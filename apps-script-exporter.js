@@ -486,9 +486,9 @@ function buildTDB(qtr, logic) {
   // ── 2. Open FY26 + Closed FY26 (da HistoricalOP) ────────────────────────
   var accOpen26 = makeAcc();
   var accClose26 = makeAcc();
-  var histRows = ss.getSheetByName('HistoricalOP').getDataRange().getValues();
-  for (var i = 1; i < histRows.length; i++) {
-    var row = histRows[i];
+  // FY2026 open pipe is in Openpipe (same tab as FY27 — slipped deals with prior-year close dates)
+  for (var i = 1; i < opRows.length; i++) {
+    var row = opRows[i];
     if (String(row[4]||'').trim() !== 'FY 2026' || String(row[5]||'').trim() !== fiscalQtr) continue;
     var ou = mapOU(row[1]); if (!ou) continue;
     var nb = getNameBand(row, isCombo);
