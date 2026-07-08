@@ -224,7 +224,9 @@
     .td-ou-title { font-size: 11px; font-weight: 700; color: var(--sf-blue); text-transform: uppercase; letter-spacing: .06em; padding: 6px 10px; background: var(--sf-blue-light); border-left: 3px solid var(--sf-blue); border-radius: 0 4px 4px 0; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
     .td-ou-title .td-ou-sub { font-size: 10px; font-weight: 400; color: var(--sf-meta); text-transform: none; letter-spacing: 0; }
     .td-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media(max-width:900px) { .td-grid { grid-template-columns: 1fr; } }
+    .td-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    @media(max-width:1200px) { .td-grid-4 { grid-template-columns: 1fr 1fr; } }
+    @media(max-width:900px) { .td-grid { grid-template-columns: 1fr; } .td-grid-4 { grid-template-columns: 1fr; } }
     .td-card { background: var(--sf-card); border: 1px solid var(--sf-border); border-radius: var(--r); box-shadow: var(--sh); }
     .td-card-hdr { padding: 8px 14px; border-bottom: 1px solid var(--sf-border); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; }
     .td-card-hdr .td-card-sub { font-size: 10px; font-weight: 400; color: var(--sf-meta); }
@@ -1315,13 +1317,26 @@ function _tdbRender(payload, band) {
   const el = document.getElementById('tdb-content');
   const bandLabels = { lt100:'<$100K', '100to500':'$100K–$500K', '500to1m':'$500K–$1M', gt1m:'$1M+' };
   const bandLabel = bandLabels[band];
+  // Derive prior-year quarter label from current quarter
+  const priorYrLabel = payload.quarter.replace('FY27','FY26').replace('FY 2027','FY 2026');
 
   const visibleOus = S.ou === 'SOUTH'
     ? payload.ous
     : payload.ous.filter(ou => ou.key === S.ou);
 
-  const allPipes = visibleOus.flatMap(ou => (ou.bands[band] ? ou.bands[band].open : []).map(d => d.pipe));
-  const maxPipe = allPipes.length ? Math.max(...allPipes) : 1;
+  function pipeRows(arr, key, maxVal) {
+    if (!arr || !arr.length) return '<tr><td colspan="2" style="color:var(--sf-meta);font-style:italic;text-align:center;padding:8px">No data</td></tr>';
+    return arr.map(d => {
+      const val = d[key] || 0;
+      const barW = maxVal > 0 ? Math.round((val / maxVal) * 80) : 0;
+      return `<tr><td>${d.name}</td><td><div class="td-bar-wrap"><div class="td-bar" style="width:${barW}px"></div><span>$${val.toFixed(2)}M</span></div></td></tr>`;
+    }).join('');
+  }
+
+  function simpleRows(arr, key) {
+    if (!arr || !arr.length) return '<tr><td colspan="2" style="color:var(--sf-meta);font-style:italic;text-align:center;padding:8px">No data</td></tr>';
+    return arr.map(d => `<tr><td>${d.name}</td><td style="text-align:right">$${(d[key]||0).toFixed(2)}M</td></tr>`).join('');
+  }
 
   el.innerHTML = `
     <div style="font-size:11px;color:var(--sf-meta);margin-bottom:14px;padding:6px 12px;background:#f0f6ff;border-left:3px solid var(--sf-blue);border-radius:0 4px 4px 0">
@@ -1329,39 +1344,68 @@ function _tdbRender(payload, band) {
       <span style="float:right;opacity:.6;font-style:italic">Live from Salesforce</span>
     </div>
     ${visibleOus.map(ou => {
-      const b = ou.bands[band] || { open:[], totalOpen:0, closed:[], totalClosed:0 };
-      const openRows = b.open.map(d => {
-        const barW = Math.round((d.pipe / maxPipe) * 80);
-        return `<tr>
-          <td>${d.name}</td>
-          <td><div class="td-bar-wrap"><div class="td-bar" style="width:${barW}px"></div><span>$${d.pipe.toFixed(2)}M</span></div></td>
-        </tr>`;
-      }).join('');
-      const openTotal = `<tr class="td-total"><td>Total Open</td><td style="text-align:right">$${b.totalOpen.toFixed(2)}M</td></tr>`;
+      const b = ou.bands[band] || { open27:[], totalOpen27:0, open26:[], totalOpen26:0, acv26:[], totalACV26:0, acv27:[], totalACV27:0 };
+      const maxOpen27 = b.open27.length ? Math.max(...b.open27.map(d=>d.pipe)) : 1;
+      const maxOpen26 = b.open26.length ? Math.max(...b.open26.map(d=>d.pipe)) : 1;
+      const maxACV26  = b.acv26.length  ? Math.max(...b.acv26.map(d=>d.acv))  : 1;
+      const maxACV27  = b.acv27.length  ? Math.max(...b.acv27.map(d=>d.acv))  : 1;
 
-      const closedRows = b.closed.filter(d => d.closed > 0).map(d =>
-        `<tr><td>${d.name}</td><td>$${d.closed.toFixed(2)}M</td></tr>`
-      ).join('');
-      const closedTotal = `<tr class="td-total"><td>Total Commit</td><td style="text-align:right">$${b.totalClosed.toFixed(2)}M</td></tr>`;
+      // Table 2: Open FY26 with closed column
+      const open26Rows = (!b.open26 || !b.open26.length)
+        ? '<tr><td colspan="3" style="color:var(--sf-meta);font-style:italic;text-align:center;padding:8px">No data</td></tr>'
+        : b.open26.map(d => {
+            const barW = maxOpen26 > 0 ? Math.round(((d.pipe||0) / maxOpen26) * 60) : 0;
+            return `<tr>
+              <td>${d.name}</td>
+              <td><div class="td-bar-wrap"><div class="td-bar" style="width:${barW}px"></div><span>$${(d.pipe||0).toFixed(2)}M</span></div></td>
+              <td style="text-align:right;color:var(--sf-green)">${d.closed > 0 ? '$'+d.closed.toFixed(2)+'M' : '—'}</td>
+            </tr>`;
+          }).join('');
 
       return `<div class="td-ou-section">
         <div class="td-ou-title">
           ${ou.label}
-          <span class="td-ou-sub">Top Open ${payload.quarter} · ${bandLabel}</span>
+          <span class="td-ou-sub">${bandLabel}</span>
         </div>
-        <div class="td-grid">
+        <div class="td-grid-4">
           <div class="td-card">
-            <div class="td-card-hdr">Open Pipeline <span class="td-card-sub">${payload.quarter} · ${bandLabel}</span></div>
+            <div class="td-card-hdr">Top Open <span class="td-card-sub">${payload.quarter} · ${bandLabel}</span></div>
             <table class="td-table">
               <thead><tr><th>Account</th><th>Open Pipe</th></tr></thead>
-              <tbody>${openRows}${openTotal}</tbody>
+              <tbody>
+                ${pipeRows(b.open27, 'pipe', maxOpen27)}
+                <tr class="td-total"><td>Total</td><td style="text-align:right">$${(b.totalOpen27||0).toFixed(2)}M</td></tr>
+              </tbody>
             </table>
           </div>
           <div class="td-card">
-            <div class="td-card-hdr">In Commit <span class="td-card-sub">${payload.quarter}</span></div>
+            <div class="td-card-hdr">Top Open <span class="td-card-sub">${priorYrLabel} · ${bandLabel}</span></div>
             <table class="td-table">
-              <thead><tr><th>Account</th><th>Commit $M</th></tr></thead>
-              <tbody>${closedRows || '<tr><td colspan="2" style="color:var(--sf-meta);font-style:italic;text-align:center">No commit records</td></tr>'}${closedTotal}</tbody>
+              <thead><tr><th>Account</th><th>Open Pipe</th><th style="color:var(--sf-green)">Closed</th></tr></thead>
+              <tbody>
+                ${open26Rows}
+                <tr class="td-total"><td>Total</td><td style="text-align:right">$${(b.totalOpen26||0).toFixed(2)}M</td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="td-card">
+            <div class="td-card-hdr">Top ACV <span class="td-card-sub">${priorYrLabel} · ${bandLabel}</span></div>
+            <table class="td-table">
+              <thead><tr><th>Account</th><th>ACV</th></tr></thead>
+              <tbody>
+                ${simpleRows(b.acv26, 'acv')}
+                <tr class="td-total"><td>Total</td><td style="text-align:right">$${(b.totalACV26||0).toFixed(2)}M</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="td-card">
+            <div class="td-card-hdr">Top ACV <span class="td-card-sub">${payload.quarter} · ${bandLabel}</span></div>
+            <table class="td-table">
+              <thead><tr><th>Account</th><th>ACV</th></tr></thead>
+              <tbody>
+                ${simpleRows(b.acv27, 'acv')}
+                <tr class="td-total"><td>Total</td><td style="text-align:right">$${(b.totalACV27||0).toFixed(2)}M</td></tr>
+              </tbody>
             </table>
           </div>
         </div>

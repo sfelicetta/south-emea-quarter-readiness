@@ -408,133 +408,160 @@ function lookupAccounts(q, qtr) {
 }
 
 // ── Top Deals by Dealband ─────────────────────────────────────────────────────
-// Legge Openpipe e aggrega per OU + dealband.
-// logic: 'Opportunity' | 'GlobalCompany' | 'ComboCompany'
-// qtr:   'CQ' (FQ 2) | 'NQ' (FQ 3)
-// Ritorna: { quarter, logic, ous: [ { key, label, bands: { lt100, '100to500', '500to1m', gt1m } } ] }
-// Ogni banda: { open: [{name, pipe}], totalOpen, closed: [{name, closed}], totalClosed }
+// Replica esatta della vista Sheet: 4 tabelle per OU
+//   1. Top Open FQ27  (da Openpipe, FY2027)
+//   2. Top Open FQ26 + Closed FQ26  (da HistoricalOP, FY2026)
+//   3. Top ACV FQ26  (da ACV, FY2026)
+//   4. Top ACV FQ27  (da ACV, FY2027)
 function buildTDB(qtr, logic) {
-  var fiscalYear = 'FY 2027';
   var fiscalQtr  = qtr === 'NQ' ? 'FQ 3' : 'FQ 2';
   var quarter    = qtr === 'NQ' ? 'Q3 FY27' : 'Q2 FY27';
 
-  // NQ + GlobalCompany non esiste nel Sheet
   if (qtr === 'NQ' && logic === 'GlobalCompany') {
     return { quarter: quarter, logic: logic, ous: [], notAvailable: true };
   }
 
   var ss = SpreadsheetApp.openById(SHEET_ID);
-  var opSheet = ss.getSheetByName('Openpipe');
-  var rows = opSheet.getDataRange().getValues();
 
-  // Colonne (0-based):
-  // A=0 lvl2 (OU head), E=4 year, F=5 qtr
-  // H=7 COMBO_GLOBAL_COMPANY_NAME, J=9 COMBO_COMPANY_NAME
-  // L=11 MGR_FORCST, N=13 OPENPIPE
-  // P=15 COMBO_GLOBAL_DEALBAND, Q=16 COMBO_COMPANY_DEALBAND
-
-  // Mappa OU head → chiave
+  // OU mappings
   var OU_MAP = {
-    'marco hernansanz':          'SOUTH',
-    'vanessa fortarezza':        'ITALY',
-    'ana alonso muñumer':        'EGM',
-    'mohammed alkhotani':        'MIDEAST',
+    'vanessa fortarezza': 'ITALY',
+    'ana alonso muñumer': 'EGM',
+    'mohammed alkhotani': 'MIDEAST',
   };
   var IB_PATTERN = /emea\s*-\s*south\s*-\s*ib/i;
-
-  // Mappa banda Sheet → chiave JS
-  var BAND_MAP = {
-    'up to 100': 'lt100',
-    '100-500':   '100to500',
-    '500-1m':    '500to1m',
-    '1m+':       'gt1m',
-  };
+  var BAND_MAP = { 'up to 100':'lt100', '100-500':'100to500', '500-1m':'500to1m', '1m+':'gt1m', '<0':'lt0' };
   var BANDS = ['lt100', '100to500', '500to1m', 'gt1m'];
   var OU_KEYS_LIST = ['SOUTH', 'IBERIA', 'ITALY', 'EGM', 'MIDEAST'];
   var OU_LABELS = { SOUTH:'EMEA South', IBERIA:'Iberia', ITALY:'Italy', EGM:'EGM', MIDEAST:'Middle East' };
 
-  // Struttura accumulatori: ouKey → bandKey → { pipe:{name→$}, commit:{name→$} }
-  var acc = {};
-  OU_KEYS_LIST.forEach(function(k) {
-    acc[k] = {};
-    BANDS.forEach(function(b) { acc[k][b] = { pipe:{}, commit:{} }; });
-  });
-
-  for (var i = 1; i < rows.length; i++) {
-    var row = rows[i];
-    var year = String(row[4] || '').trim();
-    var fq   = String(row[5] || '').trim();
-    if (year !== fiscalYear || fq !== fiscalQtr) continue;
-
-    // Determina OU da colonna B (OVA_LVL_03_USR_NM = OU head)
-    var lvl3 = String(row[1] || '').trim();
-    var ou;
-    if (IB_PATTERN.test(lvl3)) {
-      ou = 'IBERIA';
-    } else {
-      ou = OU_MAP[lvl3.toLowerCase()] || null;
-      if (!ou) continue; // salta righe non mappabili (es. headers)
-    }
-
-    // Determina nome account e banda in base alla logica
-    // Opportunity → OPPORTUNITY_DEALBAND (col K=10), COMBO_GLOBAL_COMPANY_NAME (col H=7)
-    // GlobalCompany → COMBO_GLOBAL_DEALBAND (col P=15), COMBO_GLOBAL_COMPANY_NAME (col H=7)
-    // ComboCompany  → COMBO_COMPANY_DEALBAND (col Q=16), COMBO_COMPANY_NAME (col J=9)
-    var name, bandRaw;
-    if (logic === 'Opportunity') {
-      name    = String(row[7]  || '').trim();
-      bandRaw = String(row[10] || '').trim().toLowerCase(); // OPPORTUNITY_DEALBAND
-    } else if (logic === 'GlobalCompany') {
-      name    = String(row[7]  || '').trim();
-      bandRaw = String(row[15] || '').trim().toLowerCase(); // COMBO_GLOBAL_DEALBAND
-    } else {
-      // ComboCompany
-      name    = String(row[9]  || '').trim();
-      bandRaw = String(row[16] || '').trim().toLowerCase(); // COMBO_COMPANY_DEALBAND
-    }
-    if (!name) continue;
-    var band = BAND_MAP[bandRaw];
-    if (!band) continue;
-
-    var pipe = parseFloat(String(row[13] || '0').replace(/,/g,'')) || 0;
-    var mgr  = String(row[11] || '').trim().toUpperCase();
-
-    // Accumula per OU specifico
-    acc[ou][band].pipe[name] = (acc[ou][band].pipe[name] || 0) + pipe;
-    if (mgr === 'IN') {
-      acc[ou][band].commit[name] = (acc[ou][band].commit[name] || 0) + pipe;
-    }
-    // SOUTH aggrega sempre tutti gli OU figli
-    acc['SOUTH'][band].pipe[name] = (acc['SOUTH'][band].pipe[name] || 0) + pipe;
-    if (mgr === 'IN') acc['SOUTH'][band].commit[name] = (acc['SOUTH'][band].commit[name] || 0) + pipe;
+  function mapOU(lvl3) {
+    var v = String(lvl3 || '').trim();
+    if (IB_PATTERN.test(v)) return 'IBERIA';
+    return OU_MAP[v.toLowerCase()] || null;
   }
 
-  // Costruisci output
+  function getNameBand(row, isCombo) {
+    if (isCombo) {
+      return { name: String(row[9]||'').trim(), bandRaw: String(row[16]||'').trim().toLowerCase() };
+    } else if (logic === 'GlobalCompany') {
+      return { name: String(row[7]||'').trim(), bandRaw: String(row[15]||'').trim().toLowerCase() };
+    } else {
+      return { name: String(row[7]||'').trim(), bandRaw: String(row[10]||'').trim().toLowerCase() };
+    }
+  }
+
+  var isCombo = (logic === 'ComboCompany');
+
+  // Inizializza accumulatori
+  function makeAcc() {
+    var a = {};
+    OU_KEYS_LIST.forEach(function(k) {
+      a[k] = {};
+      BANDS.forEach(function(b) { a[k][b] = {}; });
+    });
+    return a;
+  }
+
+  function top10(map) {
+    return Object.keys(map).map(function(n){ return { name:n, val: Math.round(map[n])/1000000 }; })
+      .sort(function(a,b){ return b.val - a.val; }).slice(0,10);
+  }
+
+  // ── 1. Open FY27 (da Openpipe) ───────────────────────────────────────────
+  var accOpen27 = makeAcc();
+  var opRows = ss.getSheetByName('Openpipe').getDataRange().getValues();
+  for (var i = 1; i < opRows.length; i++) {
+    var row = opRows[i];
+    if (String(row[4]||'').trim() !== 'FY 2027' || String(row[5]||'').trim() !== fiscalQtr) continue;
+    var ou = mapOU(row[1]); if (!ou) continue;
+    var nb = getNameBand(row, isCombo);
+    if (!nb.name) continue;
+    var band = BAND_MAP[nb.bandRaw]; if (!band || band === 'lt0') continue;
+    var pipe = parseFloat(String(row[13]||'0').replace(/,/g,'')) || 0;
+    accOpen27[ou][band][nb.name] = (accOpen27[ou][band][nb.name] || 0) + pipe;
+    accOpen27['SOUTH'][band][nb.name] = (accOpen27['SOUTH'][band][nb.name] || 0) + pipe;
+  }
+
+  // ── 2. Open FY26 + Closed FY26 (da HistoricalOP) ────────────────────────
+  var accOpen26 = makeAcc();
+  var accClose26 = makeAcc();
+  var histRows = ss.getSheetByName('HistoricalOP').getDataRange().getValues();
+  for (var i = 1; i < histRows.length; i++) {
+    var row = histRows[i];
+    if (String(row[4]||'').trim() !== 'FY 2026' || String(row[5]||'').trim() !== fiscalQtr) continue;
+    var ou = mapOU(row[1]); if (!ou) continue;
+    var nb = getNameBand(row, isCombo);
+    if (!nb.name) continue;
+    var band = BAND_MAP[nb.bandRaw]; if (!band || band === 'lt0') continue;
+    var pipe = parseFloat(String(row[13]||'0').replace(/,/g,'')) || 0;
+    var mgr  = String(row[11]||'').trim().toUpperCase();
+    accOpen26[ou][band][nb.name] = (accOpen26[ou][band][nb.name] || 0) + pipe;
+    accOpen26['SOUTH'][band][nb.name] = (accOpen26['SOUTH'][band][nb.name] || 0) + pipe;
+    if (mgr === 'IN') {
+      accClose26[ou][band][nb.name] = (accClose26[ou][band][nb.name] || 0) + pipe;
+      accClose26['SOUTH'][band][nb.name] = (accClose26['SOUTH'][band][nb.name] || 0) + pipe;
+    }
+  }
+
+  // ── 3 & 4. Top ACV FY26 e FY27 (da ACV tab) ─────────────────────────────
+  // ACV cols: A=0 year, B=1 fqtr, D=3 lvl3, H=7 global_name, J=9 combo_name,
+  //           K=10 opp_band, N=13 ACV, P=14 global_band, Q=15 combo_band
+  var accACV26 = makeAcc();
+  var accACV27 = makeAcc();
+  var acvRows = ss.getSheetByName('ACV').getDataRange().getValues();
+  for (var i = 1; i < acvRows.length; i++) {
+    var row = acvRows[i];
+    var yr = String(row[0]||'').trim();
+    if ((yr !== 'FY 2026' && yr !== 'FY 2027') || String(row[1]||'').trim() !== fiscalQtr) continue;
+    var ou = mapOU(row[3]); if (!ou) continue;
+    var name, bandRaw;
+    if (isCombo) {
+      name    = String(row[9]||'').trim();
+      bandRaw = String(row[15]||'').trim().toLowerCase();
+    } else if (logic === 'GlobalCompany') {
+      name    = String(row[7]||'').trim();
+      bandRaw = String(row[14]||'').trim().toLowerCase();
+    } else {
+      name    = String(row[7]||'').trim();
+      bandRaw = String(row[10]||'').trim().toLowerCase();
+    }
+    if (!name) continue;
+    var band = BAND_MAP[bandRaw]; if (!band || band === 'lt0') continue;
+    var acv = parseFloat(String(row[13]||'0').replace(/,/g,'')) || 0;
+    if (yr === 'FY 2026') {
+      accACV26[ou][band][name] = (accACV26[ou][band][name] || 0) + acv;
+      accACV26['SOUTH'][band][name] = (accACV26['SOUTH'][band][name] || 0) + acv;
+    } else {
+      accACV27[ou][band][name] = (accACV27[ou][band][name] || 0) + acv;
+      accACV27['SOUTH'][band][name] = (accACV27['SOUTH'][band][name] || 0) + acv;
+    }
+  }
+
+  // ── Costruisci output ─────────────────────────────────────────────────────
   var ous = OU_KEYS_LIST.map(function(ouKey) {
     var bands = {};
     BANDS.forEach(function(b) {
-      var pipeMap   = acc[ouKey][b].pipe;
-      var commitMap = acc[ouKey][b].commit;
+      var open27  = top10(accOpen27[ouKey][b]);
+      var open26  = top10(accOpen26[ouKey][b]);
+      var close26 = accClose26[ouKey][b];
+      var acv26   = top10(accACV26[ouKey][b]);
+      var acv27   = top10(accACV27[ouKey][b]);
 
-      // Top 10 open per pipe desc
-      var openArr = Object.keys(pipeMap).map(function(n) {
-        return { name: n, pipe: Math.round(pipeMap[n]) / 1000000 };
-      }).sort(function(a,b){ return b.pipe - a.pipe; }).slice(0, 10);
-
-      var totalOpen = Object.keys(pipeMap).reduce(function(s,n){ return s + pipeMap[n]; }, 0) / 1000000;
-
-      // Top 10 commit per commit desc
-      var closedArr = Object.keys(commitMap).map(function(n) {
-        return { name: n, closed: Math.round(commitMap[n]) / 1000000 };
-      }).sort(function(a,b){ return b.closed - a.closed; }).slice(0, 10);
-
-      var totalClosed = Object.keys(commitMap).reduce(function(s,n){ return s + commitMap[n]; }, 0) / 1000000;
+      // Arricchisci open26 con closed
+      var open26WithClosed = open26.map(function(d) {
+        return { name: d.name, pipe: d.val, closed: Math.round(close26[d.name]||0)/1000000 };
+      });
 
       bands[b] = {
-        open:        openArr,
-        totalOpen:   Math.round(totalOpen * 10) / 10,
-        closed:      closedArr,
-        totalClosed: Math.round(totalClosed * 10) / 10,
+        open27:      open27.map(function(d){ return { name:d.name, pipe:d.val }; }),
+        totalOpen27: Math.round(open27.reduce(function(s,d){ return s+d.val; },0)*10)/10,
+        open26:      open26WithClosed,
+        totalOpen26: Math.round(open26.reduce(function(s,d){ return s+d.val; },0)*10)/10,
+        acv26:       acv26.map(function(d){ return { name:d.name, acv:d.val }; }),
+        totalACV26:  Math.round(acv26.reduce(function(s,d){ return s+d.val; },0)*10)/10,
+        acv27:       acv27.map(function(d){ return { name:d.name, acv:d.val }; }),
+        totalACV27:  Math.round(acv27.reduce(function(s,d){ return s+d.val; },0)*10)/10,
       };
     });
     return { key: ouKey, label: OU_LABELS[ouKey], bands: bands };
