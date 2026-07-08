@@ -1,32 +1,23 @@
 /**
  * Google Apps Script — South EMEA FY27 Quarter Readiness — Backend
  *
- * SETUP:
- *   1. Incolla questo file in Extensions → Apps Script del tuo Sheet
- *   2. Sostituisci SHEET_ID con l'ID del tuo Google Sheet
- *   3. Deploy → New deployment → Web App
- *      - Execute as: Me
- *      - Who has access: Anyone (within Salesforce o Anyone with link)
- *   4. Copia l'URL del deployment → incollalo in index.html su APPS_SCRIPT_URL
- *
- * ENDPOINT:
- *   GET  ?action=readiness          → restituisce tutti i dati dei 4 tab Dealband
- *   POST { action:'writeForecast', key:'CQ_OPP_SOUTH', value:'$44.2M' }
- *        → scrive il valore nella cella Forecast del tab _meta
- *
- * TAB ATTESI NEL SHEET:
- *   "CQ Dealband (Opportunity LVL)"
- *   "CQ Dealband (Combo LVL)"
- *   "NQ Dealband (Opportunity LVL)"
- *   "NQ Dealband (Combo LVL)"
- *   "_meta"   → A1:header, A2:ts_snowflake, B2:ts_org62, C2:ts_finplan, D2:ts_hc
- *              → righe 4+ per i Forecast override: A=key, B=value
- *
- * HEADER OBBLIGATORI IN OGNI TAB DEALBAND (riga 1, case-insensitive):
- *   Band | OU | AE | Forecast | Pipe | Y/Y | Pipe Coverage | BCO | Commit | Finplan | Closed QTD | Closed QTD YoY | Deals in Commit | ACV PY | Pipe Growth YoY | Hist Pipe Coverage
+ * STRUTTURA REALE DEL TAB (0-indexed):
+ *   col 0:  sempre vuota
+ *   col 1:  Deal Band  (header "Deal Band", poi "<$0", "<$100K", "$100K - $500K", ...)
+ *   col 2:  Q2 FY26 ACV          es. "$33.3"
+ *   col 3:  Q2 FY27 Forecast     es. "$19.0"  (SOLO nella riga Total)
+ *   col 4:  Y/Y forecast          es. "12%", "-100%", "-"
+ *   col 5:  Q2 FY27 Pipe         es. "$24.7"
+ *   col 6:  Pipe Growth Y/Y       es. "-14%"
+ *   col 7:  Pipe Coverage (Hist)  es. "-1.3x  (1.9x)" o "2x  (1.7x)"
+ *   col 8:  # Deals in Commit     es. "#Q2 Open Opps: 930"
+ *   col 9:  BCO per AE            es. "BCO per AE $57K, -18% Y/Y"
+ *   col 10: FY27 Closed QTD       es. "$19.6"
+ *   col 11: Y/Y closed QTD        es. "6%"
+ *   col 15: OU name               es. "South", "Iberia", "Italy", "EGM", "Middle East"
  */
 
-const SHEET_ID = 'YOUR_GOOGLE_SHEET_ID_HERE'; // ← CAMBIA QUESTO
+const SHEET_ID = '1DdcjTIC-w26qBgYYdIMHbLQIOthfxnHAMv7AC27QLpc';
 
 const TABS = {
   CQ_OPP:   'CQ Dealband (Opportunity LVL)',
@@ -36,49 +27,84 @@ const TABS = {
   META:     '_meta',
 };
 
-const OU_KEYS = ['SOUTH', 'IBERIA', 'ITALY', 'EGM', 'MIDEAST'];
-const OU_NAMES = { SOUTH:['emea south','south'], IBERIA:['iberia','es'], ITALY:['italy','it'], EGM:['egm','emerging'], MIDEAST:['middle east','me','mideast'] };
+const OU_KEYS    = ['SOUTH', 'IBERIA', 'ITALY', 'EGM', 'MIDEAST'];
+const BAND_ORDER = ['<$0', '$0–$100K', '$100–$500K', '$500K–$1M', '$1M+'];
 
-// ── CORS helper ──────────────────────────────────────────────────────────────
-function setCors(output) {
-  return output
-    .setMimeType(ContentService.MimeType.JSON);
+// Normalizza i nomi banda dal foglio → chiave canonica
+const BAND_NORM = {
+  '<$0':           '<$0',
+  '<$100k':        '$0–$100K',
+  '$100k - $500k': '$100–$500K',
+  '$500k - $1m':   '$500K–$1M',
+  '$1m+':          '$1M+',
+};
+
+function mapOU(raw) {
+  const v = String(raw || '').trim().toLowerCase();
+  if (!v) return null;
+  if (v === 'south' || v === 'emea south') return 'SOUTH';
+  if (v === 'iberia')                       return 'IBERIA';
+  if (v === 'italy')                        return 'ITALY';
+  if (v === 'egm')                          return 'EGM';
+  if (v === 'middle east')                  return 'MIDEAST';
+  return null;
 }
 
-// ── GET handler ──────────────────────────────────────────────────────────────
+// ── GET ───────────────────────────────────────────────────────────────────────
 function doGet(e) {
   try {
-    const action = (e && e.parameter && e.parameter.action) || 'readiness';
+    const cb     = (e && e.parameter && e.parameter.callback) || '';
+    const action = (e && e.parameter && e.parameter.action)   || 'readiness';
+    var payload;
     if (action === 'readiness') {
-      return setCors(ContentService.createTextOutput(JSON.stringify(buildPayload())));
+      payload = buildPayload();
+    } else if (action === 'lookup') {
+      const q  = (e && e.parameter && e.parameter.q)  || '';
+      const qtr = (e && e.parameter && e.parameter.qtr) || 'CQ';
+      payload = lookupAccounts(q, qtr);
+    } else if (action === 'tdb') {
+      const qtr   = (e && e.parameter && e.parameter.qtr)   || 'CQ';
+      const logic = (e && e.parameter && e.parameter.logic) || 'Opportunity';
+      payload = buildTDB(qtr, logic);
+    } else {
+      payload = { error: 'unknown action' };
     }
-    return setCors(ContentService.createTextOutput(JSON.stringify({ error: 'unknown action' })));
+    const json = JSON.stringify(payload);
+    if (cb) {
+      return ContentService.createTextOutput(cb + '(' + json + ')')
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService.createTextOutput(json).setMimeType(ContentService.MimeType.JSON);
   } catch(err) {
-    return setCors(ContentService.createTextOutput(JSON.stringify({ error: err.message })));
+    return ContentService.createTextOutput(JSON.stringify({ error: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
-// ── POST handler (write Forecast back to Sheet) ───────────────────────────────
+// ── POST ──────────────────────────────────────────────────────────────────────
 function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
     if (body.action === 'writeForecast') {
       writeForecast(body.key, body.value);
-      return setCors(ContentService.createTextOutput(JSON.stringify({ ok: true })));
+      return ContentService.createTextOutput(JSON.stringify({ ok: true }))
+        .setMimeType(ContentService.MimeType.JSON);
     }
-    return setCors(ContentService.createTextOutput(JSON.stringify({ error: 'unknown action' })));
+    return ContentService.createTextOutput(JSON.stringify({ error: 'unknown action' }))
+      .setMimeType(ContentService.MimeType.JSON);
   } catch(err) {
-    return setCors(ContentService.createTextOutput(JSON.stringify({ error: err.message })));
+    return ContentService.createTextOutput(JSON.stringify({ error: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
-// ── Build full payload ────────────────────────────────────────────────────────
+// ── Payload principale ────────────────────────────────────────────────────────
 function buildPayload() {
-  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const ss   = SpreadsheetApp.openById(SHEET_ID);
   const meta = readMeta(ss);
   return {
-    generated_at: new Date().toISOString(),
-    timestamps: meta.timestamps,
+    generated_at:       new Date().toISOString(),
+    timestamps:         meta.timestamps,
     forecast_overrides: meta.forecasts,
     CQ: {
       OPP:   parseTab(ss, TABS.CQ_OPP),
@@ -91,14 +117,14 @@ function buildPayload() {
   };
 }
 
-// ── Read _meta tab ────────────────────────────────────────────────────────────
+// ── _meta tab ─────────────────────────────────────────────────────────────────
 function readMeta(ss) {
   const sheet = ss.getSheetByName(TABS.META);
   if (!sheet) return { timestamps: {}, forecasts: {} };
   const all = sheet.getDataRange().getValues();
-  const ts = all[1] || [];
+  const ts  = all[1] || [];
   const forecasts = {};
-  for (let i = 3; i < all.length; i++) {
+  for (var i = 3; i < all.length; i++) {
     if (all[i][0]) forecasts[String(all[i][0])] = String(all[i][1]);
   }
   return {
@@ -108,172 +134,131 @@ function readMeta(ss) {
       finplan:   ts[2] ? String(ts[2]) : null,
       hc:        ts[3] ? String(ts[3]) : null,
     },
-    forecasts,
+    forecasts: forecasts,
   };
 }
 
-// ── Write forecast override ───────────────────────────────────────────────────
 function writeForecast(key, value) {
-  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const ss    = SpreadsheetApp.openById(SHEET_ID);
   const sheet = ss.getSheetByName(TABS.META);
   if (!sheet) return;
   const data = sheet.getDataRange().getValues();
-  for (let i = 3; i < data.length; i++) {
-    if (data[i][0] === key) {
-      sheet.getRange(i + 1, 2).setValue(value);
-      return;
-    }
+  for (var i = 3; i < data.length; i++) {
+    if (data[i][0] === key) { sheet.getRange(i + 1, 2).setValue(value); return; }
   }
-  // Key non trovata → aggiunge nuova riga
   sheet.appendRow([key, value]);
 }
 
-// ── Parse a Dealband tab ──────────────────────────────────────────────────────
+// ── Parser principale ─────────────────────────────────────────────────────────
 function parseTab(ss, tabName) {
   const sheet = ss.getSheetByName(tabName);
   if (!sheet) { Logger.log('Tab not found: ' + tabName); return emptyResult(); }
+
   const rows = sheet.getDataRange().getValues();
-  if (rows.length < 2) return emptyResult();
 
-  const hdr = rows[0].map(h => String(h).trim().toLowerCase());
-  const data = rows.slice(1).filter(r => r.some(c => c !== ''));
+  // Per ogni OU: { total: {...}, bands: { bandKey: {...} } }
+  const ouData = {};
+  OU_KEYS.forEach(function(k) { ouData[k] = { total: null, bands: {} }; });
 
-  // Column index helper
-  const ci = (...names) => {
-    for (const n of names) {
-      const idx = hdr.indexOf(n.toLowerCase());
-      if (idx >= 0) return idx;
+  var inSection = false;
+
+  rows.forEach(function(row) {
+    // IMPORTANTE: i dati iniziano dalla colonna 1 (col 0 sempre vuota)
+    const cell = String(row[1] || '').trim();
+    const cellLo = cell.toLowerCase();
+
+    // Rileva riga header di ogni sezione
+    if (cellLo === 'deal band') {
+      inSection = true;
+      return;
     }
-    return -1;
-  };
+    if (!inSection) return;
 
-  const iOU   = ci('ou','operating unit');
-  const iAE   = ci('ae','account executive');
-  const iBand = ci('band','deal band','dealband');
-  const iFcst = ci('forecast','fcst');
-  const iPipe = ci('pipe','pipeline');
-  const iYoY  = ci('y/y','yoy','y-o-y');
-  const iCov  = ci('pipe coverage','coverage','pipe cov');
-  const iBCO  = ci('bco');
-  const iCmt  = ci('commit','commitment');
-  const iFP   = ci('finplan','fin plan');
-  const iCQTD = ci('closed qtd','closed qtd fy27');
-  const iCYoY = ci('closed qtd yoy','closed yoy');
-  const iDeals= ci('deals in commit','# deals','deals in commitment');
-  const iACV  = ci('acv py','q2 fy26 acv','acv fy26');
-  const iPGrw = ci('pipe growth','pipe growth yoy');
-  const iHCov = ci('hist pipe coverage','historical pipe coverage','hist cov');
+    // OU dalla colonna 15
+    const ou = mapOU(String(row[15] || '').trim());
+    if (!ou) return;
 
-  // Aggregate per OU + per Band
-  const ouMap   = {};
-  const bandMap = {};
-  const aeRows  = [];
-
-  data.forEach(row => {
-    const ou   = mapOU(String(row[iOU] || ''));
-    const band = String(row[iBand] || '').trim();
-    const fcst = n(row[iFcst]);
-    const pipe = n(row[iPipe]);
-    const yoy  = row[iYoY] != null ? row[iYoY] : 0;
-    const cmt  = iCmt  >= 0 ? n(row[iCmt])  : 0;
-    const fp   = iFP   >= 0 ? n(row[iFP])   : 0;
-    const cqtd = iCQTD >= 0 ? n(row[iCQTD]) : 0;
-    const cyoy = iCYoY >= 0 ? row[iCYoY]    : 0;
-    const deals= iDeals>= 0 ? n(row[iDeals]): 0;
-    const acvpy= iACV  >= 0 ? n(row[iACV])  : 0;
-    const pgrw = iPGrw >= 0 ? row[iPGrw]    : 0;
-    const hcov = iHCov >= 0 ? n(row[iHCov]) : 0;
-    const cov  = iCov  >= 0 ? n(row[iCov])  : 0;
-    const bco  = iBCO  >= 0 ? n(row[iBCO])  : 0;
-
-    // OU aggregation
-    if (!ouMap[ou]) ouMap[ou] = { fcst:0, pipe:0, yoy_sum:0, yoy_cnt:0, cmt:0, fp:0, cqtd:0, cyoy_sum:0, cyoy_cnt:0, deals:0, acvpy:0, pgrw_sum:0, pgrw_cnt:0, hcov_sum:0, hcov_cnt:0, cov_sum:0, cov_cnt:0, bco_sum:0, ae_cnt:0, bands:{} };
-    const o = ouMap[ou];
-    o.fcst += fcst; o.pipe += pipe;
-    o.yoy_sum += n(yoy); o.yoy_cnt++;
-    o.cmt += cmt; o.fp += fp;
-    o.cqtd += cqtd;
-    o.cyoy_sum += n(cyoy); o.cyoy_cnt++;
-    o.deals += deals;
-    o.acvpy += acvpy;
-    o.pgrw_sum += n(pgrw); o.pgrw_cnt++;
-    o.hcov_sum += hcov; o.hcov_cnt++;
-    o.cov_sum  += cov;  o.cov_cnt++;
-    o.bco_sum  += bco;  o.ae_cnt++;
-
-    // Band within OU
-    if (!o.bands[band]) o.bands[band] = { pipe:0, fcst:0, yoy_sum:0, yoy_cnt:0, cmt:0, fp:0 };
-    o.bands[band].pipe     += pipe;
-    o.bands[band].fcst     += fcst;
-    o.bands[band].yoy_sum  += n(yoy);
-    o.bands[band].yoy_cnt  ++;
-    o.bands[band].cmt      += cmt;
-    o.bands[band].fp       += fp;
-
-    // Global band map
-    if (!bandMap[band]) bandMap[band] = { pipe:0, fcst:0, yoy_sum:0, yoy_cnt:0, cmt:0, fp:0 };
-    bandMap[band].pipe    += pipe;
-    bandMap[band].fcst    += fcst;
-    bandMap[band].yoy_sum += n(yoy);
-    bandMap[band].yoy_cnt ++;
-    bandMap[band].cmt     += cmt;
-    bandMap[band].fp      += fp;
-
-    // AE row
-    if (iAE >= 0 && row[iAE]) {
-      aeRows.push({
-        ou,
-        name:   String(row[iAE]).trim(),
-        fcst:   fmtM(fcst),
-        pipe:   fmtM(pipe),
-        cov:    cov > 0 ? r1(cov).toFixed(1) + 'x' : '—',
-        bco:    bco > 0 ? fmtM(bco) : '—',
-        deals:  deals,
-        closed: cqtd > 0 ? fmtM(cqtd) : '—',
-        yoy:    fmtPct(cyoy),
-        dir:    n(cyoy) >= 0 ? 'pos' : 'neg',
-      });
+    // Riga Total → KPI aggregati
+    if (cellLo === 'total') {
+      const cov = parseCov(row[7]);
+      ouData[ou].total = {
+        acvPY:      nM(row[2]),
+        forecast:   nM(row[3]),
+        yoyFcst:    nPct(row[4]),
+        pipe:       nM(row[5]),
+        pipeGrowth: nPct(row[6]),
+        pipeCov:    cov.current,
+        histCov:    cov.hist,
+        deals:      parseDeals(row[8]),
+        bco:        parseBCO(row[9]),
+        closedQTD:  nM(row[10]),
+        yoyClosed:  nPct(row[11]),
+      };
+      return;
     }
+
+    // Righe banda → dati per il grafico distribution
+    const canonBand = BAND_NORM[cellLo];
+    if (!canonBand) return;
+
+    const cov = parseCov(row[7]);
+    ouData[ou].bands[canonBand] = {
+      acvPY:   nM(row[2]),
+      pipe:    nM(row[5]),
+      yoyPipe: nPct(row[6]),
+      pipeCov: cov.current,
+      histCov: cov.hist,
+    };
   });
 
-  // SOUTH = aggregation of all OUs
-  const allOUs = Object.values(ouMap);
-  ouMap['SOUTH'] = ouMap['SOUTH'] || aggregateAll(allOUs);
-
-  // Build per-OU structured output
+  // Costruisci risultato per OU
   const result = {};
-  OU_KEYS.forEach(ouKey => {
-    const o = ouMap[ouKey];
-    if (!o) { result[ouKey] = emptyOU(); return; }
-    const avgCov  = o.cov_cnt  > 0 ? r1(o.cov_sum  / o.cov_cnt)  : 0;
-    const avgHCov = o.hcov_cnt > 0 ? r1(o.hcov_sum / o.hcov_cnt) : 0;
-    const avgYoY  = o.yoy_cnt  > 0 ? r1(o.yoy_sum  / o.yoy_cnt)  : 0;
-    const avgCYoY = o.cyoy_cnt > 0 ? r1(o.cyoy_sum / o.cyoy_cnt) : 0;
-    const avgPGrw = o.pgrw_cnt > 0 ? r1(o.pgrw_sum / o.pgrw_cnt) : 0;
-    const bcoAE   = o.ae_cnt   > 0 ? r1(o.bco_sum  / o.ae_cnt)   : 0;
+  OU_KEYS.forEach(function(ouKey) {
+    const d = ouData[ouKey];
+    const t = d.total || {};
+
+    const acvPY      = t.acvPY      || 0;
+    const forecast   = t.forecast   || 0;
+    const yoyFcst    = t.yoyFcst    || 0;
+    const pipe       = t.pipe       || 0;
+    const pipeGrowth = t.pipeGrowth || 0;
+    const pipeCov    = t.pipeCov    || 0;
+    const histCov    = t.histCov    || 0;
+    const deals      = t.deals      || 0;
+    const bco        = t.bco        || 0;
+    const closedQTD  = t.closedQTD  || 0;
+    const yoyClosed  = t.yoyClosed  || 0;
 
     result[ouKey] = {
       kpis: {
-        acv_py:       { val: fmtM(o.acvpy),   lbl: 'Q2 FY26 ACV (PY)' },
-        forecast:     { val: fmtM(o.fcst),    lbl: 'Q2 FY27 Forecast', editable: true },
-        yoy:          { val: fmtPct(avgYoY),  lbl: 'Y/Y Forecast',     dir: avgYoY  >= 0 ? 'pos' : 'neg' },
-        pipeline:     { val: fmtM(o.pipe),    lbl: 'Pipeline Q2 FY27' },
-        pipe_growth:  { val: fmtPct(avgPGrw), lbl: 'Pipeline Growth Y/Y', dir: avgPGrw >= 0 ? 'pos' : 'neg' },
-        pipe_cov:     { val: avgCov.toFixed(1) + 'x',  lbl: 'Pipe Coverage' },
-        hist_pipe_cov:{ val: avgHCov.toFixed(1) + 'x', lbl: 'Hist. Pipe Coverage' },
-        deals_cmt:    { val: o.deals,         lbl: '# Deals in Commitment' },
-        bco_ae:       { val: fmtM(bcoAE),     lbl: 'BCO per AE' },
-        closed_qtd:   { val: fmtM(o.cqtd),   lbl: 'Closed QTD FY27', delta: fmtPct(avgCYoY) + ' Y/Y', dir: avgCYoY >= 0 ? 'pos' : 'neg' },
+        acv_py:        { val: fmtM(acvPY),                     lbl: 'Q2 FY26 ACV (PY)' },
+        forecast:      { val: fmtM(forecast),                  lbl: 'Q2 FY27 Forecast', editable: true },
+        yoy:           { val: fmtPct(yoyFcst),                 lbl: 'Y/Y Forecast',         dir: yoyFcst    >= 0 ? 'pos' : 'neg' },
+        pipeline:      { val: fmtM(pipe),                      lbl: 'Pipeline Q2 FY27' },
+        pipe_growth:   { val: fmtPct(pipeGrowth),              lbl: 'Pipeline Growth Y/Y',  dir: pipeGrowth >= 0 ? 'pos' : 'neg' },
+        pipe_cov:      { val: Math.abs(pipeCov).toFixed(1) + 'x', lbl: 'Pipe Coverage' },
+        hist_pipe_cov: { val: Math.abs(histCov).toFixed(1) + 'x', lbl: 'Hist. Pipe Coverage' },
+        deals_cmt:     { val: deals,                            lbl: '# Deals in Commitment' },
+        bco_ae:        { val: bco > 0 ? fmtK(bco) : '—',      lbl: 'BCO per AE' },
+        closed_qtd:    { val: fmtM(closedQTD),
+                         delta: fmtPct(yoyClosed) + ' Y/Y',
+                         lbl: 'Closed QTD FY27',               dir: yoyClosed  >= 0 ? 'pos' : 'neg' },
       },
-      bands: bandOrder().map(band => {
-        const b = o.bands[band] || { pipe:0, fcst:0, yoy_sum:0, yoy_cnt:1, cmt:0, fp:0 };
-        const yoy = b.yoy_cnt > 0 ? b.yoy_sum / b.yoy_cnt : 0;
-        return { band, fcst: r1(b.fcst/1e6), pipe: r1(b.pipe/1e6), yoy: fmtPct(yoy), dir: yoy >= 0 && band !== '<$0' ? 'pos' : 'neg' };
+      bands: BAND_ORDER.map(function(band) {
+        const b = d.bands[band];
+        if (!b) return { band: band, fcst: 0, pipe: 0, yoy: '—', dir: 'neu' };
+        return {
+          band: band,
+          fcst: r1(b.acvPY),       // ACV PY come riferimento per-banda
+          pipe: r1(b.pipe),
+          yoy:  fmtPct(b.yoyPipe),
+          dir:  band === '<$0' ? 'neg' : (b.yoyPipe >= 0 ? 'pos' : 'neg'),
+        };
       }),
-      aes: aeRows.filter(a => ouKey === 'SOUTH' || a.ou === ouKey),
-      coverage: bandOrder().map(band => {
-        const b = o.bands[band] || { cmt:0, fcst:0, fp:0 };
-        return { band, commit: r1(b.cmt/1e6), fcst: r1(b.fcst/1e6), fp: r1(b.fp/1e6) };
+      aes: [],
+      coverage: BAND_ORDER.map(function(band) {
+        const b = d.bands[band] || {};
+        return { band: band, commit: 0, fcst: r1(b.pipe || 0), fp: 0 };
       }),
     };
   });
@@ -281,39 +266,294 @@ function parseTab(ss, tabName) {
   return result;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function emptyResult() { return OU_KEYS.reduce((a, k) => { a[k] = emptyOU(); return a; }, {}); }
-function emptyOU() { return { kpis: {}, bands: [], aes: [], coverage: [] }; }
-function bandOrder() { return ['<$0', '$0–$100K', '$100–$500K', '$500K–$1M', '$1M+']; }
+// ── Value parsers ─────────────────────────────────────────────────────────────
 
-function mapOU(raw) {
-  const v = raw.toLowerCase().trim();
-  for (const [key, aliases] of Object.entries(OU_NAMES)) {
-    if (aliases.some(a => v.includes(a))) return key;
+// nM: "$33.3" → 33.3  oppure  numero diretto → passthrough
+function nM(v) {
+  if (v === '' || v === null || v === undefined) return 0;
+  if (typeof v === 'number') return v;
+  var s = String(v).replace(/[$,\s]/g, '');  // togli $ , spazi (ma NON M/K per evitare strip su "EGM")
+  return parseFloat(s) || 0;
+}
+
+// nPct: "12%" → 0.12 | "-100%" → -1.0 | "-" → 0 | 0.12 (già decimale) → 0.12
+function nPct(v) {
+  if (v === '' || v === null || v === undefined) return 0;
+  if (typeof v === 'number') {
+    return Math.abs(v) <= 5 ? v : v / 100;
   }
-  return 'SOUTH';
+  var s = String(v).replace(/[%\s]/g, '').trim();
+  if (!s || s === '-') return 0;
+  var n = parseFloat(s);
+  if (isNaN(n)) return 0;
+  return Math.abs(n) > 5 ? n / 100 : n;
 }
 
-function aggregateAll(ous) {
-  const base = { fcst:0, pipe:0, yoy_sum:0, yoy_cnt:0, cmt:0, fp:0, cqtd:0, cyoy_sum:0, cyoy_cnt:0, deals:0, acvpy:0, pgrw_sum:0, pgrw_cnt:0, hcov_sum:0, hcov_cnt:0, cov_sum:0, cov_cnt:0, bco_sum:0, ae_cnt:0, bands:{} };
-  ous.forEach(o => {
-    Object.keys(base).forEach(k => { if (typeof base[k] === 'number') base[k] += (o[k] || 0); });
-    Object.entries(o.bands || {}).forEach(([b, v]) => {
-      if (!base.bands[b]) base.bands[b] = { pipe:0, fcst:0, yoy_sum:0, yoy_cnt:0, cmt:0, fp:0 };
-      Object.keys(base.bands[b]).forEach(k => base.bands[b][k] += (v[k] || 0));
-    });
-  });
-  return base;
+// parseCov: "-1.3x  (1.9x)" → { current: -1.3, hist: 1.9 }
+//           "2x  (1.7x)"    → { current: 2,    hist: 1.7 }
+//           "-  (-)"        → { current: 0,    hist: 0   }
+function parseCov(raw) {
+  var s     = String(raw || '').trim();
+  var curM  = s.match(/^([+-]?\d+\.?\d*)/);
+  var histM = s.match(/\(([+-]?\d+\.?\d*)x?\)/);
+  var cur   = curM  ? parseFloat(curM[1])  : 0;
+  var hist  = histM ? parseFloat(histM[1]) : 0;
+  if (isNaN(cur))  cur  = 0;
+  if (isNaN(hist)) hist = 0;
+  return { current: cur, hist: hist };
 }
 
-function n(v)      { if (typeof v === 'number') return v; const s = String(v).replace(/[$,%\s]/g,''); return parseFloat(s) || 0; }
-function r1(v)     { return Math.round(v * 10) / 10; }
-function fmtM(v)   { const a = Math.abs(v/1e6); const s = v < 0 ? '-' : ''; return s + '$' + r1(a) + 'M'; }
+// parseDeals: "#Q2 Open Opps: 1,073" → 1073
+function parseDeals(raw) {
+  var s = String(raw || '');
+  var m = s.match(/(\d[\d,]*)/);
+  return m ? parseInt(m[1].replace(/,/g, ''), 10) : 0;
+}
+
+// parseBCO: "BCO per AE $57K, -18% Y/Y" → 57000
+function parseBCO(raw) {
+  var s = String(raw || '');
+  if (s.indexOf('BCO') < 0) return 0;
+  var kM = s.match(/\$(\d+\.?\d*)[Kk]/);
+  var mM = s.match(/\$(\d+\.?\d*)[Mm]/);
+  if (kM) return parseFloat(kM[1]) * 1000;
+  if (mM) return parseFloat(mM[1]) * 1e6;
+  return 0;
+}
+
+// ── Format helpers ────────────────────────────────────────────────────────────
+function r1(v) { return Math.round(v * 10) / 10; }
+
+function fmtM(v) {
+  var abs = Math.abs(v);
+  return (v < 0 ? '-' : '') + '$' + r1(abs) + 'M';
+}
+
+function fmtK(dollars) {
+  if (dollars >= 1e6)  return '$' + r1(dollars / 1e6) + 'M';
+  if (dollars >= 1000) return '$' + Math.round(dollars / 1000) + 'K';
+  return '$' + Math.round(dollars);
+}
+
+// fmtPct: 0.12 → "+12%"  |  -0.03 → "-3%"
 function fmtPct(v) {
-  const num = n(v);
-  if (String(v).includes('%')) return String(v);
-  const sign = num >= 0 ? '+' : '';
-  return sign + Math.round(num * (Math.abs(num) < 1 ? 100 : 1)) + '%';
+  if (typeof v !== 'number' || isNaN(v)) return '—';
+  var pct  = Math.abs(v) <= 5 ? v * 100 : v;
+  var sign = pct >= 0 ? '+' : '';
+  return sign + Math.round(pct) + '%';
 }
 
-function testBuild() { Logger.log(JSON.stringify(buildPayload(), null, 2)); }
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function emptyResult() {
+  return OU_KEYS.reduce(function(a, k) { a[k] = emptyOU(); return a; }, {});
+}
+function emptyOU() {
+  return {
+    kpis: {},
+    bands:    BAND_ORDER.map(function(b) { return { band: b, fcst: 0, pipe: 0, yoy: '—', dir: 'neu' }; }),
+    aes:      [],
+    coverage: BAND_ORDER.map(function(b) { return { band: b, commit: 0, fcst: 0, fp: 0 }; }),
+  };
+}
+
+// ── Account Lookup ────────────────────────────────────────────────────────────
+// Cerca account in Openpipe e [Org62] Commit per il quarter selezionato.
+// qtr: 'CQ' → Q2 FY27 | 'NQ' → Q3 FY27
+// Ritorna: { results: [{ name, pipe, commit }] } — max 20 risultati
+function lookupAccounts(q, qtr) {
+  if (!q || q.length < 2) return { results: [] };
+  const qLow = q.toLowerCase();
+
+  // Map quarter code → valori Sheet
+  var fiscalYear = 'FY 2027';
+  var fiscalQtr  = qtr === 'NQ' ? 'FQ 3' : 'FQ 2';
+
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+
+  // ── Openpipe: aggrega OPENPIPE per COMBO_GLOBAL_COMPANY_NAME ──────────────
+  var opSheet = ss.getSheetByName('Openpipe');
+  var opRows  = opSheet.getDataRange().getValues();
+  // col index (0-based): H=7 name, E=4 year, F=5 qtr, N=13 openpipe, L=11 mgr_fcst
+  var pipeMap   = {};  // name → pipe $
+  var commitMap = {};  // name → commit $
+  for (var i = 1; i < opRows.length; i++) {
+    var row = opRows[i];
+    var name = String(row[7] || '').trim();
+    if (!name || name.toLowerCase().indexOf(qLow) < 0) continue;
+    var year = String(row[4] || '').trim();
+    var fqtr = String(row[5] || '').trim();
+    if (year !== fiscalYear || fqtr !== fiscalQtr) continue;
+    var pipe = parseFloat(String(row[13] || '0').replace(/,/g, '')) || 0;
+    var mgr  = String(row[11] || '').trim().toUpperCase();
+    pipeMap[name] = (pipeMap[name] || 0) + pipe;
+    if (mgr === 'IN') commitMap[name] = (commitMap[name] || 0) + pipe;
+  }
+
+  // ── [Org62] Commit: aggrega Forecast Amount per Global Company ────────────
+  // col index: A=0 role, D=3 quarter (es. "Q2 FY27"), F=5 amount
+  // Qui non abbiamo global company name direttamente — skip, usiamo solo openpipe
+  // (il commit già aggregato sopra via MGR_FORCST_JUDG_TXT = IN)
+
+  // ── Costruisci risultati ──────────────────────────────────────────────────
+  var names = Object.keys(pipeMap);
+  var results = names.map(function(n) {
+    return {
+      name:   n,
+      pipe:   Math.round(pipeMap[n]) / 1000000,   // in $M
+      commit: Math.round(commitMap[n] || 0) / 1000000,
+    };
+  }).sort(function(a, b) { return b.pipe - a.pipe; }).slice(0, 20);
+
+  return { results: results };
+}
+
+// ── Top Deals by Dealband ─────────────────────────────────────────────────────
+// Legge Openpipe e aggrega per OU + dealband.
+// logic: 'Opportunity' | 'GlobalCompany' | 'ComboCompany'
+// qtr:   'CQ' (FQ 2) | 'NQ' (FQ 3)
+// Ritorna: { quarter, logic, ous: [ { key, label, bands: { lt100, '100to500', '500to1m', gt1m } } ] }
+// Ogni banda: { open: [{name, pipe}], totalOpen, closed: [{name, closed}], totalClosed }
+function buildTDB(qtr, logic) {
+  var fiscalYear = 'FY 2027';
+  var fiscalQtr  = qtr === 'NQ' ? 'FQ 3' : 'FQ 2';
+  var quarter    = qtr === 'NQ' ? 'Q3 FY27' : 'Q2 FY27';
+
+  // NQ + GlobalCompany non esiste nel Sheet
+  if (qtr === 'NQ' && logic === 'GlobalCompany') {
+    return { quarter: quarter, logic: logic, ous: [], notAvailable: true };
+  }
+
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var opSheet = ss.getSheetByName('Openpipe');
+  var rows = opSheet.getDataRange().getValues();
+
+  // Colonne (0-based):
+  // A=0 lvl2 (OU head), E=4 year, F=5 qtr
+  // H=7 COMBO_GLOBAL_COMPANY_NAME, J=9 COMBO_COMPANY_NAME
+  // L=11 MGR_FORCST, N=13 OPENPIPE
+  // P=15 COMBO_GLOBAL_DEALBAND, Q=16 COMBO_COMPANY_DEALBAND
+
+  // Mappa OU head → chiave
+  var OU_MAP = {
+    'marco hernansanz':          'SOUTH',
+    'vanessa fortarezza':        'ITALY',
+    'ana alonso muñumer':        'EGM',
+    'mohammed alkhotani':        'MIDEAST',
+  };
+  var IB_PATTERN = /emea\s*-\s*south\s*-\s*ib/i;
+
+  // Mappa banda Sheet → chiave JS
+  var BAND_MAP = {
+    'up to 100': 'lt100',
+    '100-500':   '100to500',
+    '500-1m':    '500to1m',
+    '1m+':       'gt1m',
+  };
+  var BANDS = ['lt100', '100to500', '500to1m', 'gt1m'];
+  var OU_KEYS_LIST = ['SOUTH', 'IBERIA', 'ITALY', 'EGM', 'MIDEAST'];
+  var OU_LABELS = { SOUTH:'EMEA South', IBERIA:'Iberia', ITALY:'Italy', EGM:'EGM', MIDEAST:'Middle East' };
+
+  // Struttura accumulatori: ouKey → bandKey → { pipe:{name→$}, commit:{name→$} }
+  var acc = {};
+  OU_KEYS_LIST.forEach(function(k) {
+    acc[k] = {};
+    BANDS.forEach(function(b) { acc[k][b] = { pipe:{}, commit:{} }; });
+  });
+
+  for (var i = 1; i < rows.length; i++) {
+    var row = rows[i];
+    var year = String(row[4] || '').trim();
+    var fq   = String(row[5] || '').trim();
+    if (year !== fiscalYear || fq !== fiscalQtr) continue;
+
+    // Determina OU
+    var lvl2 = String(row[0] || '').trim();
+    var ou;
+    if (IB_PATTERN.test(lvl2)) {
+      ou = 'IBERIA';
+    } else {
+      ou = OU_MAP[lvl2.toLowerCase()] || null;
+      // fallback: SOUTH aggrega tutto
+      if (!ou) ou = 'SOUTH';
+    }
+
+    // Determina nome account e banda in base alla logica
+    var name, bandRaw;
+    if (logic === 'Opportunity' || logic === 'GlobalCompany') {
+      name    = String(row[7] || '').trim();   // COMBO_GLOBAL_COMPANY_NAME
+      bandRaw = String(row[15] || '').trim().toLowerCase(); // COMBO_GLOBAL_DEALBAND
+    } else {
+      // ComboCompany
+      name    = String(row[9] || '').trim();   // COMBO_COMPANY_NAME
+      bandRaw = String(row[16] || '').trim().toLowerCase(); // COMBO_COMPANY_DEALBAND
+    }
+    if (!name) continue;
+    var band = BAND_MAP[bandRaw];
+    if (!band) continue;
+
+    var pipe = parseFloat(String(row[13] || '0').replace(/,/g,'')) || 0;
+    var mgr  = String(row[11] || '').trim().toUpperCase();
+
+    // Accumula
+    acc[ou][band].pipe[name] = (acc[ou][band].pipe[name] || 0) + pipe;
+    if (mgr === 'IN') {
+      acc[ou][band].commit[name] = (acc[ou][band].commit[name] || 0) + pipe;
+    }
+    // SOUTH è la somma di tutti
+    if (ou !== 'SOUTH') {
+      acc['SOUTH'][band].pipe[name] = (acc['SOUTH'][band].pipe[name] || 0) + pipe;
+      if (mgr === 'IN') acc['SOUTH'][band].commit[name] = (acc['SOUTH'][band].commit[name] || 0) + pipe;
+    }
+  }
+
+  // Costruisci output
+  var ous = OU_KEYS_LIST.map(function(ouKey) {
+    var bands = {};
+    BANDS.forEach(function(b) {
+      var pipeMap   = acc[ouKey][b].pipe;
+      var commitMap = acc[ouKey][b].commit;
+
+      // Top 10 open per pipe desc
+      var openArr = Object.keys(pipeMap).map(function(n) {
+        return { name: n, pipe: Math.round(pipeMap[n]) / 1000000 };
+      }).sort(function(a,b){ return b.pipe - a.pipe; }).slice(0, 10);
+
+      var totalOpen = Object.keys(pipeMap).reduce(function(s,n){ return s + pipeMap[n]; }, 0) / 1000000;
+
+      // Top 10 commit per commit desc
+      var closedArr = Object.keys(commitMap).map(function(n) {
+        return { name: n, closed: Math.round(commitMap[n]) / 1000000 };
+      }).sort(function(a,b){ return b.closed - a.closed; }).slice(0, 10);
+
+      var totalClosed = Object.keys(commitMap).reduce(function(s,n){ return s + commitMap[n]; }, 0) / 1000000;
+
+      bands[b] = {
+        open:        openArr,
+        totalOpen:   Math.round(totalOpen * 10) / 10,
+        closed:      closedArr,
+        totalClosed: Math.round(totalClosed * 10) / 10,
+      };
+    });
+    return { key: ouKey, label: OU_LABELS[ouKey], bands: bands };
+  });
+
+  return { quarter: quarter, logic: logic, ous: ous };
+}
+
+// ── Test ──────────────────────────────────────────────────────────────────────
+function testBuild() {
+  const payload = buildPayload();
+  Logger.log(JSON.stringify(payload.CQ.OPP, null, 2));
+}
+
+function testTDB() {
+  Logger.log(JSON.stringify(buildTDB('CQ', 'Opportunity'), null, 2));
+}
+
+function testTDBCombo() {
+  Logger.log(JSON.stringify(buildTDB('NQ', 'ComboCompany'), null, 2));
+}
+
+function testLookup() {
+  Logger.log(JSON.stringify(lookupAccounts('omantel', 'NQ'), null, 2));
+}

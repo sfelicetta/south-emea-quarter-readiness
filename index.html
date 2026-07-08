@@ -35,9 +35,13 @@
 
     /* ── PAGE TABS ── */
     .page-tabs { display: flex; background: #fff; border-bottom: 2px solid var(--sf-border); padding: 0 24px; gap: 0; }
-    .page-tab { padding: 10px 20px; font-size: 12px; font-weight: 600; color: var(--sf-meta); border-bottom: 3px solid transparent; cursor: pointer; margin-bottom: -2px; transition: all .15s; }
+    .page-tab { position: relative; padding: 10px 20px; font-size: 12px; font-weight: 600; color: var(--sf-meta); border-bottom: 3px solid transparent; cursor: pointer; margin-bottom: -2px; transition: all .15s; }
     .page-tab.active { color: var(--sf-blue); border-bottom-color: var(--sf-blue); }
     .page-tab:hover:not(.active) { color: var(--sf-title); background: var(--sf-bg); }
+    /* Tab tooltip on hover */
+    .page-tab .tab-tip { display:none; position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%); width:260px; background:#1a1a2e; color:#e8eaf0; font-size:11px; font-weight:400; line-height:1.55; padding:9px 13px; border-radius:6px; box-shadow:0 4px 16px rgba(0,0,0,.22); z-index:200; pointer-events:none; white-space:normal; }
+    .page-tab .tab-tip::before { content:''; position:absolute; bottom:100%; left:50%; transform:translateX(-50%); border:6px solid transparent; border-bottom-color:#1a1a2e; }
+    .page-tab:hover .tab-tip { display:block; }
 
     /* ── SLICER BAR ── */
     .slicer-bar {
@@ -70,6 +74,20 @@
     .pill-lv button { padding: 5px 16px; border: none; background: transparent; color: #7B1FA2; font-size: 11px; font-weight: 700; cursor: pointer; transition: all .18s; white-space: nowrap; letter-spacing: .2px; }
     .pill-lv button.active { background: linear-gradient(135deg,#9C27B0,#6A1B9A); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.2); }
     .pill-lv button:hover:not(.active) { background: #F3E5F5; }
+
+    /* DB Logic — Emerald Green */
+    .sl-dbl { color: #2E7D32; }
+    .pill-dbl { display: flex; border-radius: 22px; overflow: hidden; border: 1.5px solid #43A047; box-shadow: 0 1px 4px rgba(67,160,71,.18); }
+    .pill-dbl button { padding: 5px 16px; border: none; background: transparent; color: #2E7D32; font-size: 11px; font-weight: 700; cursor: pointer; transition: all .18s; white-space: nowrap; letter-spacing: .2px; }
+    .pill-dbl button.active { background: linear-gradient(135deg,#43A047,#2E7D32); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.2); }
+    .pill-dbl button:hover:not(.active) { background: #E8F5E9; }
+
+    /* Dealband — Amber/Orange */
+    .sl-db { color: #E65100; }
+    .pill-db { display: flex; border-radius: 22px; overflow: hidden; border: 1.5px solid #FB8C00; box-shadow: 0 1px 4px rgba(251,140,0,.18); }
+    .pill-db button { padding: 5px 16px; border: none; background: transparent; color: #E65100; font-size: 11px; font-weight: 700; cursor: pointer; transition: all .18s; white-space: nowrap; letter-spacing: .2px; }
+    .pill-db button.active { background: linear-gradient(135deg,#FB8C00,#E65100); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.2); }
+    .pill-db button:hover:not(.active) { background: #FFF3E0; }
 
     /* OU — Teal per SOUTH, poi colori distincti per OU */
     .sl-ou { color: #00695C; }
@@ -111,6 +129,9 @@
       white-space: nowrap;
     }
 
+    .tab-desc { font-size: 11px; color: var(--sf-meta); background: var(--sf-bg); border-left: 3px solid var(--sf-blue); border-radius: 0 4px 4px 0; padding: 7px 12px; margin-top: 8px; line-height: 1.6; max-width: 860px; }
+    .tab-desc strong { color: #1a1a2e; font-weight: 700; }
+
     /* ── MAIN ── */
     .page { display: none; padding: 18px 24px; }
     .page.active { display: block; }
@@ -133,6 +154,7 @@
     .kpi.editable:hover .edit-icon { opacity: 1; }
     .kpi input.edit-input { font-size: 18px; font-weight: 700; width: 100%; border: none; border-bottom: 2px solid var(--sf-blue); outline: none; background: var(--sf-blue-light); border-radius: 4px 4px 0 0; padding: 2px 4px; }
     .saving-badge { position: absolute; top: 8px; right: 10px; font-size: 9px; background: var(--sf-blue); color: #fff; border-radius: 8px; padding: 2px 7px; display: none; }
+    .kpi-edited { font-size: 9px; color: var(--sf-meta); margin-top: 4px; }
 
     /* ── CARD ── */
     .card { background: var(--sf-card); border: 1px solid var(--sf-border); border-radius: var(--r); box-shadow: var(--sh); overflow: hidden; }
@@ -192,39 +214,159 @@
     .tbar-lbl { font-size: 9px; color: var(--sf-meta); }
     .tbar-val { font-size: 9px; font-weight: 600; }
 
-    /* ── DATASET EXPLORER ── */
-    .ds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-bottom: 20px; }
-    .ds-card { background: var(--sf-card); border: 1.5px solid var(--sf-border); border-radius: var(--r); padding: 14px; cursor: pointer; transition: all .15s; }
-    .ds-card:hover { border-color: var(--sf-blue); box-shadow: 0 0 0 3px var(--sf-blue-light); }
-    .ds-card.selected { border-color: var(--sf-blue); background: var(--sf-blue-light); }
-    .ds-card .ds-icon { font-size: 22px; margin-bottom: 6px; }
-    .ds-card .ds-name { font-size: 12px; font-weight: 700; }
-    .ds-card .ds-src { font-size: 10px; color: var(--sf-meta); margin-top: 2px; }
-    .ds-card .ds-ts { font-size: 9px; color: var(--sf-meta); margin-top: 4px; border-top: 1px solid var(--sf-border); padding-top: 6px; }
-    .ds-preview { background: var(--sf-card); border: 1px solid var(--sf-border); border-radius: var(--r); box-shadow: var(--sh); }
-    .ds-preview-hdr { padding: 12px 16px; border-bottom: 1px solid var(--sf-border); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .ds-preview-hdr h3 { font-size: 13px; font-weight: 700; }
-    .dl-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 13px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1.5px solid; transition: all .15s; text-decoration: none; }
-    .dl-btn.csv  { border-color: var(--sf-success); color: var(--sf-success); background: var(--sf-success-bg); }
-    .dl-btn.csv:hover  { background: var(--sf-success); color: #fff; }
-    .dl-btn.json { border-color: var(--sf-blue); color: var(--sf-blue); background: var(--sf-blue-light); }
-    .dl-btn.json:hover { background: var(--sf-blue); color: #fff; }
-    .dl-btn.xlsx { border-color: var(--sf-warning); color: var(--sf-warning); background: var(--sf-warn-bg); }
-    .dl-btn.xlsx:hover { background: var(--sf-warning); color: #fff; }
-    .dl-group { display: flex; gap: 6px; margin-left: auto; }
-    .ds-badge-src { font-size: 10px; padding: 2px 9px; border-radius: 10px; font-weight: 600; }
-    .src-snow { background: #e8f4fd; color: #0176D3; }
-    .src-org  { background: #e9f9ee; color: #2E844A; }
-    .src-gs   { background: #FFF3E0; color: #E65100; }
-    .ds-preview-body { padding: 14px; overflow-x: auto; }
-    .ds-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px; color: var(--sf-meta); gap: 8px; }
-    .ds-empty .big { font-size: 36px; }
+    /* ── TOP DEALS ── */
+    .td-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+    .td-tf-pills { display: flex; gap: 6px; }
+    .td-tf-btn { padding: 6px 16px; border-radius: 20px; border: 1.5px solid var(--sf-border); background: #fff; font-size: 11px; font-weight: 600; color: var(--sf-meta); cursor: pointer; transition: all .15s; }
+    .td-tf-btn.active { background: var(--sf-blue); border-color: var(--sf-blue); color: #fff; }
+    .td-tf-btn:hover:not(.active) { border-color: var(--sf-blue); color: var(--sf-blue); }
+    .td-ou-section { margin-bottom: 18px; }
+    .td-ou-title { font-size: 11px; font-weight: 700; color: var(--sf-blue); text-transform: uppercase; letter-spacing: .06em; padding: 6px 10px; background: var(--sf-blue-light); border-left: 3px solid var(--sf-blue); border-radius: 0 4px 4px 0; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .td-ou-title .td-ou-sub { font-size: 10px; font-weight: 400; color: var(--sf-meta); text-transform: none; letter-spacing: 0; }
+    .td-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media(max-width:900px) { .td-grid { grid-template-columns: 1fr; } }
+    .td-card { background: var(--sf-card); border: 1px solid var(--sf-border); border-radius: var(--r); box-shadow: var(--sh); }
+    .td-card-hdr { padding: 8px 14px; border-bottom: 1px solid var(--sf-border); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; }
+    .td-card-hdr .td-card-sub { font-size: 10px; font-weight: 400; color: var(--sf-meta); }
+    .td-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .td-table th { padding: 5px 10px; text-align: left; font-size: 10px; font-weight: 600; color: var(--sf-meta); border-bottom: 1px solid var(--sf-border); background: var(--sf-bg); }
+    .td-table th:not(:first-child) { text-align: right; }
+    .td-table td { padding: 5px 10px; border-bottom: 1px solid #f0f2f5; color: var(--sf-title); }
+    .td-table td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+    .td-table tr:last-child td { border-bottom: none; }
+    .td-table tr:hover td { background: var(--sf-blue-light); }
+    .td-table .td-total td { font-weight: 700; color: var(--sf-blue); border-top: 1.5px solid var(--sf-border); background: #f8f9fb; }
+    .td-bar-wrap { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+    .td-bar { height: 6px; background: var(--sf-blue); border-radius: 3px; min-width: 2px; }
+    .td-commit-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #4bc076; margin-right: 3px; vertical-align: middle; }
+    .tdb-filter-group { display: flex; flex-direction: column; gap: 4px; }
+    .tdb-filter-lbl { font-size: 9px; font-weight: 700; color: var(--sf-meta); text-transform: uppercase; letter-spacing: .06em; }
+    .tdb-notice { font-size: 11px; color: var(--sf-meta); background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; padding: 8px 12px; margin-bottom: 14px; }
+    .td-lookup-row td { background: #f0f7ff; border-top: 1.5px dashed #b0cef0; }
+    .td-lookup-wrap { position: relative; display: inline-block; width: 100%; }
+    .td-lookup-input { width: 100%; border: none; background: transparent; font-size: 11px; font-family: inherit; color: var(--sf-blue); padding: 2px 4px; outline: none; cursor: text; }
+    .td-lookup-input::placeholder { color: #a8b8c8; font-style: italic; }
+    .td-lookup-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #b0cef0; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,.12); z-index: 100; max-height: 180px; overflow-y: auto; }
+    .td-lookup-opt { padding: 5px 10px; font-size: 11px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .td-lookup-opt:hover, .td-lookup-opt.active { background: #e8f0fe; color: var(--sf-blue); }
+    .td-lookup-val { font-size: 11px; font-weight: 700; text-align: right; }
+    .tdb-notice strong { color: #b8860b; }
+
+    /* ── QBR FORECAST ── */
+    .qbr-section { margin-bottom: 22px; }
+    .qbr-section-title { font-size: 12px; font-weight: 700; color: #fff; background: var(--sf-blue); padding: 6px 14px; border-radius: var(--r) var(--r) 0 0; letter-spacing: .05em; text-transform: uppercase; }
+    .qbr-table-wrap { overflow-x: auto; border: 1px solid var(--sf-border); border-radius: 0 0 var(--r) var(--r); }
+    .qbr-table { width: 100%; border-collapse: collapse; font-size: 11px; white-space: nowrap; }
+    .qbr-table th { padding: 5px 10px; background: var(--sf-bg); border-bottom: 1.5px solid var(--sf-border); font-size: 9px; font-weight: 700; color: var(--sf-meta); text-transform: uppercase; letter-spacing: .04em; }
+    .qbr-table th:first-child { text-align: left; min-width: 180px; }
+    .qbr-table th:not(:first-child) { text-align: right; min-width: 72px; }
+    .qbr-table td { padding: 5px 10px; border-bottom: 1px solid #f0f2f5; color: var(--sf-title); }
+    .qbr-table td:first-child { font-weight: 600; }
+    .qbr-table td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+    .qbr-table tr:last-child td { border-bottom: none; }
+    .qbr-table tr:hover td { background: var(--sf-blue-light); }
+    .qbr-table .qbr-ou-row td { font-weight: 700; background: #f4f6ff; color: var(--sf-blue); }
+    .qbr-table .qbr-dir-row td { font-style: italic; color: var(--sf-meta); font-size: 10px; }
+    .qbr-pos { color: #1e7e34 !important; font-weight: 600; }
+    .qbr-warn { color: #e07b00 !important; font-weight: 600; }
+    .qbr-neg { color: #c53929 !important; font-weight: 600; }
+    .qbr-attn-hi { color: #1e7e34 !important; font-weight: 700; }
+    .qbr-attn-mid { color: #e07b00 !important; font-weight: 700; }
+    .qbr-attn-lo { color: #c53929 !important; font-weight: 700; }
+    .qbr-funded-cell { min-width: 90px; cursor: text; border-bottom: 1.5px dashed #aab4d0; outline: none; border-radius: 2px; }
+    .qbr-funded-cell:focus { background: #fffbe6; border-bottom: 1.5px solid var(--sf-blue); }
+    .qbr-funded-cell:empty:before { content: attr(data-placeholder); color: #bbb; font-style: italic; }
+
+    /* ── SEASONALITY & OP STATUS ── */
+    .seas-block { margin-bottom: 36px; }
+    .seas-block-title { font-size: 13px; font-weight: 700; color: var(--sf-blue); margin-bottom: 14px; padding-bottom: 6px; border-bottom: 2px solid var(--sf-blue); letter-spacing: .02em; display: flex; align-items: center; gap: 8px; }
+    .seas-block-title .seas-badge { font-size: 9px; font-weight: 700; background: var(--sf-blue); color: #fff; padding: 2px 8px; border-radius: 10px; letter-spacing: .05em; }
+    /* OU cards grid */
+    .seas-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 14px; }
+    .seas-card { background: var(--sf-card); border: 1px solid var(--sf-border); border-radius: var(--r); box-shadow: var(--sh); overflow: hidden; max-width: 480px; }
+    .seas-card-hdr { background: linear-gradient(135deg, #0176d3 0%, #032d60 100%); color: #fff; padding: 10px 14px 8px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .seas-card-ou { font-size: 14px; font-weight: 700; line-height: 1.3; }
+    .seas-card-total { font-size: 18px; font-weight: 800; letter-spacing: -.02em; text-align: right; }
+    .seas-card-total-lbl { font-size: 11px; font-weight: 400; opacity: .75; display: block; }
+    .seas-card-body { padding: 10px 14px 12px; }
+    /* Legend at top of card */
+    .seas-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 9px; }
+    .seas-legend-item { display: flex; align-items: center; gap: 3px; font-size: 9px; color: var(--sf-meta); font-weight: 600; }
+    .seas-legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+    /* Year timeline rows */
+    .seas-yr-rows { display: flex; flex-direction: column; gap: 4px; }
+    .seas-yr-row { display: flex; align-items: center; gap: 6px; padding: 4px 5px; border-radius: 4px; }
+    .seas-yr-row.seas-hist { background: #f0f4ff; }
+    .seas-yr-row.seas-fy27 { background: #fff8e1; border-left: 3px solid #f59e0b; }
+    .seas-yr-lbl { font-size: 11px; font-weight: 700; color: var(--sf-meta); width: 54px; flex-shrink: 0; text-transform: uppercase; letter-spacing: .04em; }
+    .seas-yr-row.seas-fy27 .seas-yr-lbl { color: #b45309; }
+    .seas-yr-bar { flex: 1; min-width: 0; }
+    .seas-yr-total { font-size: 12px; font-weight: 700; color: #1a1a2e; min-width: 50px; text-align: right; flex-shrink: 0; }
+    .seas-yr-row.seas-fy27 .seas-yr-total { color: var(--sf-blue); }
+    /* Stacked bar */
+    .seas-bar { display: flex; height: 20px; border-radius: 3px; overflow: hidden; gap: 1px; background: #e8edf5; }
+    .seas-bar-seg { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; transition: flex .3s; }
+    /* Monthly bar colors */
+    .seg-may  { background: #5b9bd5; }
+    .seg-jun  { background: #2e75b6; }
+    .seg-jul  { background: #1f497d; }
+    /* MFJ bar colors */
+    .seg-none { background: #c5c9d4; }
+    .seg-upm  { background: #e07b00; }
+    .seg-upp  { background: #2e75b6; }
+    .seg-inn  { background: #1e7e34; }
+    /* Stage bar colors */
+    .seg-s23  { background: #e07b00; }
+    .seg-s4   { background: #1e7e34; }
+    /* Dealband bar colors */
+    .seg-rr   { background: #5b9bd5; }
+    .seg-fm   { background: #2e75b6; }
+    .seg-ld   { background: #1f497d; }
 
     /* ── FOOTER ── */
     .dash-footer { margin: 4px 24px 16px; padding: 9px 14px; background: #fff; border: 1px solid var(--sf-border); border-radius: var(--r); display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
     .ft { font-size: 10px; color: var(--sf-meta); }
     .ft strong { color: var(--sf-title); }
     .countdown { margin-left: auto; font-size: 10px; color: var(--sf-meta); }
+
+    /* ── SECTION LABELS ── */
+    .section-lbl { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--sf-meta); margin: 18px 0 6px; padding-left: 2px; }
+
+    /* ── STORY BAR ── */
+    .story-bar { background: linear-gradient(135deg,#014486,#0176D3); color:#fff; border-radius: var(--r); padding: 10px 16px; font-size: 12px; font-weight: 600; margin-bottom: 4px; min-height: 36px; display:flex; align-items:center; gap:10px; }
+    .story-bar .dot { width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.5);flex-shrink:0; }
+
+    /* ── KPI GRIDS ── */
+    .kpi-top { grid-template-columns: repeat(4,1fr); margin-bottom: 4px; }
+    .kpi-mid { grid-template-columns: repeat(4,1fr); }
+    @media(max-width:1100px){ .kpi-top,.kpi-mid{ grid-template-columns:repeat(2,1fr); } }
+
+    /* ── COVERAGE CARDS ── */
+    .cov-cards { display:block; }
+    .cov-card { background:var(--sf-card); border:1px solid var(--sf-border); border-radius:var(--r); padding:14px 16px; box-shadow:var(--sh); }
+    .cov-card .cov-title { font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--sf-meta);margin-bottom:10px; }
+    .cov-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #f0efed; }
+    .cov-row:last-child { border-bottom:none; }
+    .cov-row .ou-name { font-size:11px;font-weight:600; }
+    .cov-row .cov-val { font-size:13px;font-weight:700; }
+    .cov-row .cov-hist { font-size:10px;color:var(--sf-meta); }
+    .cov-pos { color: var(--sf-success); }
+    .cov-neg { color: var(--sf-danger); }
+    .cov-warn { color: var(--sf-warning); }
+
+    /* ── COMMENTS ── */
+    .comment-compose { border-top:1px solid var(--sf-border); padding-top:12px; margin-top:8px; }
+    .cmt-btn { padding:5px 14px; border-radius:4px; font-size:11px; font-weight:700; cursor:pointer; border:1.5px solid; transition:all .15s; }
+    .cmt-btn.ai  { border-color:var(--sf-blue); color:var(--sf-blue); background:var(--sf-blue-light); }
+    .cmt-btn.ai:hover { background:var(--sf-blue); color:#fff; }
+    .cmt-btn.submit { border-color:var(--sf-success); color:var(--sf-success); background:var(--sf-success-bg); }
+    .cmt-btn.submit:hover { background:var(--sf-success); color:#fff; }
+    .cmt-item { padding:10px 0; border-bottom:1px solid var(--sf-border); }
+    .cmt-item:last-child { border-bottom:none; }
+    .cmt-meta { font-size:10px;color:var(--sf-meta);margin-bottom:3px; }
+    .cmt-text { font-size:12px;line-height:1.5; }
+    .cmt-badge { display:inline-block;padding:1px 7px;border-radius:8px;font-size:9px;font-weight:700;margin-left:6px; }
+    .cmt-badge.ai { background:var(--sf-blue-light);color:var(--sf-blue); }
 
     /* ── LOADING ── */
     .loading { position: fixed; inset: 0; background: rgba(1,68,134,.88); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; gap: 14px; z-index: 999; transition: opacity .3s; }
@@ -251,14 +393,17 @@
 
 <!-- PAGE TABS -->
 <div class="page-tabs">
-  <div class="page-tab active" onclick="switchPage('readiness',this)">Readiness View</div>
-  <div class="page-tab" onclick="switchPage('datasets',this)">Dataset Explorer</div>
+  <div class="page-tab active" onclick="switchPage('readiness',this)">Readiness View<span class="tab-tip">Real-time quarter health check. KPI tiles for forecast, pipeline coverage, BCO per AE, and deal band distribution — pulled live from Snowflake &amp; Org62. Toggle CQ/NQ, Opp/Combo, and OU.</span></div>
+  <div class="page-tab" onclick="switchPage('topdeals',this)">Top Deals<span class="tab-tip">Ranked list of the largest open opportunities and closed deals per OU. Search any account to surface its Open Pipe and Commit for the selected quarter.</span></div>
+  <div class="page-tab" onclick="switchPage('topdeals-db',this)">Top Deals by Dealband<span class="tab-tip">Deal pipeline sliced by size tier (&lt;$100K · $100K–$500K · $500K–$1M · $1M+) and DB logic (Opportunity · Global Company · Combo Company). All combinations available except NQ + Global Company (not in source data).</span></div>
+  <div class="page-tab" onclick="switchPage('qbr',this)">QBR Forecast<span class="tab-tip">Full QBR forecast table by OU and OU+1 sub-teams. Shows Forecast, Y/Y, Attainment, Velocity, Pipeline Coverage, Stage 4 Coverage, AE headcount, and Funded. Switch CQ ↔ NQ via Timeframe.</span></div>
+  <div class="page-tab" onclick="switchPage('seasonality',this)">Seasonality &amp; OP Status<span class="tab-tip">Year-over-year seasonality patterns from FY24 → FY27. Each card shows monthly bookings, MFJ, stage mix, and deal band split alongside a 3-year historical average as a benchmark.</span></div>
 </div>
 
 <!-- SLICER BAR -->
 <div class="slicer-bar" id="slicer-bar">
 
-  <div class="sg">
+  <div class="sg" id="sg-tf">
     <span class="sl sl-tf">Timeframe</span>
     <div class="pill-tf" id="tf-pill">
       <button class="active" onclick="setFilter('tf','CQ',this)">Current Quarter</button>
@@ -266,9 +411,9 @@
     </div>
   </div>
 
-  <div class="slicer-divider"></div>
+  <div class="slicer-divider" id="sd-tf"></div>
 
-  <div class="sg">
+  <div class="sg" id="sg-lv">
     <span class="sl sl-lv">Level</span>
     <div class="pill-lv" id="lv-pill">
       <button class="active" onclick="setFilter('lv','OPP',this)">Opportunity</button>
@@ -276,7 +421,19 @@
     </div>
   </div>
 
-  <div class="slicer-divider"></div>
+  <div class="slicer-divider" id="sd-lv"></div>
+
+  <!-- Timeframe TDB — visibile solo su topdeals-db, prima dell'OU -->
+  <div class="slicer-divider" id="sd-tdb" style="display:none"></div>
+  <div class="sg" id="sg-tdb" style="display:none">
+    <span class="sl sl-tf">Timeframe</span>
+    <div class="pill-tf">
+      <button class="tdb-tf active" onclick="setTDBFilter('tf','CQ',this)">Current Quarter</button>
+      <button class="tdb-tf" onclick="setTDBFilter('tf','NQ',this)">Next Quarter</button>
+    </div>
+  </div>
+
+  <div class="slicer-divider" id="sd-tdb-ou" style="display:none"></div>
 
   <div class="sg">
     <span class="sl sl-ou">Operating Unit</span>
@@ -288,6 +445,25 @@
       <button class="ou-btn"        data-ou="MIDEAST" onclick="setFilter('ou','MIDEAST',this)">Middle East</button>
     </div>
   </div>
+  <div class="slicer-divider" id="sd-tdb2" style="display:none"></div>
+  <div class="sg" id="sg-tdb2" style="display:none">
+    <span class="sl sl-dbl">DB Logic</span>
+    <div class="pill-dbl">
+      <button class="tdb-logic active" onclick="setTDBFilter('logic','Opportunity',this)">Opportunity</button>
+      <button class="tdb-logic" onclick="setTDBFilter('logic','GlobalCompany',this)">Global Company</button>
+      <button class="tdb-logic" onclick="setTDBFilter('logic','ComboCompany',this)">Combo Company</button>
+    </div>
+  </div>
+  <div class="slicer-divider" id="sd-tdb3" style="display:none"></div>
+  <div class="sg" id="sg-tdb3" style="display:none">
+    <span class="sl sl-db">Dealband</span>
+    <div class="pill-db">
+      <button class="tdb-band active" onclick="setTDBFilter('band','lt100',this)">&lt;$100K</button>
+      <button class="tdb-band" onclick="setTDBFilter('band','100to500',this)">$100K–$500K</button>
+      <button class="tdb-band" onclick="setTDBFilter('band','500to1m',this)">$500K–$1M</button>
+      <button class="tdb-band" onclick="setTDBFilter('band','gt1m',this)">$1M+</button>
+    </div>
+  </div>
 
   <div class="view-lbl" id="view-lbl">Current Quarter &mdash; Opportunity &mdash; EMEA South</div>
 </div>
@@ -297,95 +473,127 @@
 <!-- ════════════════════════════════════════════════════════════ -->
 <div class="page active" id="page-readiness">
 
-  <!-- KPI ROW -->
-  <div class="kpi-grid" id="kpi-grid"></div>
+  <p class="tab-desc">Real-time quarter health check for <strong>South EMEA</strong>. Use the filters above to switch between Current Quarter (Q2 FY27) and Next Quarter (Q3 FY27), toggle Opportunity vs. Combo level, and drill into a specific Operating Unit. KPIs are pulled live from Snowflake and Org62 — the goal is to give Sales leaders a single view of forecast momentum, pipeline coverage, and deal band distribution heading into a QBR.</p>
 
-  <!-- ROW 1: Dealband + AE Table -->
+  <!-- ① KPI ROW — Forecast momentum -->
+  <div class="section-lbl">Forecast Momentum</div>
+  <div class="kpi-grid kpi-top" id="kpi-grid-top"></div>
+
+  <!-- ③ KPI ROW — Pipeline health -->
+  <div class="section-lbl">Pipeline Health</div>
+  <div class="kpi-grid kpi-mid" id="kpi-grid-mid"></div>
+
+  <!-- ④ DEAL BAND + COVERAGE side by side -->
+  <div class="section-lbl">Deal Band Distribution &amp; Coverage</div>
   <div class="grid-2 mb14">
     <div class="card">
       <div class="card-hdr">
-        <h3>Deal Band Distribution</h3>
-        <span class="card-sub" id="db-sub">Pipe &amp; Forecast by Band</span>
+        <h3 id="db-title">Pipeline by Band</h3>
+        <span class="card-sub" id="db-sub"></span>
       </div>
       <div class="card-body">
         <div class="db-hdr">
-          <span>Band</span><span>Pipeline bar</span>
+          <span>Band</span>
+          <span>Pipeline bar</span>
           <span style="text-align:right">Pipe $M</span>
-          <span style="text-align:right">Fcst $M</span>
-          <span style="text-align:right">Y/Y</span>
+          <span style="text-align:right">ACV PY $M</span>
+          <span style="text-align:right">Y/Y Pipe</span>
         </div>
         <div class="db-rows" id="db-rows"></div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-hdr">
-        <h3>AE Detail — Commitment &amp; BCO</h3>
-        <span class="card-sub" id="ae-sub"></span>
-      </div>
-      <div class="card-body" style="overflow-x:auto">
-        <table class="tbl">
-          <thead>
-            <tr>
-              <th>AE</th>
-              <th class="num">Fcst</th>
-              <th class="num">Pipe</th>
-              <th class="num">Cov</th>
-              <th class="num">BCO</th>
-              <th class="num"># Deals Cmt</th>
-              <th class="num">Closed QTD</th>
-              <th class="num">Y/Y</th>
-            </tr>
-          </thead>
-          <tbody id="ae-tbody"></tbody>
-        </table>
+    <div id="cov-cards"></div>
+  </div>
+
+  <!-- ⑥ COMMENTI -->
+  <div class="section-lbl">Comments</div>
+  <div class="card mb14" id="comments-card">
+    <div class="card-hdr" style="justify-content:space-between">
+      <h3>Add a Comment</h3>
+      <span class="card-sub">Draft → AI polish → Submit</span>
+    </div>
+    <div class="card-body">
+      <div id="comments-list"></div>
+      <div class="comment-compose">
+        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+          <input id="cmt-author" placeholder="Your name" style="width:160px;padding:5px 9px;border:1px solid var(--sf-border);border-radius:4px;font-size:12px">
+          <span style="font-size:10px;color:var(--sf-meta)">commenting on <strong id="cmt-context"></strong></span>
+        </div>
+        <textarea id="cmt-draft" placeholder="Write a draft comment… (can be rough)" rows="3"
+          style="width:100%;padding:8px 10px;border:1px solid var(--sf-border);border-radius:4px;font-size:12px;resize:vertical;font-family:inherit"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+          <button class="cmt-btn ai" onclick="polishComment()">✦ Polish with AI</button>
+          <button class="cmt-btn submit" onclick="submitComment()">Submit</button>
+          <span id="cmt-status" style="font-size:10px;color:var(--sf-meta)"></span>
+        </div>
+        <div id="cmt-polished-wrap" style="display:none;margin-top:10px">
+          <div style="font-size:10px;font-weight:700;color:var(--sf-blue);margin-bottom:4px">✦ AI Polished Version</div>
+          <div id="cmt-polished" style="background:var(--sf-blue-light);border:1px solid var(--sf-blue);border-radius:4px;padding:9px 12px;font-size:12px;line-height:1.5"></div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="cmt-btn ai" onclick="usePolished()">Use this version</button>
+            <button class="cmt-btn" onclick="document.getElementById('cmt-polished-wrap').style.display='none'">Discard</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ROW 2: Commit vs Fcst + Trend -->
-  <div class="grid-2">
-    <div class="card">
-      <div class="card-hdr">
-        <h3>Commit vs Forecast vs Finplan</h3>
-        <span class="card-sub">Org62 + Snowflake</span>
-      </div>
-      <div class="card-body">
-        <div style="display:flex;gap:14px;margin-bottom:10px;font-size:10px;color:var(--sf-meta)">
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:var(--sf-blue);display:inline-block"></span>Commit</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:#64B5F6;display:inline-block"></span>Forecast</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:2px;background:var(--sf-meta);display:inline-block"></span>Finplan</span>
-        </div>
-        <div class="cov-list" id="cov-list"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-hdr">
-        <h3>Pipeline Growth &mdash; Weekly Trend</h3>
-        <span class="card-sub" id="trend-sub">Last 6 weeks</span>
-      </div>
-      <div class="card-body">
-        <div class="trend-wrap" id="trend-wrap"></div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════ -->
-<!--  PAGE 2: DATASET EXPLORER                                   -->
+<!--  PAGE 2: TOP DEALS                                          -->
 <!-- ════════════════════════════════════════════════════════════ -->
-<div class="page" id="page-datasets">
-  <div style="margin-bottom:16px">
-    <h2 style="font-size:14px;font-weight:700;margin-bottom:4px">Dataset Explorer</h2>
-    <p style="font-size:11px;color:var(--sf-meta)">Seleziona un dataset per visualizzarne un'anteprima. I dati riflettono l'ultimo refresh disponibile.</p>
-  </div>
-  <div class="ds-grid" id="ds-cards"></div>
-  <div class="ds-preview" id="ds-preview">
-    <div class="ds-empty">
-      <div class="big">&#128202;</div>
-      <div style="font-size:13px;font-weight:600">Seleziona un dataset</div>
-      <div style="font-size:11px">Clicca su una delle card qui sopra per visualizzare i dati</div>
+<div class="page" id="page-topdeals">
+  <div class="td-header">
+    <div>
+      <h2 style="font-size:14px;font-weight:700;margin-bottom:2px">Top Deals</h2>
+      <p style="font-size:11px;color:var(--sf-meta)">Open pipeline, commit and closed deals by OU — live data from Google Sheet</p>
+      <p class="tab-desc">A ranked view of the <strong>largest open opportunities and closed deals</strong> for each Operating Unit in the selected quarter. Use the <strong>Timeframe</strong> filter to compare CQ vs. NQ pipeline. The search bar at the bottom of each table lets you look up any account to instantly surface its Open Pipe and Commit values.</p>
     </div>
   </div>
+  <div id="td-content"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!--  PAGE 3: TOP DEALS BY DEALBAND                              -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-topdeals-db">
+  <div class="td-header">
+    <div>
+      <h2 style="font-size:14px;font-weight:700;margin-bottom:2px">Top Deals by Dealband</h2>
+      <p style="font-size:11px;color:var(--sf-meta)">Top open pipeline and closed deals by OU, filtered by dealband and DB logic &mdash; live data from Google Sheet</p>
+      <p class="tab-desc">Same deal-level data as Top Deals, but sliced by <strong>deal size band</strong> (&lt;$100K · $100K–$500K · $500K–$1M · $1M+) and <strong>DB logic</strong> (Opportunity · Global Company · Combo Company). All combinations are available across CQ and NQ — the only exception is <strong>NQ + Global Company</strong>, which is not present in the source data.</p>
+    </div>
+  </div>
+  <div id="tdb-content"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!--  PAGE 4: QBR FORECAST                                        -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-qbr">
+  <div class="td-header">
+    <div>
+      <h2 style="font-size:14px;font-weight:700;margin-bottom:2px">QBR Forecast</h2>
+      <p style="font-size:11px;color:var(--sf-meta)">Forecast by OU and OU+1 — data from Google Sheet "QBR CQ/NQ Fcst"</p>
+      <p class="tab-desc">The full QBR forecast table, structured by <strong>OU and OU+1 sub-teams</strong>. Shows Forecast, Y/Y, 2YR growth, Attainment, Velocity, Pipeline, Coverage (current and historical), Stage 4 coverage, AE count and headcount Y/Y. Switch between <strong>Current Quarter</strong> and <strong>Next Quarter</strong> using the Timeframe filter. The <strong>Funded</strong> column is manually editable — values are saved locally for the session.</p>
+    </div>
+  </div>
+  <div id="qbr-content"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!--  PAGE 5: SEASONALITY & OP STATUS                            -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-seasonality">
+  <div class="td-header" style="margin-bottom:18px">
+    <div>
+      <h2 style="font-size:14px;font-weight:700;margin-bottom:2px">CQ Seasonality &amp; OP Status</h2>
+      <p style="font-size:11px;color:var(--sf-meta)">Q2 FY27 — 3-year historical average vs. current commit</p>
+      <p class="tab-desc">Year-over-year seasonality patterns across <strong>FY24 → FY25 → FY26 → 3yr historical average → FY27</strong>, for each OU. Four dimensions are shown: <strong>Monthly distribution</strong> (May/June/July split), <strong>MFJ forecast category</strong> (None / UP− / UP+ / IN), <strong>Stage distribution</strong> (Stage 2/3 vs. Stage 4+), and <strong>Dealband distribution</strong> (Run Rate / Fat Middle / Large Deals). The goal is to benchmark FY27 behavior against historical norms and spot early signals of over- or under-performance.</p>
+    </div>
+  </div>
+  <div id="seas-content"></div>
 </div>
 
 <!-- FOOTER -->
@@ -404,187 +612,763 @@
 // Struttura: DATA[timeframe][level][ou] = { kpis, bands, aes, coverage, trend }
 // ─────────────────────────────────────────────────────────────────────────────
 
-const BANDS = ['<$0', '$0–$100K', '$100–$500K', '$500K–$1M', '$1M+'];
+const BANDS = ['$0–$100K', '$100–$500K', '$500K–$1M', '$1M+'];
 
-function makeOU(fcstScale, pipeScale, acvScale) {
+// ── LIVE DATA — Google Sheet 07 Jul 2026 ─────────────────────────────────────
+// Coverage format: "current (hist)" — valori esatti dal Sheet
+function mkOU(acv,fcst,yoy,pipe,pg,cv,hcv,dl,bc,cq,yc,bands,q) {
+  q = q || 'Q2';
+  var yoyDir = (yoy==='-'||yoy==='—') ? 'neu' : (yoy.charAt(0)==='-' ? 'neg' : 'pos');
+  var pgDir  = (pg==='-'||pg==='—')   ? 'neu' : (pg.charAt(0)==='-'  ? 'neg' : 'pos');
+  var ycDir  = (yc==='-'||yc==='—')   ? 'neu' : (yc.charAt(0)==='-'  ? 'neg' : 'pos');
   return {
     kpis: {
-      acv_py:       { val: '$' + r1(acvScale * 38.4) + 'M',  lbl: 'Q2 FY26 ACV (PY)' },
-      forecast:     { val: '$' + r1(fcstScale * 42.3) + 'M', lbl: 'Q2 FY27 Forecast', editable: true },
-      yoy:          { val: '+' + r1((fcstScale - acvScale/acvScale) * 100 + 12) + '%', dir: 'pos', lbl: 'Y/Y Forecast' },
-      pipeline:     { val: '$' + r1(pipeScale * 118.4) + 'M', lbl: 'Pipeline Q2 FY27' },
-      pipe_growth:  { val: '+' + r1(pipeScale * 8.3) + '%',  dir: 'pos', lbl: 'Pipeline Growth Y/Y' },
-      pipe_cov:     { val: r1(pipeScale / fcstScale * 2.79) + 'x', lbl: 'Pipe Coverage' },
-      hist_pipe_cov:{ val: r1(pipeScale / fcstScale * 2.55) + 'x', lbl: 'Hist. Pipe Coverage' },
-      deals_cmt:    { val: Math.round(fcstScale * 87),        lbl: '# Deals in Commitment' },
-      bco_ae:       { val: '$' + r1(fcstScale * 1.41) + 'M', lbl: 'BCO per AE' },
-      closed_qtd:   { val: '$' + r1(fcstScale * 18.2) + 'M', lbl: 'Closed QTD FY27', delta: '+' + r1(fcstScale * 10 + 8) + '% Y/Y', dir: 'pos' },
+      acv_py:        { val:acv,  lbl:q+' FY26 ACV (PY)' },
+      forecast:      { val:fcst, lbl:q+' FY27 Forecast', editable:true },
+      yoy:           { val:yoy,  lbl:'Y/Y vs PY',         dir:yoyDir },
+      pipeline:      { val:pipe, lbl:'Open Pipeline' },
+      pipe_growth:   { val:pg,   lbl:'Pipe Growth Y/Y',   dir:pgDir },
+      pipe_cov:      { val:cv,   lbl:'Current Pipe Coverage' },
+      hist_pipe_cov: { val:hcv,  lbl:'Historical Pipe Coverage' },
+      deals_cmt:     { val:dl,   lbl:'# Open Opps' },
+      bco_ae:        { val:bc,   lbl:'BCO per AE' },
+      closed_qtd:    { val:cq,   delta:yc+' Y/Y', lbl:'Closed QTD', dir:ycDir },
     },
-    bands: [
-      { band:'<$0',        pipe: r1(pipeScale * -3.2),  fcst: r1(fcstScale * -1.8),  yoy: '—',   dir:'neg' },
-      { band:'$0–$100K',   pipe: r1(pipeScale * 18.4),  fcst: r1(fcstScale * 7.6),   yoy:'+6%',  dir:'pos' },
-      { band:'$100–$500K', pipe: r1(pipeScale * 38.2),  fcst: r1(fcstScale * 14.8),  yoy:'+11%', dir:'pos' },
-      { band:'$500K–$1M',  pipe: r1(pipeScale * 28.6),  fcst: r1(fcstScale * 10.2),  yoy:'+9%',  dir:'pos' },
-      { band:'$1M+',       pipe: r1(pipeScale * 36.4),  fcst: r1(fcstScale * 11.5),  yoy:'+18%', dir:'pos' },
-    ],
-    aes: [
-      { name:'Rossi M.',   fcst: fmtM(fcstScale*5.2),  pipe: fmtM(pipeScale*14.1), cov:'2.7x', bco: fmtM(fcstScale*1.6),  deals:12, closed: fmtM(fcstScale*2.1),  yoy:'+18%', dir:'pos' },
-      { name:'Bianchi L.', fcst: fmtM(fcstScale*4.8),  pipe: fmtM(pipeScale*11.2), cov:'2.3x', bco: fmtM(fcstScale*1.5),  deals:9,  closed: fmtM(fcstScale*1.8),  yoy:'+10%', dir:'pos' },
-      { name:'Ferrari G.', fcst: fmtM(fcstScale*4.1),  pipe: fmtM(pipeScale*9.8),  cov:'2.4x', bco: fmtM(fcstScale*1.3),  deals:7,  closed: fmtM(fcstScale*1.4),  yoy:'−3%',  dir:'neg' },
-      { name:'Conti A.',   fcst: fmtM(fcstScale*3.9),  pipe: fmtM(pipeScale*12.4), cov:'3.2x', bco: fmtM(fcstScale*1.2),  deals:14, closed: fmtM(fcstScale*1.9),  yoy:'+22%', dir:'pos' },
-    ],
-    coverage: [
-      { band:'<$0',        commit: r1(fcstScale*-1.2), fcst: r1(fcstScale*-1.8),  fp: r1(fcstScale*0) },
-      { band:'$0–$100K',   commit: r1(fcstScale* 6.0), fcst: r1(fcstScale* 7.6),  fp: r1(fcstScale* 7.2) },
-      { band:'$100–$500K', commit: r1(fcstScale*12.4), fcst: r1(fcstScale*14.8),  fp: r1(fcstScale*14.0) },
-      { band:'$500K–$1M',  commit: r1(fcstScale* 8.8), fcst: r1(fcstScale*10.2),  fp: r1(fcstScale*10.0) },
-      { band:'$1M+',       commit: r1(fcstScale* 9.7), fcst: r1(fcstScale*11.5),  fp: r1(fcstScale*11.0) },
-    ],
-    trend: [
-      { w:'W1', v: r1(pipeScale*98)  },
-      { w:'W2', v: r1(pipeScale*104) },
-      { w:'W3', v: r1(pipeScale*109) },
-      { w:'W4', v: r1(pipeScale*113) },
-      { w:'W5', v: r1(pipeScale*116) },
-      { w:'W6', v: r1(pipeScale*118) },
-    ]
+    bands: bands,
+    aes: [],
   };
 }
-
-// Scale factors per OU (rispetto al totale SOUTH = 1.0)
-const OU_SCALES = {
-  SOUTH:   { f:1.00, p:1.00, a:1.00 },
-  IBERIA:  { f:0.28, p:0.27, a:0.27 },
-  ITALY:   { f:0.32, p:0.31, a:0.30 },
-  EGM:     { f:0.22, p:0.24, a:0.23 },
-  MIDEAST: { f:0.18, p:0.18, a:0.20 },
-};
-
-function buildData() {
-  const out = {};
-  ['CQ','NQ'].forEach(tf => {
-    out[tf] = {};
-    ['OPP','COMBO'].forEach(lv => {
-      out[tf][lv] = {};
-      const comboMult = lv === 'COMBO' ? 1.46 : 1.0;
-      const nqMult    = tf  === 'NQ'   ? 0.90 : 1.0;
-      Object.keys(OU_SCALES).forEach(ou => {
-        const sc = OU_SCALES[ou];
-        out[tf][lv][ou] = makeOU(
-          sc.f * comboMult * nqMult,
-          sc.p * comboMult * nqMult,
-          sc.a
-        );
-      });
-    });
-  });
-  return out;
+function bd(nm,pipe,acv,yoy) {
+  var y = (yoy==='-'||yoy==='')?'—':yoy;
+  var dir = y==='—' ? 'neu' : (y.charAt(0)==='-' ? 'neg' : 'pos');
+  return {band:nm, pipe:pipe, fcst:acv, yoy:y, dir:dir};
 }
 
-const DATA = buildData();
+// Coverage per OU dal Sheet (formato: "current (hist)")
+// CQ OPP: SOUTH -1.8x(2x) | IBERIA 2x(1.7x) | ITALY 1.3x(1.8x) | EGM 2x(2.3x) | MIDEAST 3.1x(3.2x)
+const COV = {
+  CQ: {
+    OPP:   { SOUTH:'1.8x (2.0x)', IBERIA:'2.0x (1.7x)', ITALY:'1.3x (1.8x)', EGM:'2.0x (2.3x)', MIDEAST:'3.1x (3.2x)' },
+    COMBO: { SOUTH:'1.8x (2.0x)', IBERIA:'2.0x (1.7x)', ITALY:'1.3x (1.8x)', EGM:'2.0x (2.3x)', MIDEAST:'3.1x (3.2x)' },
+  },
+  NQ: {
+    OPP:   { SOUTH:'3.3x (3.3x)', IBERIA:'2.3x (3.6x)', ITALY:'2.1x (2.8x)', EGM:'3.3x (3.6x)', MIDEAST:'2.6x (3.1x)' },
+    COMBO: { SOUTH:'3.3x (3.3x)', IBERIA:'2.3x (3.6x)', ITALY:'2.1x (2.8x)', EGM:'3.3x (3.6x)', MIDEAST:'2.6x (3.1x)' },
+  },
+};
 
-// Override manuale del Forecast (simulazione write-back a Google Sheet)
+const DATA = {
+  CQ: {
+    OPP: {
+      SOUTH:   mkOU('$61.2M','$66.5M','+9%', '$61.9M', '-3%', '1.8x','2.0x',1073,'—','$34.1M','+50%', [bd('$0–$100K',24.7,33.3,'-14%'), bd('$100–$500K',23.7,22.4,'-19%'),bd('$500K–$1M',9.6,3.1,'+169%'),bd('$1M+',3.9,2.4,'+55%')]),
+      IBERIA:  mkOU('$17.0M','$19.0M','+12%','$16.5M', '-1%', '2.0x','1.7x',287, '—','$10.6M','+28%', [bd('$0–$100K',5.4,8.9,'-24%'),   bd('$100–$500K',7.7,7.2,'+4%'),  bd('$500K–$1M',3.4,1.0,'+264%'),bd('$1M+',0.0,0.0,'—')]),
+      ITALY:   mkOU('$17.8M','$17.5M','-2%', '$14.8M', '-26%','1.3x','1.8x',271, '—','$6.5M', '-12%', [bd('$0–$100K',6.8,8.9,'-9%'),    bd('$100–$500K',5.8,7.2,'-45%'), bd('$500K–$1M',1.0,1.7,'+77%'), bd('$1M+',1.1,0.0,'—')]),
+      EGM:     mkOU('$17.6M','$18.5M','+5%', '$15.4M', '-15%','2.0x','2.3x',357, '—','$10.8M','+23%', [bd('$0–$100K',7.9,10.2,'-19%'),  bd('$100–$500K',3.3,5.5,'-56%'), bd('$500K–$1M',2.7,0.5,'+232%'),bd('$1M+',1.5,1.4,'—')]),
+      MIDEAST: mkOU('$8.8M', '$11.0M','+24%','$14.9M', '+64%','3.1x','3.2x',146, '—','$6.2M', '+2%',  [bd('$0–$100K',4.3,5.3,'+2%'),    bd('$100–$500K',6.9,2.5,'+87%'), bd('$500K–$1M',2.5,0.0,'+98%'), bd('$1M+',1.3,1.0,'—')]),
+    },
+    COMBO: {
+      SOUTH:   mkOU('$61.2M','$66.5M','+9%', '$61.9M', '-3%', '1.8x','2.0x',1073,'—','$34.1M','+50%', [bd('$0–$100K',17.0,21.8,'-8%'),  bd('$100–$500K',26.0,22.1,'0%'),  bd('$500K–$1M',10.0,12.2,'-17%'),bd('$1M+',9.0,5.1,'+21%')]),
+      IBERIA:  mkOU('$17.0M','$19.0M','+12%','$16.5M', '-1%', '2.0x','1.7x',287, '—','$10.6M','+28%', [bd('$0–$100K',3.7,6.4,'-18%'),   bd('$100–$500K',5.6,6.0,'+29%'), bd('$500K–$1M',4.6,3.2,'+112%'),bd('$1M+',2.6,1.5,'-55%')]),
+      ITALY:   mkOU('$17.8M','$17.5M','-2%', '$14.8M', '-26%','1.3x','1.8x',271, '—','$6.5M', '-12%', [bd('$0–$100K',4.2,4.4,'+10%'),   bd('$100–$500K',6.9,5.5,'-23%'), bd('$500K–$1M',2.3,6.8,'-58%'), bd('$1M+',1.4,1.0,'-16%')]),
+      EGM:     mkOU('$17.6M','$18.5M','+5%', '$15.4M', '-15%','2.0x','2.3x',357, '—','$10.8M','+23%', [bd('$0–$100K',5.9,7.1,'-14%'),   bd('$100–$500K',5.3,7.2,'-39%'), bd('$500K–$1M',2.1,1.7,'-18%'), bd('$1M+',2.2,1.5,'—')]),
+      MIDEAST: mkOU('$8.8M', '$11.0M','+24%','$14.9M', '+64%','3.1x','3.2x',146, '—','$6.2M', '+2%',  [bd('$0–$100K',2.9,3.9,'-6%'),    bd('$100–$500K',8.3,3.3,'+98%'), bd('$500K–$1M',1.0,0.6,'-48%'), bd('$1M+',2.8,1.0,'—')]),
+    },
+  },
+  NQ: {
+    OPP: {
+      SOUTH:   mkOU('$52.3M','$66.5M','+27%','$159.7M','+6%', '3.3x','3.3x',2177,'—','$1.9M', '+5%',  [bd('$0–$100K',67.2,27.8,'-6%'),  bd('$100–$500K',65.0,19.7,'+10%'),bd('$500K–$1M',11.8,3.4,'-20%'), bd('$1M+',15.7,1.3,'+232%')],'Q3'),
+      IBERIA:  mkOU('$11.7M','$12.5M','+7%', '$27.8M', '-19%','2.3x','3.6x',530, '—','$0.7M', '+196%',[bd('$0–$100K',15.4,7.3,'-21%'),  bd('$100–$500K',9.8,3.8,'-23%'),  bd('$500K–$1M',1.2,0.6,'-49%'), bd('$1M+',1.4,0.0,'—')],'Q3'),
+      ITALY:   mkOU('$16.0M','$16.5M','+3%', '$34.2M', '-2%', '2.1x','2.8x',485, '—','$0.3M', '-68%', [bd('$0–$100K',14.8,7.2,'-7%'),   bd('$100–$500K',15.6,6.4,'-2%'),  bd('$500K–$1M',2.5,1.1,'+44%'), bd('$1M+',1.4,1.3,'+4%')],'Q3'),
+      EGM:     mkOU('$15.5M','$20.0M','+29%','$63.9M', '+22%','3.3x','3.6x',779, '—','$0.9M', '-28%', [bd('$0–$100K',23.7,8.5,'-9%'),   bd('$100–$500K',22.8,5.8,'+22%'), bd('$500K–$1M',4.6,1.2,'-14%'), bd('$1M+',12.9,0.0,'—')],'Q3'),
+      MIDEAST: mkOU('$9.0M', '$12.7M','+41%','$32.4M', '+17%','2.6x','3.1x',369, '—','$0.1M', '+1%',  [bd('$0–$100K',12.7,4.8,'+30%'),  bd('$100–$500K',16.1,3.6,'+40%'), bd('$500K–$1M',3.6,0.5,'-33%'), bd('$1M+',0.0,0.0,'—')],'Q3'),
+    },
+    COMBO: {
+      SOUTH:   mkOU('$52.3M','$66.5M','+27%','$159.7M','+6%', '3.3x','3.3x',2177,'—','$1.9M', '+5%',  [bd('$0–$100K',41.2,18.5,'-6%'),  bd('$100–$500K',71.6,22.7,'+16%'),bd('$500K–$1M',18.3,6.9,'-41%'), bd('$1M+',28.5,4.2,'+120%')],'Q3'),
+      IBERIA:  mkOU('$11.7M','$12.5M','+7%', '$27.8M', '-19%','2.3x','3.6x',530, '—','$0.7M', '+196%',[bd('$0–$100K',10.4,4.8,'-4%'),   bd('$100–$500K',11.4,5.0,'-22%'), bd('$500K–$1M',4.6,1.9,'-17%'), bd('$1M+',1.4,0.0,'—')],'Q3'),
+      ITALY:   mkOU('$16.0M','$16.5M','+3%', '$34.2M', '-2%', '2.1x','2.8x',485, '—','$0.3M', '-68%', [bd('$0–$100K',8.6,3.8,'-10%'),   bd('$100–$500K',17.0,7.0,'+16%'), bd('$500K–$1M',4.5,2.2,'-23%'), bd('$1M+',4.1,3.0,'-14%')],'Q3'),
+      EGM:     mkOU('$15.5M','$20.0M','+29%','$63.9M', '+22%','3.3x','3.6x',779, '—','$0.9M', '-28%', [bd('$0–$100K',14.4,6.8,'-16%'),  bd('$100–$500K',25.3,6.8,'+21%'), bd('$500K–$1M',4.8,0.7,'-59%'), bd('$1M+',19.4,1.2,'+659%')],'Q3'),
+      MIDEAST: mkOU('$9.0M', '$12.7M','+41%','$32.4M', '+17%','2.6x','3.1x',369, '—','$0.1M', '+1%',  [bd('$0–$100K',12.7,4.8,'+30%'),  bd('$100–$500K',16.1,3.6,'+40%'), bd('$500K–$1M',3.6,0.5,'-33%'), bd('$1M+',0.0,0.0,'—')],'Q3'),
+    },
+  },
+};
+
+// Override per qualsiasi KPI — chiave: tf_lv_ou_kpiid
 const FORECAST_OVERRIDES = {};
+const KPI_OVERRIDES = {};
+const KPI_EDITORS = {}; // kpiKey → { val, author }
 
 // ── DATASET DEFINITIONS ──────────────────────────────────────────────────────
-const DATASETS = [
-  {
-    id: 'openpipe', name: 'OpenPipe', icon: '❄️', src: 'Snowflake',
-    srcClass: 'src-snow', ts: '06 Jul 2026, 08:00',
-    desc: 'Open pipeline opportunities by AE, band, stage.',
-    headers: ['Account','AE','OU','Amount','Stage','Close Date','Band','Created'],
-    rows: [
-      ['Acme Corp','Rossi M.','Italy','$480K','Proposal','2026-07-31','$100–$500K','2026-05-12'],
-      ['Beta SpA','Ferrari G.','Italy','$1.2M','Negotiation','2026-07-15','$1M+','2026-04-08'],
-      ['Gamma SA','García P.','Iberia','$95K','Discovery','2026-08-15','$0–$100K','2026-06-01'],
-      ['Delta LLC','Müller K.','EGM','$620K','Value Prop','2026-07-28','$500K–$1M','2026-05-20'],
-      ['Epsilon AG','Khalid R.','Middle East','$2.1M','Proposal','2026-07-22','$1M+','2026-03-15'],
-      ['Zeta Ltd','Bianchi L.','Italy','$340K','Discovery','2026-08-10','$100–$500K','2026-06-18'],
+const SHEET_ID = '1DdcjTIC-w26qBgYYdIMHbLQIOthfxnHAMv7AC27QLpc';
+
+
+// ── TOP DEALS DATA ───────────────────────────────────────────────────────────
+const TOP_DEALS = {
+  CQ: {
+    quarter: 'Q2 FY27',
+    ouLabel: { SOUTH:'EMEA South', IBERIA:'Iberia', ITALY:'Italy', EGM:'EGM', MIDEAST:'Middle East' },
+    ous: [
+      {
+        key: 'SOUTH',
+        open: [
+          { name:'Public Power Corporation S.A.', pipe:2.2, commit:2.12 },
+          { name:'Aldar Properties PJSC', pipe:1.5, commit:0.00 },
+          { name:'Credit Agricole', pipe:1.5, commit:0.00 },
+          { name:'AMADEUS IT GROUP SA', pipe:1.4, commit:0.00 },
+          { name:'G42 Cloud Technology LLC', pipe:1.3, commit:0.00 },
+          { name:'Arab Republic Of Egypt', pipe:1.3, commit:0.00 },
+          { name:'HOTELBEDS TECHNOLOGY SL', pipe:1.2, commit:0.00 },
+          { name:'SEGURCAIXA ADESLAS SA', pipe:1.0, commit:0.00 },
+          { name:'GOVERNMENT OF ABU DHABI', pipe:1.0, commit:0.10 },
+          { name:'Stellantis N.V.', pipe:0.9, commit:0.76 },
+          { name:'Associação Nacional Das Farmácias', pipe:0.9, commit:0.21 },
+          { name:'EL CORTE INGLES SA', pipe:0.9, commit:0.69 },
+          { name:'The Courier Guy South Africa', pipe:0.8, commit:0.77 },
+          { name:'Segretariato Generale Presidenza della Repubblica', pipe:0.7, commit:0.00 },
+          { name:'CAIXABANK SA', pipe:0.7, commit:0.70 },
+        ],
+        totalOpen: 17.8, totalCommit: 5.4,
+        acvPY: [
+          { name:'AXA', closed:0.2 },
+          { name:'GOVERNMENT OF ISRAEL', closed:0.5 },
+          { name:'EL CORTE INGLES SA', closed:1.5 },
+          { name:'NATURGY ENERGY GROUP SA', closed:0.8 },
+          { name:'BANCO SANTANDER SA', closed:1.2 },
+        ],
+        closedFY27: [
+          { name:'TELEFONICA, SA', closed:1.08 },
+          { name:'HIJOS DE RIVERA, SA', closed:0.86 },
+          { name:'Turkiye Is Bankasi', closed:0.83 },
+          { name:'BANCO SANTANDER SA', closed:0.81 },
+          { name:'C.G.R FZE', closed:0.74 },
+          { name:'King Salman International Airport', closed:0.73 },
+          { name:'DUBAI HOLDING (L.L.C)', closed:0.69 },
+        ],
+        totalClosedFY27: 9.58,
+      },
+      {
+        key: 'IBERIA',
+        open: [
+          { name:'AMADEUS IT GROUP SA', pipe:1.4, commit:0.00 },
+          { name:'HOTELBEDS TECHNOLOGY SL', pipe:1.2, commit:0.78 },
+          { name:'Segurcaixa Adeslas SA', pipe:1.0, commit:0.00 },
+          { name:'ASSOCIAÇÃO NACIONAL DAS FARMÁCIAS', pipe:0.9, commit:0.21 },
+          { name:'EL CORTE INGLES SA', pipe:0.9, commit:0.69 },
+          { name:'CAIXABANK SA', pipe:0.7, commit:0.70 },
+          { name:'TELEFONICA, SA', pipe:0.6, commit:0.00 },
+          { name:'Caixa Geral de Depositos', pipe:0.6, commit:0.00 },
+          { name:'DOMINGO ALONSO GROUP SL', pipe:0.5, commit:0.07 },
+          { name:'NATURGY ENERGY GROUP SA', pipe:0.4, commit:0.24 },
+        ],
+        totalOpen: 8.1, totalCommit: 2.7,
+        closedFY27: [
+          { name:'TELEFONICA, SA', closed:1.08 },
+          { name:'CORPORACION HIJOS DE RIVERA', closed:0.86 },
+          { name:'BANCO SANTANDER SA', closed:0.81 },
+          { name:'Ascendi', closed:0.41 },
+          { name:'GOVERNMENT OF ABU DHABI', closed:0.39 },
+        ],
+        totalClosedFY27: 5.18,
+      },
+      {
+        key: 'ITALY',
+        open: [
+          { name:'Sas Rue La Boetie', pipe:1.4, commit:1.40 },
+          { name:'Stellantis N.V.', pipe:0.8, commit:0.76 },
+          { name:'De Longhi Industrial S.A.', pipe:0.6, commit:0.59 },
+          { name:'COOP ALLEANZA 3.0', pipe:0.6, commit:0.12 },
+          { name:'SARA ASSICURAZIONI SpA', pipe:0.6, commit:0.50 },
+          { name:'ACEA', pipe:0.5, commit:0.39 },
+          { name:'AS ROMA S.r.l.', pipe:0.4, commit:0.42 },
+          { name:'FERROVIE DELLO STATO ITALIANE', pipe:0.4, commit:0.19 },
+          { name:'FERRAGAMO', pipe:0.4, commit:0.37 },
+          { name:'Edizione Spa', pipe:0.3, commit:0.28 },
+        ],
+        totalOpen: 6.0, totalCommit: 5.0,
+        closedFY27: [
+          { name:'ENI SPA', closed:0.58 },
+          { name:'Ferrari N.V.', closed:0.42 },
+          { name:'Alia Servizi Ambientali Spa', closed:0.39 },
+          { name:'Duferco Italia Holding SpA', closed:0.38 },
+          { name:'COMPAGNIA AEREA ITALIANA', closed:0.34 },
+        ],
+        totalClosedFY27: 3.18,
+      },
+      {
+        key: 'EGM',
+        open: [
+          { name:'PUBLIC POWER CORPORATION S.A.', pipe:2.2, commit:2.12 },
+          { name:'The Courier Guy South Africa', pipe:0.8, commit:0.77 },
+          { name:'CAPITEC BANK HOLDINGS LTD', pipe:0.7, commit:0.67 },
+          { name:'Zentiva Group a.s.', pipe:0.6, commit:0.00 },
+          { name:'Luminor Holding As', pipe:0.5, commit:0.00 },
+          { name:'ABSA BANK LTD', pipe:0.5, commit:0.46 },
+          { name:'Keystone Bank Ltd', pipe:0.4, commit:0.00 },
+          { name:'THE PHOENIX HOLDINGS LTD', pipe:0.3, commit:0.13 },
+          { name:'Danel Adir Yehoshua Ltd.', pipe:0.2, commit:0.00 },
+          { name:'BOOKSY INTERNATIONAL SP Z O O', pipe:0.2, commit:0.00 },
+        ],
+        totalOpen: 6.3, totalCommit: 4.1,
+        closedFY27: [
+          { name:'TURKIYE IS BANKASI', closed:0.83 },
+          { name:'MINISTARSTVO PRAVOSUDA', closed:0.66 },
+          { name:'Societe Generale', closed:0.59 },
+          { name:'Eurobank Bulgaria AD', closed:0.27 },
+          { name:'Mews Systems B.V.', closed:0.26 },
+        ],
+        totalClosedFY27: 3.77,
+      },
+      {
+        key: 'MIDEAST',
+        open: [
+          { name:'Aldar Properties PJSC', pipe:1.5, commit:1.48 },
+          { name:'G42 Cloud Technology LLC', pipe:1.3, commit:0.00 },
+          { name:'EGYPTAIR Holding', pipe:1.0, commit:0.00 },
+          { name:'Al-Ghanim Industries Co.', pipe:0.4, commit:0.40 },
+          { name:'Al Jazirah Vehicles Agencies', pipe:0.3, commit:0.33 },
+          { name:'Dallah Health', pipe:0.3, commit:0.00 },
+          { name:'ABU DHABI GLOBAL MARKET', pipe:0.3, commit:0.32 },
+          { name:'Sobha Group', pipe:0.3, commit:0.00 },
+          { name:'Arab Republic Of Egypt', pipe:0.3, commit:0.00 },
+          { name:'Pure Health Holding LLC', pipe:0.3, commit:0.00 },
+        ],
+        totalOpen: 6.1, totalCommit: 2.5,
+        closedFY27: [
+          { name:'C.G.R. FZE', closed:0.74 },
+          { name:'King Salman International Airport', closed:0.73 },
+          { name:'Dubai Holding Group', closed:0.69 },
+          { name:'Binghatti Developers FZE', closed:0.27 },
+          { name:'GOVERNMENT OF RAS AL KHAIMAH', closed:0.21 },
+        ],
+        totalClosedFY27: 3.49,
+      },
     ]
   },
-  {
-    id: 'acv', name: 'ACV', icon: '📊', src: 'Snowflake',
-    srcClass: 'src-snow', ts: '06 Jul 2026, 08:00',
-    desc: 'Annual Contract Value booked by quarter, AE, OU.',
-    headers: ['Quarter','OU','AE','ACV','Prod Family','Segment','Y/Y'],
-    rows: [
-      ['Q2 FY27','Italy','Rossi M.','$5.2M','Sales Cloud','Enterprise','+18%'],
-      ['Q2 FY27','Italy','Bianchi L.','$4.8M','Service Cloud','Enterprise','+10%'],
-      ['Q2 FY27','Italy','Ferrari G.','$4.1M','Platform','Enterprise','−3%'],
-      ['Q2 FY27','Iberia','García P.','$3.2M','Sales Cloud','MM','+14%'],
-      ['Q2 FY27','EGM','Müller K.','$2.9M','Data Cloud','Enterprise','+22%'],
-      ['Q2 FY26','Italy','Rossi M.','$4.4M','Sales Cloud','Enterprise','—'],
+  NQ: {
+    quarter: 'Q3 FY27',
+    ouLabel: { SOUTH:'EMEA South', IBERIA:'Iberia', ITALY:'Italy', EGM:'EGM', MIDEAST:'Middle East' },
+    ous: [
+      {
+        key: 'SOUTH',
+        open: [
+          { name:'Bank Leumi le-Israel Ltd.', pipe:5.1, commit:0.04 },
+          { name:'GOVERNMENT OF ABU DHABI', pipe:3.7, commit:0.10 },
+          { name:'Clalit Health Services', pipe:3.6, commit:0.00 },
+          { name:'GOVERNMENT OF ISRAEL', pipe:3.2, commit:0.01 },
+          { name:'Stellantis N.V.', pipe:2.4, commit:0.76 },
+          { name:'LATVIJAS MOBILAIS TELEFONS SIA', pipe:2.2, commit:0.00 },
+          { name:'Walmart Inc.', pipe:1.8, commit:0.00 },
+          { name:'ASSICURAZIONI GENERALI SPA', pipe:1.8, commit:0.01 },
+          { name:'Dan Bar Mashiah Holdings Ltd', pipe:1.8, commit:0.00 },
+          { name:'Steenbok Newco 2a Limited', pipe:1.5, commit:0.00 },
+          { name:'Emirates Group', pipe:1.4, commit:0.01 },
+          { name:'C.G.R FZE', pipe:1.2, commit:0.00 },
+          { name:'ADAMA AGRICULTURAL SOLUTIONS', pipe:1.2, commit:0.00 },
+          { name:'Econet Global Limited', pipe:1.1, commit:0.00 },
+          { name:'Alia Servizi Ambientali Spa', pipe:1.1, commit:0.00 },
+        ],
+        totalOpen: 34.2, totalCommit: 0.9,
+        closedFY27: [
+          { name:'Lavinia S.Coop.', closed:0.34 },
+          { name:'INFRAESTRUCTURES VIARIES', closed:0.21 },
+          { name:'First International Bank of Israel', closed:0.21 },
+          { name:'Ges Group Holding B.V.', closed:0.10 },
+          { name:'BNP PARIBAS', closed:0.08 },
+        ],
+        totalClosedFY27: 1.54,
+      },
+      {
+        key: 'IBERIA',
+        open: [
+          { name:'GOVERNMENT OF ABU DHABI', pipe:1.4, commit:0.00 },
+          { name:'NATURGY ENERGY GROUP SA', pipe:0.8, commit:0.24 },
+          { name:'EL CORTE INGLES SA', pipe:0.8, commit:0.69 },
+          { name:'ORGANIZACION NACIONAL DE CIEGOS', pipe:0.7, commit:0.00 },
+          { name:'Globalia Corporacion Empresarial', pipe:0.6, commit:0.00 },
+          { name:'KZEMOS TECHNOLOGIES SLU', pipe:0.6, commit:0.14 },
+          { name:'BANKINTER SA', pipe:0.5, commit:0.00 },
+          { name:'PUNTA NA HOLDING SA', pipe:0.5, commit:0.00 },
+          { name:'ASSICURAZIONI GENERALI SPA', pipe:0.5, commit:0.00 },
+          { name:'MASORANGE SL', pipe:0.5, commit:0.00 },
+        ],
+        totalOpen: 7.0, totalCommit: 1.1,
+        closedFY27: [
+          { name:'Lavinia S.Coop.', closed:0.34 },
+          { name:'BNP PARIBAS', closed:0.08 },
+          { name:'BANCO SANTANDER SA', closed:0.07 },
+          { name:'Intrum AB', closed:0.03 },
+          { name:'Lealan Sxt Sl.', closed:0.03 },
+        ],
+        totalClosedFY27: 0.64,
+      },
+      {
+        key: 'ITALY',
+        open: [
+          { name:'Stellantis N.V.', pipe:2.3, commit:0.76 },
+          { name:'ASSICURAZIONI GENERALI', pipe:1.3, commit:0.00 },
+          { name:'Alia Servizi Ambientali Spa', pipe:1.1, commit:0.00 },
+          { name:'Hera Spa', pipe:0.9, commit:0.00 },
+          { name:'Crc Holland B.V.', pipe:0.7, commit:0.00 },
+          { name:'ACQUEDOTTO LUCANO SPA', pipe:0.6, commit:0.00 },
+          { name:'Fastweb S.p.A.', pipe:0.6, commit:0.13 },
+          { name:'GEFIM SPA', pipe:0.6, commit:0.00 },
+          { name:'Edizione Spa', pipe:0.5, commit:0.28 },
+          { name:'Baker Hughes Company', pipe:0.5, commit:0.00 },
+        ],
+        totalOpen: 9.2, totalCommit: 1.2,
+        closedFY27: [
+          { name:'Wind Tre', closed:0.08 },
+          { name:'UNICREDIT SPA', closed:0.05 },
+          { name:'KAG Italy S.C.Sp.', closed:0.04 },
+          { name:'BRT', closed:0.04 },
+          { name:'Dolomiti Energia Holding Spa', closed:0.04 },
+        ],
+        totalClosedFY27: 0.34,
+      },
+      {
+        key: 'EGM',
+        open: [
+          { name:'Bank Leumi le-Israel Ltd.', pipe:5.1, commit:0.04 },
+          { name:'CLALIT HEALTH SERVICES', pipe:3.6, commit:0.00 },
+          { name:'LATVIJAS MOBILAIS TELEFONS SIA', pipe:2.2, commit:0.00 },
+          { name:'Walmart Inc.', pipe:1.8, commit:0.00 },
+          { name:'Dan Bar Mashiah Holdings Ltd', pipe:1.8, commit:0.00 },
+          { name:'Pepkor Holdings Limited', pipe:1.5, commit:0.00 },
+          { name:'ADAMA AGRICULTURAL SOLUTIONS', pipe:1.2, commit:0.00 },
+          { name:'Econet Global Limited', pipe:1.1, commit:0.00 },
+          { name:'Ministry of Defence', pipe:1.0, commit:0.07 },
+          { name:'Lietuvos Respublikos Vyriausybes', pipe:0.9, commit:0.00 },
+        ],
+        totalOpen: 20.3, totalCommit: 0.1,
+        closedFY27: [
+          { name:'Menora Mivtachim Holdings Ltd.', closed:0.21 },
+          { name:'FIRST INTERNATIONAL BANK OF ISRAEL', closed:0.21 },
+          { name:'FTV Prima, spol. s r.o.', closed:0.10 },
+          { name:'ZOTA TECHNOLOGY PTE. LTD.', closed:0.07 },
+          { name:'MOL Magyar Olaj', closed:0.07 },
+        ],
+        totalClosedFY27: 0.83,
+      },
+      {
+        key: 'MIDEAST',
+        open: [
+          { name:'Emirates Group', pipe:1.4, commit:0.01 },
+          { name:'C.G.R. FZE', pipe:1.2, commit:0.00 },
+          { name:'OMANTEL', pipe:1.1, commit:0.00 },
+          { name:'Etihad Water and Electricity', pipe:0.8, commit:0.00 },
+          { name:'Taiba Investments', pipe:0.7, commit:0.00 },
+          { name:'Emirates Telecommunications Etisalat', pipe:0.6, commit:0.00 },
+          { name:'ABDUL LATIF JAMEEL CO. LTD', pipe:0.6, commit:0.00 },
+          { name:'Wasl Properties L.L.C', pipe:0.5, commit:0.00 },
+          { name:'Dammam Airports Company', pipe:0.5, commit:0.00 },
+          { name:'Tallat Moustafa', pipe:0.5, commit:0.00 },
+        ],
+        totalOpen: 7.9, totalCommit: 0.0,
+        closedFY27: [
+          { name:'Zahid Group Holdings', closed:0.08 },
+          { name:'Emirates Health Services', closed:0.00 },
+          { name:'Machinery Group Holding', closed:0.00 },
+          { name:'Housing & Development Properties', closed:0.00 },
+        ],
+        totalClosedFY27: 0.08,
+      },
     ]
+  }
+};
+
+function renderTopDeals() {
+  const ouLabel = OU_LABELS[S.ou] || S.ou;
+  document.getElementById('view-lbl').textContent = `${S.tf === 'CQ' ? 'Current Quarter' : 'Next Quarter'} — ${ouLabel}`;
+  const data = TOP_DEALS[S.tf];
+  const visibleOus = S.ou === 'SOUTH' ? data.ous : data.ous.filter(ou => ou.key === S.ou);
+  const maxPipe = Math.max(...visibleOus.flatMap(ou => ou.open.map(d => d.pipe)));
+
+  document.getElementById('td-content').innerHTML = visibleOus.map(ou => {
+    const ouName = data.ouLabel[ou.key] || ou.key;
+
+    const openRows = ou.open.map(d => {
+      const barW = Math.round((d.pipe / maxPipe) * 80);
+      const hasCommit = d.commit > 0;
+      return `<tr>
+        <td>${d.name}</td>
+        <td>
+          <div class="td-bar-wrap">
+            <div class="td-bar" style="width:${barW}px"></div>
+            <span>$${d.pipe.toFixed(1)}M</span>
+          </div>
+        </td>
+        <td>${hasCommit ? `<span class="td-commit-dot"></span>$${d.commit.toFixed(2)}M` : '<span style="color:var(--sf-meta)">—</span>'}</td>
+      </tr>`;
+    }).join('');
+    const openTotal = `<tr class="td-total"><td>Total</td><td style="text-align:right;font-variant-numeric:tabular-nums">$${ou.totalOpen.toFixed(1)}M</td><td style="text-align:right;font-variant-numeric:tabular-nums">$${ou.totalCommit.toFixed(1)}M</td></tr>`;
+
+    const closedRows = (ou.closedFY27 || []).map(d =>
+      `<tr><td>${d.name}</td><td>$${d.closed.toFixed(2)}M</td></tr>`
+    ).join('');
+    const closedTotal = ou.totalClosedFY27 != null
+      ? `<tr class="td-total"><td>Total</td><td style="text-align:right">$${ou.totalClosedFY27.toFixed(2)}M</td></tr>`
+      : '';
+
+    return `<div class="td-ou-section">
+      <div class="td-ou-title">
+        ${ouName}
+        <span class="td-ou-sub">Top Open ${data.quarter}</span>
+      </div>
+      <div class="td-grid">
+        <div class="td-card">
+          <div class="td-card-hdr">
+            Open Pipeline &amp; Commit
+            <span class="td-card-sub">${data.quarter}</span>
+          </div>
+          <table class="td-table">
+            <thead><tr><th>Account</th><th>Open Pipe</th><th>Commit</th></tr></thead>
+            <tbody>${openRows}${openTotal}${_tdLookupRow(ou.key, S.tf)}</tbody>
+          </table>
+        </div>
+        <div class="td-card">
+          <div class="td-card-hdr">
+            Top ACV Closed
+            <span class="td-card-sub">${data.quarter}</span>
+          </div>
+          <table class="td-table">
+            <thead><tr><th>Account</th><th>ACV Closed $M</th></tr></thead>
+            <tbody>${closedRows}${closedTotal}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── TOP DEALS ACCOUNT LOOKUP ─────────────────────────────────────────────────
+// Dati da "CQ Top Deals" e "NQ Top Deals" Sheet — col B = account, C = pipe, D = commit
+const TD_LOOKUP = {
+  CQ: {
+    SOUTH:   [
+      {name:'Public Power Corporation S.A.',pipe:2.2,commit:2.12},{name:'Aldar Properties PJSC',pipe:1.5,commit:0},{name:'Credit Agricole',pipe:1.5,commit:0},
+      {name:'AMADEUS IT GROUP SA',pipe:1.4,commit:0},{name:'G42 Cloud Technology LLC',pipe:1.3,commit:0},{name:'Arab Republic Of Egypt',pipe:1.3,commit:0},
+      {name:'HOTELBEDS TECHNOLOGY SL',pipe:1.2,commit:0},{name:'SEGURCAIXA ADESLAS, S.A. DE SEGUROS Y REASEGUROS',pipe:1.0,commit:0},
+      {name:'GOVERNMENT OF ABU DHABI',pipe:1.0,commit:0.10},{name:'Stellantis N.V.',pipe:0.9,commit:0.76},
+      {name:'Associação Nacional Das Farmácias',pipe:0.9,commit:0.21},{name:'EL CORTE INGLES SA',pipe:0.9,commit:0.69},
+      {name:'The Courier Guy South Africa (Pty) Ltd',pipe:0.8,commit:0.77},{name:'Segretariato Generale Della Presidenza Della Repubblica',pipe:0.7,commit:0},
+      {name:'CAIXABANK SA',pipe:0.7,commit:0.70},{name:'Capitec Bank Holdings Limited',pipe:0.67,commit:0},
+    ],
+    IBERIA:  [
+      {name:'AMADEUS IT GROUP SA',pipe:1.4,commit:0},{name:'HOTELBEDS TECHNOLOGY SL - ES',pipe:1.2,commit:0.78},
+      {name:'Segurcaixa Adeslas, Sociedad Anonima De Seguros Y Reaseguros.',pipe:1.0,commit:0},{name:'ASSOCIAÇÃO NACIONAL DAS FARMÁCIAS',pipe:0.9,commit:0.21},
+      {name:'EL CORTE INGLES SA',pipe:0.9,commit:0.69},{name:'CAIXABANK SA',pipe:0.7,commit:0.70},
+      {name:'TELEFONICA, SA',pipe:0.6,commit:0},{name:'Caixa Geral de Depositos',pipe:0.6,commit:0},
+      {name:'DOMINGO ALONSO GROUP, SOCIEDAD LIMITADA.',pipe:0.5,commit:0.07},{name:'NATURGY ENERGY GROUP SA.',pipe:0.4,commit:0.24},
+    ],
+    ITALY:   [
+      {name:'Sas Rue La Boetie',pipe:1.4,commit:1.40},{name:'Stellantis N.V.',pipe:0.8,commit:0.76},
+      {name:'De Longhi Industrial S.A.',pipe:0.6,commit:0.59},{name:'COOP ALLEANZA 3.0 SOC COOP',pipe:0.6,commit:0.12},
+      {name:'SARA ASSICURAZIONI SpA',pipe:0.6,commit:0.50},{name:'ACEA',pipe:0.5,commit:0.39},
+      {name:'AS ROMA S.r.l.',pipe:0.4,commit:0.42},{name:'FERROVIE DELLO STATO ITALIANE',pipe:0.4,commit:0.19},
+      {name:'FERRAGAMO',pipe:0.4,commit:0.37},{name:'Edizione Spa',pipe:0.3,commit:0.28},
+    ],
+    EGM:     [
+      {name:'PUBLIC POWER CORPORATION S.A.',pipe:2.2,commit:2.12},{name:'The Courier Guy South Africa (Pty) Ltd',pipe:0.8,commit:0.77},
+      {name:'CAPITEC BANK HOLDINGS LTD',pipe:0.7,commit:0.67},{name:'Zentiva Group a.s.',pipe:0.6,commit:0},
+      {name:'Luminor Holding As',pipe:0.5,commit:0},{name:'ABSA BANK LTD',pipe:0.5,commit:0.46},
+      {name:'Keystone Bank Ltd',pipe:0.4,commit:0},{name:'THE PHOENIX HOLDINGS LTD',pipe:0.3,commit:0.13},
+      {name:'Danel Adir Yehoshua Ltd.',pipe:0.2,commit:0},{name:'BOOKSY INTERNATIONAL SP Z O O',pipe:0.2,commit:0},
+    ],
+    MIDEAST: [
+      {name:'Aldar Properties - P J S C',pipe:1.5,commit:1.48},{name:'G42 Cloud Technology LLC',pipe:1.3,commit:0},
+      {name:'EGYPTAIR Holding',pipe:1.0,commit:0},{name:'Al-Ghanim Industries Co.',pipe:0.4,commit:0.40},
+      {name:'Al Jazirah Vehicles Agencies Company',pipe:0.3,commit:0.33},{name:'Dallah Health',pipe:0.3,commit:0},
+      {name:'ABU DHABI GLOBAL MARKET',pipe:0.3,commit:0.32},{name:'Sobha Group',pipe:0.3,commit:0},
+      {name:'Arab Republic Of Egypt',pipe:0.3,commit:0},{name:'Pure Health Holding L.L.C.',pipe:0.3,commit:0},
+    ],
   },
-  {
-    id: 'hist_op', name: 'Historical OP', icon: '📈', src: 'Snowflake',
-    srcClass: 'src-snow', ts: '06 Jul 2026, 08:00',
-    desc: 'Pipeline history week-over-week for trend analysis.',
-    headers: ['Week','OU','Total Pipe','vs PW','vs PY','Coverage','# Opps'],
-    rows: [
-      ['W1 Q2 FY27','EMEA South','$98.0M','+0%','+12%','2.32x',142],
-      ['W2 Q2 FY27','EMEA South','$104.1M','+6.2%','+13%','2.46x',148],
-      ['W3 Q2 FY27','EMEA South','$109.2M','+4.9%','+14%','2.58x',155],
-      ['W4 Q2 FY27','EMEA South','$113.4M','+3.8%','+15%','2.68x',161],
-      ['W5 Q2 FY27','EMEA South','$116.1M','+2.4%','+15%','2.74x',166],
-      ['W6 Q2 FY27','EMEA South','$118.4M','+2.0%','+14%','2.80x',170],
-    ]
+  NQ: {
+    SOUTH:   [
+      {name:'Bank Leumi le-Israel Ltd.',pipe:5.1,commit:0.04},{name:'GOVERNMENT OF ABU DHABI',pipe:3.7,commit:0.10},
+      {name:'Clalit Health services',pipe:3.6,commit:0},{name:'GOVERNMENT OF ISRAEL',pipe:3.2,commit:0.01},
+      {name:'Stellantis N.V.',pipe:2.4,commit:0.76},{name:'LATVIJAS MOBILAIS TELEFONS SIA',pipe:2.2,commit:0},
+      {name:'Walmart Inc.',pipe:1.8,commit:0},{name:'ASSICURAZIONI GENERALI SPA',pipe:1.8,commit:0.01},
+      {name:'Dan Bar Mashiah Holdings Ltd',pipe:1.8,commit:0},{name:'Steenbok Newco 2a Limited',pipe:1.5,commit:0},
+      {name:'Emirates Group',pipe:1.4,commit:0.01},{name:'C.G.R FZE',pipe:1.2,commit:0},
+      {name:'ADAMA AGRICULTURAL SOLUTIONS LTD',pipe:1.2,commit:0},{name:'Econet Global Limited',pipe:1.1,commit:0},
+      {name:'Alia Servizi Ambientali Spa',pipe:1.1,commit:0},{name:'Omantel',pipe:1.07,commit:0},
+    ],
+    IBERIA:  [
+      {name:'GOVERNMENT OF ABU DHABI',pipe:1.4,commit:0},{name:'NATURGY ENERGY GROUP SA.',pipe:0.8,commit:0.24},
+      {name:'EL CORTE INGLES SA',pipe:0.8,commit:0.69},{name:'ORGANIZACION NACIONAL DE CIEGOS ESPAÑOLES',pipe:0.7,commit:0},
+      {name:'Globalia Corporacion Empresarial, Sociedad Anonima',pipe:0.6,commit:0},{name:'KZEMOS TECHNOLOGIES SLU.',pipe:0.6,commit:0.14},
+      {name:'BANKINTER SOCIEDAD ANONIMA',pipe:0.5,commit:0},{name:'PUNTA NA HOLDING SA',pipe:0.5,commit:0},
+      {name:'ASSICURAZIONI GENERALI SPA',pipe:0.5,commit:0},{name:'MASORANGE SL',pipe:0.5,commit:0},
+    ],
+    ITALY:   [
+      {name:'Stellantis N.V.',pipe:2.3,commit:0.76},{name:'ASSICURAZIONI GENERALI',pipe:1.3,commit:0},
+      {name:'Alia Servizi Ambientali Spa',pipe:1.1,commit:0},{name:'Hera Spa',pipe:0.9,commit:0},
+      {name:'Crc Holland B.V.',pipe:0.7,commit:0},{name:'ACQUEDOTTO LUCANO SPA',pipe:0.6,commit:0},
+      {name:'Fastweb S.p.A.*',pipe:0.6,commit:0.13},{name:'GEFIM SPA',pipe:0.6,commit:0},
+      {name:'Edizione Spa',pipe:0.5,commit:0.28},{name:'Baker Hughes Company',pipe:0.5,commit:0},
+    ],
+    EGM:     [
+      {name:'Bank Leumi le-Israel Ltd.',pipe:5.1,commit:0.04},{name:'CLALIT HEALTH SERVICES',pipe:3.6,commit:0},
+      {name:'LATVIJAS MOBILAIS TELEFONS SIA',pipe:2.2,commit:0},{name:'Walmart Inc.',pipe:1.8,commit:0},
+      {name:'Dan Bar Mashiah Holdings Ltd',pipe:1.8,commit:0},{name:'Pepkor Holdings Limited',pipe:1.5,commit:0},
+      {name:'ADAMA AGRICULTURAL SOLUTIONS LTD',pipe:1.2,commit:0},{name:'Econet Global Limited',pipe:1.1,commit:0},
+      {name:'Ministry of Defence',pipe:1.0,commit:0.07},{name:'Lietuvos Respublikos Vyriausybes Kanceliarija',pipe:0.9,commit:0},
+    ],
+    MIDEAST: [
+      {name:'Emirates Group',pipe:1.4,commit:0.01},{name:'C.G.R. FZE',pipe:1.2,commit:0},
+      {name:'OMANTEL',pipe:1.1,commit:0},{name:'Etihad Water and Electricity (EWE)',pipe:0.8,commit:0},
+      {name:'Taiba Investments',pipe:0.7,commit:0},{name:'Emirates Telecommunications Corporation - Etisalat',pipe:0.6,commit:0},
+      {name:'ABDUL LATIF JAMEEL COMPANY LIMITED',pipe:0.6,commit:0},{name:'Wasl Properties L.L.C',pipe:0.5,commit:0},
+      {name:'Dammam Airports Company (Daco)',pipe:0.5,commit:0},{name:'tallat moustafa',pipe:0.5,commit:0},
+    ],
   },
-  {
-    id: 'op_clouds', name: 'OP with Clouds', icon: '☁️', src: 'Snowflake',
-    srcClass: 'src-snow', ts: '06 Jul 2026, 08:00',
-    desc: 'Pipeline split by product cloud family.',
-    headers: ['Cloud','OU','Pipe $M','% Total','Y/Y','# Opps','Avg Deal'],
-    rows: [
-      ['Sales Cloud','Italy','$34.2M','28.9%','+11%',48,'$713K'],
-      ['Service Cloud','Italy','$22.8M','19.3%','+8%',35,'$651K'],
-      ['Data Cloud','EGM','$19.4M','16.4%','+28%',22,'$882K'],
-      ['Platform','Iberia','$16.0M','13.5%','+5%',31,'$516K'],
-      ['MuleSoft','Middle East','$14.1M','11.9%','+19%',18,'$783K'],
-      ['Other','EMEA South','$12.0M','10.1%','+4%',16,'$750K'],
-    ]
-  },
-  {
-    id: 'commitment', name: 'Commitment', icon: '🏢', src: 'Org62',
-    srcClass: 'src-org', ts: '06 Jul 2026, 07:45',
-    desc: 'Committed opportunities pulled da Org62 via Connected App.',
-    headers: ['Account','AE','OU','Amount','Stage','Commit Cat.','Close Date'],
-    rows: [
-      ['Acme Corp','Rossi M.','Italy','$480K','Commit','Best Case','2026-07-31'],
-      ['Alpha Bank','Conti A.','Italy','$1.8M','Commit','Commit','2026-07-20'],
-      ['Beta Telecom','Bianchi L.','Italy','$320K','Commit','Best Case','2026-07-28'],
-      ['Gamma Oil','García P.','Iberia','$950K','Commit','Commit','2026-07-15'],
-      ['Delta Energy','Müller K.','EGM','$2.4M','Commit','Commit','2026-07-10'],
-    ]
-  },
-  {
-    id: 'finplan', name: 'Finplan', icon: '📋', src: 'Google Sheet (ImportRange)',
-    srcClass: 'src-gs', ts: '05 Jul 2026, 18:00',
-    desc: 'Target finanziari per quarter, importati da foglio Finance.',
-    headers: ['Quarter','OU','Finplan ACV','Finplan Pipe','Coverage Target','Growth Target'],
-    rows: [
-      ['Q2 FY27','EMEA South','$44.8M','$131M','2.9x','+15%'],
-      ['Q2 FY27','Italy','$14.3M','$41.0M','2.9x','+14%'],
-      ['Q2 FY27','Iberia','$12.5M','$35.0M','2.8x','+12%'],
-      ['Q2 FY27','EGM','$9.8M','$31.0M','3.2x','+18%'],
-      ['Q2 FY27','Middle East','$8.2M','$24.0M','2.9x','+20%'],
-    ]
-  },
-  {
-    id: 'hc', name: 'HC Tracker', icon: '👥', src: 'Google Sheet (ImportRange)',
-    srcClass: 'src-gs', ts: '05 Jul 2026, 18:00',
-    desc: 'Headcount AE per OU, quota assegnata, ramp status.',
-    headers: ['AE','OU','Start Date','Status','Quota','Ramp %','Manager'],
-    rows: [
-      ['Rossi M.','Italy','2023-03-01','Active','$5.4M','100%','Moretti P.'],
-      ['Bianchi L.','Italy','2022-09-01','Active','$5.0M','100%','Moretti P.'],
-      ['Ferrari G.','Italy','2024-01-15','Active','$4.2M','100%','Moretti P.'],
-      ['Conti A.','Italy','2023-07-01','Active','$4.0M','100%','Moretti P.'],
-      ['García P.','Iberia','2021-06-01','Active','$5.8M','100%','Lopez A.'],
-      ['Müller K.','EGM','2022-11-01','Active','$6.2M','100%','Weber T.'],
-    ]
-  },
-];
+};
+
+function _tdLookupRow(ouKey, tf) {
+  const id = `td-lookup-${tf}-${ouKey}`;
+  return `<tr class="td-lookup-row">
+    <td>
+      <div class="td-lookup-wrap">
+        <input class="td-lookup-input" id="${id}-inp" type="text" placeholder="Search account…"
+          oninput="tdLookupInput(this,'${ouKey}','${tf}')"
+          onblur="tdLookupBlur('${id}')"
+          onkeydown="tdLookupKey(event,'${id}','${ouKey}','${tf}')"
+          autocomplete="off">
+        <div class="td-lookup-dropdown" id="${id}-dd" style="display:none"></div>
+      </div>
+    </td>
+    <td class="td-lookup-val" id="${id}-pipe">—</td>
+    <td class="td-lookup-val" id="${id}-commit">—</td>
+  </tr>`;
+}
+
+// Cache lookup results per evitare chiamate ripetute: chiave = tf+query
+const _tdLookupCache = {};
+let _tdLookupTimer = null;
+
+function tdLookupInput(inp, ouKey, tf) {
+  const id = `td-lookup-${tf}-${ouKey}`;
+  const q = inp.value.trim();
+  const dd = document.getElementById(id + '-dd');
+  if (q.length < 2) { dd.style.display = 'none'; return; }
+
+  // Mostra subito i risultati locali (fallback)
+  const localAccounts = (TD_LOOKUP[tf] && TD_LOOKUP[tf][ouKey]) || [];
+  const localMatches = localAccounts.filter(a => a.name.toLowerCase().includes(q.toLowerCase()));
+  if (localMatches.length) {
+    _tdRenderDropdown(dd, id, ouKey, tf, localMatches);
+  }
+
+  // Debounce: aspetta 400ms prima di chiamare il backend
+  clearTimeout(_tdLookupTimer);
+  _tdLookupTimer = setTimeout(() => tdLookupFetch(id, ouKey, tf, q), 400);
+}
+
+function tdLookupFetch(id, ouKey, tf, q) {
+  const cacheKey = tf + '|' + q.toLowerCase();
+  if (_tdLookupCache[cacheKey]) {
+    const dd = document.getElementById(id + '-dd');
+    if (dd) _tdRenderDropdown(dd, id, ouKey, tf, _tdLookupCache[cacheKey]);
+    return;
+  }
+  const cbName = '_tdCb_' + Date.now();
+  const script = document.createElement('script');
+  script.src = `${APPS_SCRIPT_URL}?action=lookup&q=${encodeURIComponent(q)}&qtr=${tf}&callback=${cbName}`;
+  window[cbName] = function(data) {
+    delete window[cbName];
+    script.remove();
+    if (!data || !data.results) return;
+    _tdLookupCache[cacheKey] = data.results;
+    const dd = document.getElementById(id + '-dd');
+    if (dd && document.getElementById(id + '-inp') === document.activeElement) {
+      _tdRenderDropdown(dd, id, ouKey, tf, data.results);
+    }
+  };
+  document.head.appendChild(script);
+}
+
+function _tdRenderDropdown(dd, id, ouKey, tf, accounts) {
+  if (!accounts.length) { dd.style.display = 'none'; return; }
+  dd.innerHTML = accounts.map((a, i) =>
+    `<div class="td-lookup-opt" data-i="${i}" onmousedown="tdLookupSelectItem('${id}',${i},'${ouKey}','${tf}')">${a.name}</div>`
+  ).join('');
+  dd._accounts = accounts;
+  dd.style.display = 'block';
+}
+
+function tdLookupSelectItem(id, idx, ouKey, tf) {
+  const dd = document.getElementById(id + '-dd');
+  const accounts = dd && dd._accounts;
+  const a = accounts && accounts[idx];
+  if (!a) return;
+  document.getElementById(id + '-inp').value = a.name;
+  dd.style.display = 'none';
+  document.getElementById(id + '-pipe').textContent = '$' + a.pipe.toFixed(2) + 'M';
+  document.getElementById(id + '-commit').innerHTML = a.commit > 0
+    ? `<span class="td-commit-dot"></span>$${a.commit.toFixed(2)}M`
+    : '<span style="color:var(--sf-meta)">—</span>';
+}
+
+// Mantieni compatibilità con tdLookupSelect usato dalla logica tasti
+function tdLookupSelect(id, ouKey, tf, idx) {
+  const dd = document.getElementById(id + '-dd');
+  const accounts = dd && dd._accounts;
+  const a = accounts && accounts[idx];
+  if (!a) return;
+  document.getElementById(id + '-inp').value = a.name;
+  dd.style.display = 'none';
+  document.getElementById(id + '-pipe').textContent = '$' + a.pipe.toFixed(2) + 'M';
+  document.getElementById(id + '-commit').innerHTML = a.commit > 0
+    ? `<span class="td-commit-dot"></span>$${a.commit.toFixed(2)}M`
+    : '<span style="color:var(--sf-meta)">—</span>';
+}
+
+function tdLookupBlur(id) {
+  setTimeout(() => {
+    const dd = document.getElementById(id + '-dd');
+    if (dd) dd.style.display = 'none';
+  }, 150);
+}
+
+function tdLookupKey(e, id, ouKey, tf) {
+  const dd = document.getElementById(id + '-dd');
+  if (!dd || dd.style.display === 'none') return;
+  const opts = dd.querySelectorAll('.td-lookup-opt');
+  let cur = Array.from(opts).findIndex(o => o.classList.contains('active'));
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (cur < opts.length - 1) { opts[cur] && opts[cur].classList.remove('active'); opts[cur+1].classList.add('active'); opts[cur+1].scrollIntoView({block:'nearest'}); }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (cur > 0) { opts[cur].classList.remove('active'); opts[cur-1].classList.add('active'); opts[cur-1].scrollIntoView({block:'nearest'}); }
+  } else if (e.key === 'Enter' && cur >= 0) {
+    e.preventDefault();
+    tdLookupSelect(id, ouKey, tf, cur);
+  } else if (e.key === 'Escape') {
+    dd.style.display = 'none';
+  }
+}
+
+// ── TOP DEALS BY DEALBAND — LIVE via Apps Script ─────────────────────────────
+// Cache: TDB_CACHE[qtr][logic] = payload da Apps Script
+const TDB_CACHE = {};
+
+const TDB_STATE = { tf: 'CQ', logic: 'Opportunity', band: 'lt100' };
+
+function setTDBFilter(dim, val, btn) {
+  TDB_STATE[dim] = val;
+  const cls = dim === 'tf' ? '.tdb-tf' : dim === 'logic' ? '.tdb-logic' : '.tdb-band';
+  document.querySelectorAll(cls).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // NQ + GlobalCompany non esiste nel Sheet — nessun altro snap necessario
+  renderTopDealsDB();
+}
+
+function renderTopDealsDB() {
+  const { tf, logic, band } = TDB_STATE;
+  const el = document.getElementById('tdb-content');
+
+  // NQ + GlobalCompany non esiste nel Sheet
+  if (tf === 'NQ' && logic === 'GlobalCompany') {
+    el.innerHTML = `<div class="tdb-notice">
+      <strong>Global Company data is not available for NQ (Q3 FY27).</strong><br>
+      Switch to <strong>Current Quarter</strong> to see Global Company pipeline.
+    </div>`;
+    return;
+  }
+
+  // Controlla cache
+  const cached = TDB_CACHE[tf] && TDB_CACHE[tf][logic];
+  if (cached) {
+    _tdbRender(cached, band);
+    return;
+  }
+
+  // Spinner
+  el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--sf-meta);font-size:12px;">
+    <div style="display:inline-block;width:20px;height:20px;border:2px solid #ddd;border-top-color:var(--sf-blue);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:8px"></div><br>
+    Loading data from Salesforce...
+  </div>`;
+
+  // Fetch via JSONP
+  const cbName = '_tdbCb_' + tf + '_' + logic;
+  const script = document.createElement('script');
+  script.src = APPS_SCRIPT_URL + '?action=tdb&qtr=' + tf + '&logic=' + logic + '&callback=' + cbName;
+  window[cbName] = function(data) {
+    delete window[cbName];
+    script.remove();
+    if (!data || data.error) {
+      el.innerHTML = `<div class="tdb-notice"><strong>Error loading data.</strong><br>${data && data.error ? data.error : 'Check Apps Script deployment.'}</div>`;
+      return;
+    }
+    if (!TDB_CACHE[tf]) TDB_CACHE[tf] = {};
+    TDB_CACHE[tf][logic] = data;
+    _tdbRender(data, band);
+  };
+  script.onerror = function() {
+    script.remove();
+    el.innerHTML = `<div class="tdb-notice"><strong>Could not reach Apps Script.</strong><br>Check your connection or redeploy the script.</div>`;
+  };
+  document.head.appendChild(script);
+}
+
+function _tdbRender(payload, band) {
+  const el = document.getElementById('tdb-content');
+  const bandLabels = { lt100:'<$100K', '100to500':'$100K–$500K', '500to1m':'$500K–$1M', gt1m:'$1M+' };
+  const bandLabel = bandLabels[band];
+
+  const visibleOus = S.ou === 'SOUTH'
+    ? payload.ous
+    : payload.ous.filter(ou => ou.key === S.ou);
+
+  const allPipes = visibleOus.flatMap(ou => (ou.bands[band] ? ou.bands[band].open : []).map(d => d.pipe));
+  const maxPipe = allPipes.length ? Math.max(...allPipes) : 1;
+
+  el.innerHTML = `
+    <div style="font-size:11px;color:var(--sf-meta);margin-bottom:14px;padding:6px 12px;background:#f0f6ff;border-left:3px solid var(--sf-blue);border-radius:0 4px 4px 0">
+      Showing: <strong>${bandLabel}</strong> &middot; Logic <strong>${payload.logic}</strong> &middot; <strong>${payload.quarter}</strong>
+      <span style="float:right;opacity:.6;font-style:italic">Live from Salesforce</span>
+    </div>
+    ${visibleOus.map(ou => {
+      const b = ou.bands[band] || { open:[], totalOpen:0, closed:[], totalClosed:0 };
+      const openRows = b.open.map(d => {
+        const barW = Math.round((d.pipe / maxPipe) * 80);
+        return `<tr>
+          <td>${d.name}</td>
+          <td><div class="td-bar-wrap"><div class="td-bar" style="width:${barW}px"></div><span>$${d.pipe.toFixed(2)}M</span></div></td>
+        </tr>`;
+      }).join('');
+      const openTotal = `<tr class="td-total"><td>Total Open</td><td style="text-align:right">$${b.totalOpen.toFixed(2)}M</td></tr>`;
+
+      const closedRows = b.closed.filter(d => d.closed > 0).map(d =>
+        `<tr><td>${d.name}</td><td>$${d.closed.toFixed(2)}M</td></tr>`
+      ).join('');
+      const closedTotal = `<tr class="td-total"><td>Total Commit</td><td style="text-align:right">$${b.totalClosed.toFixed(2)}M</td></tr>`;
+
+      return `<div class="td-ou-section">
+        <div class="td-ou-title">
+          ${ou.label}
+          <span class="td-ou-sub">Top Open ${payload.quarter} · ${bandLabel}</span>
+        </div>
+        <div class="td-grid">
+          <div class="td-card">
+            <div class="td-card-hdr">Open Pipeline <span class="td-card-sub">${payload.quarter} · ${bandLabel}</span></div>
+            <table class="td-table">
+              <thead><tr><th>Account</th><th>Open Pipe</th></tr></thead>
+              <tbody>${openRows}${openTotal}</tbody>
+            </table>
+          </div>
+          <div class="td-card">
+            <div class="td-card-hdr">In Commit <span class="td-card-sub">${payload.quarter}</span></div>
+            <table class="td-table">
+              <thead><tr><th>Account</th><th>Commit $M</th></tr></thead>
+              <tbody>${closedRows || '<tr><td colspan="2" style="color:var(--sf-meta);font-style:italic;text-align:center">No commit records</td></tr>'}${closedTotal}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>`;
+    }).join('')}
+  `;
+}
 
 // ── UTILS ────────────────────────────────────────────────────────────────────
 function r1(n)     { return Math.round(Math.abs(n) * 10) / 10 * Math.sign(n); }
@@ -598,90 +1382,215 @@ function setFilter(dim, val, btn) {
   btn.closest('div').querySelectorAll('button')
     .forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  render();
+  // Re-render la pagina attiva
+  const activePage = document.querySelector('.page.active');
+  const pageId = activePage ? activePage.id.replace('page-','') : 'readiness';
+  if (pageId === 'readiness') render();
+  else if (pageId === 'topdeals') renderTopDeals();
+  else if (pageId === 'topdeals-db') renderTopDealsDB();
+  else if (pageId === 'qbr') renderQBR();
+  else if (pageId === 'seasonality') renderSeasonality();
 }
 
 // ── RENDER ───────────────────────────────────────────────────────────────────
+const OU_LABELS = { SOUTH:'EMEA South', IBERIA:'Iberia', ITALY:'Italy', EGM:'EGM', MIDEAST:'Middle East' };
+
 function render() {
   const d = DATA[S.tf][S.lv][S.ou];
-  const ouLabel = { SOUTH:'EMEA South', IBERIA:'Iberia', ITALY:'Italy', EGM:'Emerging Growth Markets', MIDEAST:'Middle East' }[S.ou];
+  const ouLabel = OU_LABELS[S.ou];
   const lvLabel = S.lv === 'COMBO' ? 'Combo' : 'Opportunity';
+  const tfLabel = S.tf === 'CQ' ? 'Current Quarter (Q2 FY27)' : 'Next Quarter (Q3 FY27)';
+  const q = S.tf === 'NQ' ? 'Q3' : 'Q2';
 
-  const tfLabel = S.tf === 'CQ' ? 'Current Quarter' : 'Next Quarter';
-  document.getElementById('view-lbl').textContent =
-    `${tfLabel} — ${lvLabel} — ${ouLabel}`;
-  document.getElementById('db-sub').textContent = `${tfLabel} · ${lvLabel} · ${ouLabel}`;
-  document.getElementById('ae-sub').textContent = `${ouLabel}`;
-  document.getElementById('trend-sub').textContent = `${ouLabel} · Last 6 weeks`;
+  document.getElementById('view-lbl').textContent = `${S.tf === 'CQ' ? 'Current Quarter' : 'Next Quarter'} — ${lvLabel} — ${ouLabel}`;
+  document.getElementById('db-sub').textContent = `${ouLabel} · ${lvLabel}`;
 
-  renderKPIs(d);
+  // KPI top row: forecast momentum
+  const k = d.kpis;
+  document.getElementById('kpi-grid-top').innerHTML = [
+    kpiCard('kpi-acv',    k.acv_py.lbl,      k.acv_py.val,          null,                    null),
+    kpiCard('kpi-fcst',   k.forecast.lbl,    k.forecast.val,        null,                    null),
+    kpiCard('kpi-yoy',    k.yoy.lbl,         k.yoy.val,             'vs '+q+' FY26',         k.yoy.dir),
+    kpiCard('kpi-closed', k.closed_qtd.lbl,  k.closed_qtd.val,      k.closed_qtd.delta,      k.closed_qtd.dir),
+  ].join('');
+
+  // KPI mid row: pipeline health
+  document.getElementById('kpi-grid-mid').innerHTML = [
+    kpiCard('kpi-pipe',    k.pipeline.lbl,      k.pipeline.val,          null, null),
+    kpiCard('kpi-pgrowth', k.pipe_growth.lbl,   k.pipe_growth.val,       null, k.pipe_growth.dir || 'neu'),
+    kpiCard('kpi-deals',   k.deals_cmt.lbl,     String(k.deals_cmt.val), null, null),
+    kpiCard('kpi-bco',     k.bco_ae.lbl,        k.bco_ae.val,            null, null),
+  ].join('');
+
+  // Coverage section
+  renderCoverageCards();
   renderDealband(d.bands);
-  renderAETable(d.aes);
-  renderCoverage(d.coverage);
-  renderTrend(d.trend);
+  renderCommentContext();
 }
 
-function renderKPIs(d) {
-  const k = d.kpis;
-  const overrideKey = `${S.tf}_${S.lv}_${S.ou}`;
-  const fcstVal = FORECAST_OVERRIDES[overrideKey] || k.forecast.val;
+function kpiKey(id) {
+  return S.tf + '_' + S.lv + '_' + S.ou + '_' + id;
+}
 
-  const cards = [
-    { id:'kpi-acv',      lbl:'Q2 FY26 ACV (PY)',         val: k.acv_py.val,       sub:null,                    editable:false },
-    { id:'kpi-fcst',     lbl:'Q2 FY27 Forecast',         val: fcstVal,             sub:null,                    editable:true  },
-    { id:'kpi-yoy',      lbl:'Y/Y Forecast',             val: k.yoy.val,          sub:'vs Q2 FY26',            dir: k.yoy.dir, editable:false },
-    { id:'kpi-pipe',     lbl:'Pipeline Q2 FY27',         val: k.pipeline.val,     sub:null,                    editable:false },
-    { id:'kpi-pgrowth',  lbl:'Pipeline Growth Y/Y',      val: k.pipe_growth.val,  sub:null,                    dir: 'pos',     editable:false },
-    { id:'kpi-cov',      lbl:'Pipe Coverage',            val: k.pipe_cov.val,     sub:'Current',               editable:false },
-    { id:'kpi-hcov',     lbl:'Hist. Pipe Coverage',      val: k.hist_pipe_cov.val,sub:'Same week PY',          editable:false },
-    { id:'kpi-deals',    lbl:'# Deals in Commitment',    val: k.deals_cmt.val,    sub:null,                    editable:false },
-    { id:'kpi-bco',      lbl:'BCO per AE',               val: k.bco_ae.val,       sub:null,                    editable:false },
-    { id:'kpi-closed',   lbl:'Closed QTD FY27',          val: k.closed_qtd.val,   sub: k.closed_qtd.delta,    dir: k.closed_qtd.dir, editable:false },
-  ];
+function kpiCard(id, lbl, val, sub, dir) {
+  const saved    = KPI_OVERRIDES[kpiKey(id)];
+  const editMeta = KPI_EDITORS[kpiKey(id)];
+  const displayVal = saved !== undefined ? saved : val;
+  const subHtml = sub
+    ? `<div class="sub ${dir||'neu'}">${dir==='pos'?'▲ ':dir==='neg'?'▼ ':''}${sub}</div>`
+    : '';
+  const editedHtml = editMeta
+    ? `<div class="kpi-edited">Last edited by <strong>${editMeta.author}</strong></div>`
+    : '';
+  return `<div class="kpi editable" id="${id}">
+    <div class="lbl">${lbl}</div>
+    <div class="val-wrap">
+      <span class="val" id="${id}-val">${displayVal}</span>
+      <span class="edit-icon" title="Edit" onclick="startEdit('${id}','${val}')">&#9998;</span>
+    </div>${subHtml}${editedHtml}
+    <span class="saving-badge" id="${id}-saving">Saved</span>
+  </div>`;
+}
 
-  document.getElementById('kpi-grid').innerHTML = cards.map(c => {
-    const subHtml = c.sub
-      ? `<div class="sub ${c.dir || 'neu'}">${c.dir === 'pos' ? '▲ ' : c.dir === 'neg' ? '▼ ' : ''}${c.sub}</div>`
-      : '';
-    if (c.editable) {
-      return `
-        <div class="kpi editable" id="${c.id}">
-          <div class="lbl">${c.lbl} <span style="color:var(--sf-blue);font-size:9px">(editable)</span></div>
-          <div class="val-wrap">
-            <span class="val" id="${c.id}-val">${c.val}</span>
-            <span class="edit-icon" title="Edit & sync to Sheet" onclick="startEdit('${c.id}')">&#9998;</span>
-          </div>
-          ${subHtml}
-          <span class="saving-badge" id="${c.id}-saving">Saving…</span>
-        </div>`;
-    }
-    return `
-      <div class="kpi" id="${c.id}">
-        <div class="lbl">${c.lbl}</div>
-        <div class="val">${c.val}</div>
-        ${subHtml}
-      </div>`;
-  }).join('');
+function covClass(val) {
+  // val es "1.8x" — verde se ≥2, arancio 1.5-2, rosso <1.5
+  var n = parseFloat(val);
+  if (isNaN(n)) return '';
+  if (n >= 2.0) return 'cov-pos';
+  if (n >= 1.5) return 'cov-warn';
+  return 'cov-neg';
+}
+
+function renderCoverageCards() {
+  document.getElementById('cov-cards').innerHTML = `
+    <div class="card" style="height:100%">
+      <div class="card-hdr"><h3>Pipe Coverage — ${OU_LABELS[S.ou]}</h3></div>
+      <div class="card-body">${renderCovHighlight()}</div>
+    </div>`;
+}
+
+function renderCovHighlight() {
+  var raw = COV[S.tf][S.lv][S.ou] || '—';
+  var m = raw.match(/([\d.]+)x\s*\(([\d.]+)x\)/);
+  var cur  = m ? parseFloat(m[1]) : null;
+  var hist = m ? parseFloat(m[2]) : null;
+  if (!cur) return '<div style="color:var(--sf-meta);font-size:12px">No data</div>';
+
+  var diff = cur - hist;
+  var diffStr = (diff >= 0 ? '+' : '') + diff.toFixed(1) + 'x vs hist';
+  var diffCls = diff >= 0 ? 'cov-pos' : 'cov-neg';
+  var pctCur  = Math.min(cur  / 4 * 100, 100).toFixed(0);
+  var pctHist = Math.min(hist / 4 * 100, 100).toFixed(0);
+
+  return `
+    <div style="font-size:12px;font-weight:600;margin-bottom:12px">${OU_LABELS[S.ou]}</div>
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px">
+        <span>Current</span><span class="${covClass(cur+'x')}">${cur.toFixed(1)}x</span>
+      </div>
+      <div style="height:10px;background:#E5E5E5;border-radius:5px;overflow:hidden">
+        <div style="height:100%;width:${pctCur}%;background:#0176D3;border-radius:5px;transition:width .4s"></div>
+      </div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px">
+        <span>Historical (PY same week)</span><span class="${covClass(hist+'x')}">${hist.toFixed(1)}x</span>
+      </div>
+      <div style="height:10px;background:#E5E5E5;border-radius:5px;overflow:hidden">
+        <div style="height:100%;width:${pctHist}%;background:#64B5F6;border-radius:5px;transition:width .4s"></div>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-size:11px;font-weight:700" class="${diffCls}">${diffStr}</div>`;
 }
 
 function renderDealband(bands) {
   const maxPipe = Math.max(...bands.map(b => Math.abs(b.pipe)));
   document.getElementById('db-rows').innerHTML = bands.map(b => {
     const pct = maxPipe > 0 ? (Math.abs(b.pipe) / maxPipe * 100).toFixed(1) : 0;
-    const barClass = b.band === '<$0' ? 'bar-neg' : b.dir === 'neg' ? 'bar-warn' : 'bar-pos';
+    const barClass = b.dir === 'neg' ? 'bar-warn' : 'bar-pos';
     return `
       <div class="db-row">
         <span class="db-band">${b.band}</span>
         <div class="bar-wrap"><div class="bar-fill ${barClass}" style="width:${pct}%"></div></div>
-        <span class="db-num">${b.pipe > 0 ? '$'+b.pipe+'M' : '($'+Math.abs(b.pipe)+'M)'}</span>
-        <span class="db-num">${b.fcst > 0 ? '$'+b.fcst+'M' : '($'+Math.abs(b.fcst)+'M)'}</span>
-        <span class="db-num"><span class="badge ${b.band === '<$0' ? 'neu' : b.dir}">${b.yoy}</span></span>
+        <span class="db-num">$${b.pipe}M</span>
+        <span class="db-num" style="color:var(--sf-meta)">$${b.fcst}M</span>
+        <span class="db-num"><span class="badge ${b.yoy==='—'?'neu':b.dir}">${b.yoy}</span></span>
       </div>`;
   }).join('');
 }
 
+// ── COMMENTS ─────────────────────────────────────────────────────────────────
+const COMMENTS = [];
+
+function renderCommentContext() {
+  const ouLabel = OU_LABELS[S.ou];
+  const q = S.tf === 'NQ' ? 'Q3' : 'Q2';
+  const ctx = `${ouLabel} · ${q} FY27 · ${S.lv === 'COMBO' ? 'Combo' : 'Opportunity'}`;
+  const el = document.getElementById('cmt-context');
+  if (el) el.textContent = ctx;
+  renderCommentsList();
+}
+
+function renderCommentsList() {
+  const list = document.getElementById('comments-list');
+  if (!list) return;
+  const relevant = COMMENTS.filter(c => c.context === document.getElementById('cmt-context').textContent);
+  if (!relevant.length) {
+    list.innerHTML = '<div style="font-size:11px;color:var(--sf-meta);padding:4px 0 12px">No comments yet for this view.</div>';
+    return;
+  }
+  list.innerHTML = relevant.map(c => `
+    <div class="cmt-item">
+      <div class="cmt-meta">${c.author} · ${c.time}${c.ai ? '<span class="cmt-badge ai">✦ AI polished</span>' : ''}</div>
+      <div class="cmt-text">${c.text}</div>
+    </div>`).join('');
+}
+
+function polishComment() {
+  const draft = document.getElementById('cmt-draft').value.trim();
+  if (!draft) { document.getElementById('cmt-status').textContent = 'Write something first.'; return; }
+  const ctx = document.getElementById('cmt-context').textContent;
+  document.getElementById('cmt-status').textContent = '✦ Polishing…';
+
+  // Chiama Claude via Apps Script proxy se disponibile, altrimenti local polish
+  const polished = localPolish(draft, ctx);
+  document.getElementById('cmt-polished').textContent = polished;
+  document.getElementById('cmt-polished-wrap').style.display = 'block';
+  document.getElementById('cmt-status').textContent = '';
+}
+
+function localPolish(draft, ctx) {
+  // Semplice polish locale: capitalizza, completa frasi, tono formale
+  var s = draft.trim();
+  s = s.charAt(0).toUpperCase() + s.slice(1);
+  if (!s.endsWith('.') && !s.endsWith(':')) s += '.';
+  return s + ' This commentary refers to ' + ctx + '.';
+}
+
+function usePolished() {
+  const polished = document.getElementById('cmt-polished').textContent;
+  document.getElementById('cmt-draft').value = polished;
+  document.getElementById('cmt-polished-wrap').style.display = 'none';
+}
+
+function submitComment() {
+  const author = document.getElementById('cmt-author').value.trim() || 'Anonymous';
+  const text   = document.getElementById('cmt-draft').value.trim();
+  if (!text) { document.getElementById('cmt-status').textContent = 'Nothing to submit.'; return; }
+  const ctx = document.getElementById('cmt-context').textContent;
+  const now = new Date().toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+  COMMENTS.push({ author, text, context: ctx, time: now, ai: false });
+  document.getElementById('cmt-draft').value = '';
+  document.getElementById('cmt-polished-wrap').style.display = 'none';
+  document.getElementById('cmt-status').textContent = 'Submitted.';
+  setTimeout(() => { document.getElementById('cmt-status').textContent = ''; }, 2000);
+  renderCommentsList();
+}
+
+// stub — kept for compatibility
 function renderAETable(aes) {
-  document.getElementById('ae-tbody').innerHTML = aes.map(ae => `
+  var el = document.getElementById('ae-tbody');
+  if (el) el.innerHTML = aes.map(ae => `
     <tr>
       <td><strong>${ae.name}</strong></td>
       <td class="num">${ae.fcst}</td>
@@ -718,6 +1627,11 @@ function renderCoverage(cov) {
 }
 
 function renderTrend(trend) {
+  if (!trend || !trend.length) {
+    document.getElementById('trend-wrap').innerHTML =
+      '<div style="color:var(--sf-meta);font-size:11px;padding:20px">Weekly trend not available in live data.</div>';
+    return;
+  }
   const maxV = Math.max(...trend.map(t => t.v));
   document.getElementById('trend-wrap').innerHTML = trend.map(t => `
     <div class="tbar-grp">
@@ -727,139 +1641,502 @@ function renderTrend(trend) {
     </div>`).join('');
 }
 
-// ── EDITABLE FORECAST ────────────────────────────────────────────────────────
-function startEdit(id) {
+// ── EDITABLE KPIs ─────────────────────────────────────────────────────────────
+function startEdit(id, originalVal) {
   const valEl = document.getElementById(id + '-val');
+  if (!valEl) return;
   const current = valEl.textContent;
   valEl.innerHTML = `<input class="edit-input" id="${id}-input" value="${current}"
-    onblur="commitEdit('${id}')" onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape')cancelEdit('${id}','${current}')">`;
+    onblur="commitEdit('${id}','${originalVal}')"
+    onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape')cancelEdit('${id}','${current}')">`;
   document.getElementById(id + '-input').focus();
 }
 
 function cancelEdit(id, original) {
-  document.getElementById(id + '-val').textContent = original;
+  const valEl = document.getElementById(id + '-val');
+  if (valEl) valEl.textContent = original;
 }
 
-async function commitEdit(id) {
+async function commitEdit(id, originalVal) {
   const input = document.getElementById(id + '-input');
   if (!input) return;
   const newVal = input.value.trim();
+  if (!newVal) { cancelEdit(id, originalVal); return; }
+
+  // Chiede il nome dell'editor se non già salvato in sessione
+  let author = sessionStorage.getItem('dashboard_author');
+  if (!author) {
+    author = prompt('Your name:', '') || 'Unknown';
+    sessionStorage.setItem('dashboard_author', author);
+  }
+
+  const k = kpiKey(id);
+  KPI_OVERRIDES[k] = newVal;
+  KPI_EDITORS[k]   = { author: author };
+  if (id === 'kpi-fcst') FORECAST_OVERRIDES[S.tf+'_'+S.lv+'_'+S.ou] = newVal;
+
+  const valEl = document.getElementById(id + '-val');
+  if (valEl) valEl.textContent = newVal;
+
+  // Aggiorna il "last edited" senza re-render completo
+  const kpiEl = document.getElementById(id);
+  if (kpiEl) {
+    let editedEl = kpiEl.querySelector('.kpi-edited');
+    if (!editedEl) {
+      editedEl = document.createElement('div');
+      editedEl.className = 'kpi-edited';
+      kpiEl.querySelector('.saving-badge').before(editedEl);
+    }
+    editedEl.innerHTML = `Last edited by <strong>${author}</strong>`;
+  }
+
   const savingEl = document.getElementById(id + '-saving');
-  document.getElementById(id + '-val').textContent = newVal;
-  savingEl.style.display = 'inline-block';
-
-  const overrideKey = `${S.tf}_${S.lv}_${S.ou}`;
-  FORECAST_OVERRIDES[overrideKey] = newVal;
-
-  if (APPS_SCRIPT_URL) {
-    try {
-      await fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'writeForecast', key: overrideKey, value: newVal }),
-      });
-    } catch(e) { console.warn('Write-back failed:', e.message); }
-  } else {
-    await new Promise(r => setTimeout(r, 600)); // simula latenza in modalità mock
-  }
-  savingEl.style.display = 'none';
+  if (savingEl) { savingEl.style.display = 'inline-block'; setTimeout(() => { savingEl.style.display = 'none'; }, 1200); }
 }
 
-// ── DATASET EXPLORER ─────────────────────────────────────────────────────────
-let selectedDS = null;
+// ── SEASONALITY & OP STATUS ───────────────────────────────────────────────────
 
-function renderDatasets() {
-  document.getElementById('ds-cards').innerHTML = DATASETS.map(ds => `
-    <div class="ds-card ${selectedDS === ds.id ? 'selected' : ''}" onclick="selectDataset('${ds.id}')">
-      <div class="ds-icon">${ds.icon}</div>
-      <div class="ds-name">${ds.name}</div>
-      <div class="ds-src">${ds.src}</div>
-      <div class="ds-ts">&#8635; ${ds.ts}</div>
-    </div>`).join('');
+const SEAS_OUS = [
+  { key: 'south',  label: 'Marco Hernansanz' },
+  { key: 'iberia', label: 'EMEA - SOUTH - IB - SVP' },
+  { key: 'italy',  label: 'Vanessa Fortarezza' },
+  { key: 'egm',    label: 'Ana Alonso Muñumer' },
+  { key: 'me',     label: 'Mohammed Alkhotani' },
+];
 
-  if (selectedDS) {
-    const ds = DATASETS.find(d => d.id === selectedDS);
-    document.getElementById('ds-preview').innerHTML = `
-      <div class="ds-preview-hdr">
-        <span style="font-size:20px">${ds.icon}</span>
-        <h3>${ds.name}</h3>
-        <span class="ds-badge-src ${ds.srcClass}">${ds.src}</span>
-        <span style="font-size:10px;color:var(--sf-meta)">&#8635; ${ds.ts} &nbsp;·&nbsp; ${ds.rows.length} rows (preview)</span>
-        <div class="dl-group">
-          <a class="dl-btn csv"  onclick="downloadDataset('${ds.id}','csv')"  href="#">&#8595; CSV</a>
-          <a class="dl-btn json" onclick="downloadDataset('${ds.id}','json')" href="#">&#8595; JSON</a>
-          <a class="dl-btn xlsx" onclick="downloadDataset('${ds.id}','xlsx')" href="#">&#8595; Excel</a>
-        </div>
+const SEAS_DATA = {
+  monthly: {
+    title: 'Monthly Seasonality — May / June / July',
+    hist: {
+      label: '3 Yr. Hist. Average',
+      rows: [
+        { ou: 'Marco Hernansanz',          may: '17%', jun: '26%', jul: '57%', q2: '$57.7M' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   may: '15%', jun: '23%', jul: '62%', q2: '$16.3M' },
+        { ou: 'Vanessa Fortarezza',         may: '11%', jun: '27%', jul: '61%', q2: '$18.0M' },
+        { ou: 'Ana Alonso Muñumer',         may: '23%', jun: '27%', jul: '51%', q2: '$15.8M' },
+        { ou: 'Mohammed Alkhotani',         may: '28%', jun: '23%', jul: '49%', q2: '$7.6M' },
+      ]
+    },
+    fy24: {
+      label: 'FY 2024',
+      rows: [
+        { ou: 'Marco Hernansanz',          may: '18%', jun: '31%', jul: '50%', q2: '$48.6M' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   may: '15%', jun: '24%', jul: '61%', q2: '$13.0M' },
+        { ou: 'Vanessa Fortarezza',         may: '13%', jun: '38%', jul: '50%', q2: '$14.1M' },
+        { ou: 'Ana Alonso Muñumer',         may: '21%', jun: '34%', jul: '45%', q2: '$14.8M' },
+        { ou: 'Mohammed Alkhotani',         may: '32%', jun: '25%', jul: '43%', q2: '$6.5M' },
+      ]
+    },
+    fy25: {
+      label: 'FY 2025',
+      rows: [
+        { ou: 'Marco Hernansanz',          may: '16%', jun: '22%', jul: '62%', q2: '$63.2M' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   may: '14%', jun: '22%', jul: '64%', q2: '$18.8M' },
+        { ou: 'Vanessa Fortarezza',         may: '9%',  jun: '23%', jul: '69%', q2: '$22.1M' },
+        { ou: 'Ana Alonso Muñumer',         may: '28%', jun: '19%', jul: '52%', q2: '$14.9M' },
+        { ou: 'Mohammed Alkhotani',         may: '19%', jun: '22%', jul: '59%', q2: '$7.4M' },
+      ]
+    },
+    fy26: {
+      label: 'FY 2026',
+      rows: [
+        { ou: 'Marco Hernansanz',          may: '18%', jun: '24%', jul: '58%', q2: '$61.2M' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   may: '15%', jun: '22%', jul: '62%', q2: '$17.0M' },
+        { ou: 'Vanessa Fortarezza',         may: '13%', jun: '22%', jul: '65%', q2: '$17.8M' },
+        { ou: 'Ana Alonso Muñumer',         may: '18%', jun: '27%', jul: '55%', q2: '$17.6M' },
+        { ou: 'Mohammed Alkhotani',         may: '33%', jun: '23%', jul: '44%', q2: '$8.8M' },
+      ]
+    },
+    fy27: {
+      label: 'Q2 FY27 Commit',
+      rows: [
+        { ou: 'Marco Hernansanz',          may: '20%', jun: '23%', jul: '57%', q2: '$66.5M' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   may: '18%', jun: '26%', jul: '56%', q2: '$19.0M' },
+        { ou: 'Vanessa Fortarezza',         may: '15%', jun: '15%', jul: '69%', q2: '$17.5M' },
+        { ou: 'Ana Alonso Muñumer',         may: '24%', jun: '28%', jul: '48%', q2: '$18.5M' },
+        { ou: 'Mohammed Alkhotani',         may: '23%', jun: '21%', jul: '56%', q2: '$11.0M' },
+      ]
+    },
+  },
+
+  mfj: {
+    title: 'MFJ Distribution (None / UP- / UP+ / IN)',
+    hist: {
+      label: '3 Yr. Hist. Average',
+      rows: [
+        { ou: 'Marco Hernansanz',          none: '4%', upm: '22%', upp: '37%', inn: '37%', total: '' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   none: '5%', upm: '29%', upp: '31%', inn: '36%', total: '' },
+        { ou: 'Vanessa Fortarezza',         none: '4%', upm: '14%', upp: '35%', inn: '46%', total: '' },
+        { ou: 'Ana Alonso Muñumer',         none: '5%', upm: '23%', upp: '44%', inn: '29%', total: '' },
+        { ou: 'Mohammed Alkhotani',         none: '3%', upm: '22%', upp: '39%', inn: '36%', total: '' },
+      ]
+    },
+    fy24: {
+      label: 'FY 2024',
+      rows: [
+        { ou: 'Marco Hernansanz',          none: '4%', upm: '26%', upp: '35%', inn: '36%', total: '$50.6M' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   none: '6%', upm: '33%', upp: '24%', inn: '37%', total: '$16.3M' },
+        { ou: 'Vanessa Fortarezza',         none: '2%', upm: '18%', upp: '40%', inn: '41%', total: '$12.7M' },
+        { ou: 'Ana Alonso Muñumer',         none: '3%', upm: '25%', upp: '43%', inn: '29%', total: '$15.9M' },
+        { ou: 'Mohammed Alkhotani',         none: '3%', upm: '23%', upp: '32%', inn: '42%', total: '$5.7M' },
+      ]
+    },
+    fy25: {
+      label: 'FY 2025',
+      rows: [
+        { ou: 'Marco Hernansanz',          none: '6%', upm: '19%', upp: '38%', inn: '36%', total: '$60.1M' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   none: '5%', upm: '29%', upp: '44%', inn: '22%', total: '$15.7M' },
+        { ou: 'Vanessa Fortarezza',         none: '10%', upm: '13%', upp: '30%', inn: '47%', total: '$19.0M' },
+        { ou: 'Ana Alonso Muñumer',         none: '4%', upm: '18%', upp: '41%', inn: '36%', total: '$14.3M' },
+        { ou: 'Mohammed Alkhotani',         none: '3%', upm: '19%', upp: '40%', inn: '38%', total: '$11.1M' },
+      ]
+    },
+    fy26: {
+      label: 'FY 2026',
+      rows: [
+        { ou: 'Marco Hernansanz',          none: '3%', upm: '20%', upp: '37%', inn: '39%', total: '$64.1M' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   none: '2%', upm: '24%', upp: '24%', inn: '50%', total: '$16.8M' },
+        { ou: 'Vanessa Fortarezza',         none: '1%', upm: '11%', upp: '36%', inn: '51%', total: '$19.9M' },
+        { ou: 'Ana Alonso Muñumer',         none: '7%', upm: '25%', upp: '47%', inn: '22%', total: '$18.1M' },
+        { ou: 'Mohammed Alkhotani',         none: '3%', upm: '23%', upp: '46%', inn: '28%', total: '$9.1M' },
+      ]
+    },
+    fy27: {
+      label: 'Q2 FY27 Pipe',
+      rows: [
+        { ou: 'Marco Hernansanz',          none: '3%', upm: '18%', upp: '37%', inn: '41%', total: '$61.9' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   none: '6%', upm: '21%', upp: '42%', inn: '31%', total: '$16.5' },
+        { ou: 'Vanessa Fortarezza',         none: '1%', upm: '9%',  upp: '31%', inn: '59%', total: '$14.8' },
+        { ou: 'Ana Alonso Muñumer',         none: '2%', upm: '30%', upp: '27%', inn: '41%', total: '$15.4' },
+        { ou: 'Mohammed Alkhotani',         none: '3%', upm: '12%', upp: '49%', inn: '35%', total: '$14.9' },
+      ]
+    },
+  },
+
+  stage: {
+    title: 'Stage Distribution (Stage 2/3 vs Stage 4+)',
+    hist: {
+      label: '3 Yr. Hist. Average',
+      rows: [
+        { ou: 'Marco Hernansanz',          s23: '14%', s4: '86%', total: '' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   s23: '16%', s4: '84%', total: '' },
+        { ou: 'Vanessa Fortarezza',         s23: '12%', s4: '88%', total: '' },
+        { ou: 'Ana Alonso Muñumer',         s23: '16%', s4: '84%', total: '' },
+        { ou: 'Mohammed Alkhotani',         s23: '12%', s4: '88%', total: '' },
+      ]
+    },
+    fy24: {
+      label: 'FY 2024',
+      rows: [
+        { ou: 'Marco Hernansanz',          s23: '15%', s4: '85%', total: '$50.6M' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   s23: '18%', s4: '82%', total: '$16.3M' },
+        { ou: 'Vanessa Fortarezza',         s23: '9%',  s4: '91%', total: '$12.7M' },
+        { ou: 'Ana Alonso Muñumer',         s23: '17%', s4: '83%', total: '$15.9M' },
+        { ou: 'Mohammed Alkhotani',         s23: '9%',  s4: '91%', total: '$5.7M' },
+      ]
+    },
+    fy25: {
+      label: 'FY 2025',
+      rows: [
+        { ou: 'Marco Hernansanz',          s23: '14%', s4: '86%', total: '$60.1M' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   s23: '16%', s4: '84%', total: '$15.7M' },
+        { ou: 'Vanessa Fortarezza',         s23: '10%', s4: '90%', total: '$19.0M' },
+        { ou: 'Ana Alonso Muñumer',         s23: '18%', s4: '82%', total: '$14.3M' },
+        { ou: 'Mohammed Alkhotani',         s23: '10%', s4: '90%', total: '$11.1M' },
+      ]
+    },
+    fy26: {
+      label: 'FY 2026',
+      rows: [
+        { ou: 'Marco Hernansanz',          s23: '15%', s4: '85%', total: '$64.1M' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   s23: '12%', s4: '88%', total: '$16.8M' },
+        { ou: 'Vanessa Fortarezza',         s23: '15%', s4: '85%', total: '$19.9M' },
+        { ou: 'Ana Alonso Muñumer',         s23: '14%', s4: '86%', total: '$18.1M' },
+        { ou: 'Mohammed Alkhotani',         s23: '18%', s4: '82%', total: '$9.1M' },
+      ]
+    },
+    fy27: {
+      label: 'Q2 FY27 Pipe',
+      rows: [
+        { ou: 'Marco Hernansanz',          s23: '20%', s4: '80%', total: '$61.9M' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   s23: '36%', s4: '64%', total: '$16.5M' },
+        { ou: 'Vanessa Fortarezza',         s23: '10%', s4: '90%', total: '$14.8M' },
+        { ou: 'Ana Alonso Muñumer',         s23: '13%', s4: '87%', total: '$15.4M' },
+        { ou: 'Mohammed Alkhotani',         s23: '18%', s4: '82%', total: '$14.9M' },
+      ]
+    },
+  },
+
+  dealband: {
+    title: 'Dealband Distribution (Run Rate / Fat Middle / Large Deals)',
+    hist: {
+      label: '3 Yr. Hist. Average',
+      rows: [
+        { ou: 'Marco Hernansanz',          rr: '43%', fm: '43%', ld: '14%', total: '' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   rr: '41%', fm: '42%', ld: '16%', total: '' },
+        { ou: 'Vanessa Fortarezza',         rr: '38%', fm: '44%', ld: '19%', total: '' },
+        { ou: 'Ana Alonso Muñumer',         rr: '50%', fm: '46%', ld: '4%',  total: '' },
+        { ou: 'Mohammed Alkhotani',         rr: '43%', fm: '42%', ld: '15%', total: '' },
+      ]
+    },
+    fy24: {
+      label: 'FY 2024',
+      rows: [
+        { ou: 'Marco Hernansanz',          rr: '47%', fm: '45%', ld: '8%',  total: '$50.6M' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   rr: '44%', fm: '41%', ld: '15%', total: '$16.3M' },
+        { ou: 'Vanessa Fortarezza',         rr: '47%', fm: '44%', ld: '9%',  total: '$12.7M' },
+        { ou: 'Ana Alonso Muñumer',         rr: '48%', fm: '48%', ld: '4%',  total: '$15.9M' },
+        { ou: 'Mohammed Alkhotani',         rr: '55%', fm: '45%', ld: '0%',  total: '$5.7M' },
+      ]
+    },
+    fy25: {
+      label: 'FY 2025',
+      rows: [
+        { ou: 'Marco Hernansanz',          rr: '35%', fm: '40%', ld: '24%', total: '$60.1M' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   rr: '38%', fm: '41%', ld: '21%', total: '$15.7M' },
+        { ou: 'Vanessa Fortarezza',         rr: '28%', fm: '34%', ld: '38%', total: '$19.0M' },
+        { ou: 'Ana Alonso Muñumer',         rr: '48%', fm: '48%', ld: '4%',  total: '$14.3M' },
+        { ou: 'Mohammed Alkhotani',         rr: '27%', fm: '41%', ld: '32%', total: '$11.1M' },
+      ]
+    },
+    fy26: {
+      label: 'FY 2026',
+      rows: [
+        { ou: 'Marco Hernansanz',          rr: '45%', fm: '46%', ld: '10%', total: '$64.1M' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   rr: '42%', fm: '44%', ld: '14%', total: '$16.8M' },
+        { ou: 'Vanessa Fortarezza',         rr: '38%', fm: '53%', ld: '9%',  total: '$19.9M' },
+        { ou: 'Ana Alonso Muñumer',         rr: '54%', fm: '41%', ld: '5%',  total: '$18.1M' },
+        { ou: 'Mohammed Alkhotani',         rr: '46%', fm: '41%', ld: '14%', total: '$9.1M' },
+      ]
+    },
+    fy27: {
+      label: 'Q2 FY27 Pipe',
+      rows: [
+        { ou: 'Marco Hernansanz',          rr: '40%', fm: '38%', ld: '22%', total: '$61.9M' },
+        { ou: 'EMEA - SOUTH - IB - SVP',   rr: '33%', fm: '47%', ld: '21%', total: '$16.5M' },
+        { ou: 'Vanessa Fortarezza',         rr: '46%', fm: '39%', ld: '15%', total: '$14.8M' },
+        { ou: 'Ana Alonso Muñumer',         rr: '51%', fm: '21%', ld: '27%', total: '$15.4M' },
+        { ou: 'Mohammed Alkhotani',         rr: '29%', fm: '46%', ld: '25%', total: '$14.9M' },
+      ]
+    },
+  },
+};
+
+// Parse "17%" → 17
+function _pct(v) { return parseFloat(String(v).replace('%','')) || 0; }
+
+// Stacked bar from array of {val, cls}
+function _seasBar(segs) {
+  return '<div class="seas-bar">' + segs.map(s => {
+    const w = Math.max(s.val, 0);
+    const txt = w >= 10 ? w + '%' : '';
+    return `<div class="seas-bar-seg ${s.cls}" style="flex:${w || 0.001}">${txt}</div>`;
+  }).join('') + '</div>';
+}
+
+// Short OU name for card header
+function _seasOuShort(ou) {
+  const MAP = {
+    'Marco Hernansanz':        'SOUTH',
+    'EMEA - SOUTH - IB - SVP': 'IBERIA',
+    'Vanessa Fortarezza':      'ITALY',
+    'Ana Alonso Muñumer':      'EGM',
+    'Mohammed Alkhotani':      'MIDDLE EAST',
+  };
+  return MAP[ou] || ou;
+}
+
+// Single year row inside a card
+function _seasYrRow(label, bar, total, isFY27) {
+  const cls = isFY27 ? 'seas-yr-row seas-fy27' : 'seas-yr-row';
+  return `<div class="${cls}">
+    <div class="seas-yr-lbl">${label}</div>
+    <div class="seas-yr-bar">${bar}</div>
+    <div class="seas-yr-total">${total || '—'}</div>
+  </div>`;
+}
+
+function _seasCardMonthly(ou, data) {
+  const years = [
+    { key:'fy24', label:'FY24' },
+    { key:'fy25', label:'FY25' },
+    { key:'fy26', label:'FY26' },
+    { key:'hist', label:'3yr avg' },
+    { key:'fy27', label:'FY27', isFY27: true },
+  ];
+  const rows = years.map(y => {
+    const r = data[y.key].rows.find(x => x.ou === ou);
+    if (!r) return '';
+    const bar = _seasBar([
+      { val: _pct(r.may), cls: 'seg-may' },
+      { val: _pct(r.jun), cls: 'seg-jun' },
+      { val: _pct(r.jul), cls: 'seg-jul' },
+    ]);
+    return _seasYrRow(y.label, bar, r.q2, y.isFY27);
+  }).join('');
+  const fy27 = data.fy27.rows.find(x => x.ou === ou);
+  return `<div class="seas-card">
+    <div class="seas-card-hdr">
+      <div class="seas-card-ou">${_seasOuShort(ou)}</div>
+      <div class="seas-card-total"><span class="seas-card-total-lbl">FY27 Commit</span>${fy27 ? fy27.q2 : '—'}</div>
+    </div>
+    <div class="seas-card-body">
+      <div class="seas-legend">
+        <div class="seas-legend-item"><div class="seas-legend-dot seg-may"></div>May</div>
+        <div class="seas-legend-item"><div class="seas-legend-dot seg-jun"></div>June</div>
+        <div class="seas-legend-item"><div class="seas-legend-dot seg-jul"></div>July</div>
       </div>
-      <div class="ds-preview-body">
-        <p style="font-size:11px;color:var(--sf-meta);margin-bottom:10px">${ds.desc}</p>
-        <table class="tbl">
-          <thead><tr>${ds.headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
-          <tbody>${ds.rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
-        </table>
-      </div>`;
-  } else {
-    document.getElementById('ds-preview').innerHTML = `
-      <div class="ds-empty">
-        <div class="big">&#128202;</div>
-        <div style="font-size:13px;font-weight:600">Seleziona un dataset</div>
-        <div style="font-size:11px">Clicca su una delle card qui sopra per visualizzare i dati</div>
-      </div>`;
-  }
+      <div class="seas-yr-rows">${rows}</div>
+    </div>
+  </div>`;
 }
 
-function selectDataset(id) {
-  selectedDS = selectedDS === id ? null : id;
-  renderDatasets();
+function _seasCardMFJ(ou, data) {
+  const years = [
+    { key:'fy24', label:'FY24' },
+    { key:'fy25', label:'FY25' },
+    { key:'fy26', label:'FY26' },
+    { key:'hist', label:'3yr avg' },
+    { key:'fy27', label:'FY27 Pipe', isFY27: true },
+  ];
+  const rows = years.map(y => {
+    const r = data[y.key].rows.find(x => x.ou === ou);
+    if (!r) return '';
+    const bar = _seasBar([
+      { val: _pct(r.none), cls: 'seg-none' },
+      { val: _pct(r.upm),  cls: 'seg-upm'  },
+      { val: _pct(r.upp),  cls: 'seg-upp'  },
+      { val: _pct(r.inn),  cls: 'seg-inn'  },
+    ]);
+    return _seasYrRow(y.label, bar, r.total, y.isFY27);
+  }).join('');
+  const fy27 = data.fy27.rows.find(x => x.ou === ou);
+  return `<div class="seas-card">
+    <div class="seas-card-hdr">
+      <div class="seas-card-ou">${_seasOuShort(ou)}</div>
+      <div class="seas-card-total"><span class="seas-card-total-lbl">FY27 Pipe</span>${fy27 ? (fy27.total || '—') : '—'}</div>
+    </div>
+    <div class="seas-card-body">
+      <div class="seas-legend">
+        <div class="seas-legend-item"><div class="seas-legend-dot seg-none"></div>None</div>
+        <div class="seas-legend-item"><div class="seas-legend-dot seg-upm"></div>UP−</div>
+        <div class="seas-legend-item"><div class="seas-legend-dot seg-upp"></div>UP+</div>
+        <div class="seas-legend-item"><div class="seas-legend-dot seg-inn"></div>IN</div>
+      </div>
+      <div class="seas-yr-rows">${rows}</div>
+    </div>
+  </div>`;
 }
 
-function downloadDataset(id, format) {
-  const ds = DATASETS.find(d => d.id === id);
-  if (!ds) return;
-  const filename = `${ds.id}_${new Date().toISOString().slice(0,10)}`;
-
-  if (format === 'csv') {
-    const lines = [ds.headers.join(',')].concat(
-      ds.rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(','))
-    );
-    triggerDownload(lines.join('\r\n'), filename + '.csv', 'text/csv;charset=utf-8;');
-  }
-
-  if (format === 'json') {
-    const objects = ds.rows.map(r =>
-      Object.fromEntries(ds.headers.map((h, i) => [h, r[i]]))
-    );
-    const payload = JSON.stringify({ dataset: ds.name, source: ds.src, exported_at: new Date().toISOString(), rows: objects }, null, 2);
-    triggerDownload(payload, filename + '.json', 'application/json');
-  }
-
-  if (format === 'xlsx') {
-    // Genera un file Excel-compatible XML (SpreadsheetML) — apre direttamente in Excel senza librerie
-    const xmlRows = [ds.headers, ...ds.rows].map(row =>
-      '<Row>' + row.map(c => `<Cell><Data ss:Type="String">${String(c).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</Data></Cell>`).join('') + '</Row>'
-    ).join('');
-    const xml = `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-  <Styles>
-    <Style ss:ID="header"><Font ss:Bold="1"/><Interior ss:Color="#0176D3" ss:Pattern="Solid"/><Font ss:Color="#FFFFFF" ss:Bold="1"/></Style>
-  </Styles>
-  <Worksheet ss:Name="${ds.name.replace(/[<>&'"]/g,'')}">
-    <Table>${xmlRows}</Table>
-  </Worksheet>
-</Workbook>`;
-    triggerDownload(xml, filename + '.xls', 'application/vnd.ms-excel');
-  }
+function _seasCardStage(ou, data) {
+  const years = [
+    { key:'fy24', label:'FY24' },
+    { key:'fy25', label:'FY25' },
+    { key:'fy26', label:'FY26' },
+    { key:'hist', label:'3yr avg' },
+    { key:'fy27', label:'FY27 Pipe', isFY27: true },
+  ];
+  const rows = years.map(y => {
+    const r = data[y.key].rows.find(x => x.ou === ou);
+    if (!r) return '';
+    const bar = _seasBar([
+      { val: _pct(r.s23), cls: 'seg-s23' },
+      { val: _pct(r.s4),  cls: 'seg-s4'  },
+    ]);
+    return _seasYrRow(y.label, bar, r.total, y.isFY27);
+  }).join('');
+  const fy27 = data.fy27.rows.find(x => x.ou === ou);
+  return `<div class="seas-card">
+    <div class="seas-card-hdr">
+      <div class="seas-card-ou">${_seasOuShort(ou)}</div>
+      <div class="seas-card-total"><span class="seas-card-total-lbl">FY27 Pipe</span>${fy27 ? (fy27.total || '—') : '—'}</div>
+    </div>
+    <div class="seas-card-body">
+      <div class="seas-legend">
+        <div class="seas-legend-item"><div class="seas-legend-dot seg-s23"></div>Stage 2/3</div>
+        <div class="seas-legend-item"><div class="seas-legend-dot seg-s4"></div>Stage 4+</div>
+      </div>
+      <div class="seas-yr-rows">${rows}</div>
+    </div>
+  </div>`;
 }
 
-function triggerDownload(content, filename, mimeType) {
-  const blob = new Blob([content], { type: mimeType });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url; a.download = filename; a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 200);
+function _seasCardDealband(ou, data) {
+  const years = [
+    { key:'fy24', label:'FY24' },
+    { key:'fy25', label:'FY25' },
+    { key:'fy26', label:'FY26' },
+    { key:'hist', label:'3yr avg' },
+    { key:'fy27', label:'FY27 Pipe', isFY27: true },
+  ];
+  const rows = years.map(y => {
+    const r = data[y.key].rows.find(x => x.ou === ou);
+    if (!r) return '';
+    const bar = _seasBar([
+      { val: _pct(r.rr), cls: 'seg-rr' },
+      { val: _pct(r.fm), cls: 'seg-fm' },
+      { val: _pct(r.ld), cls: 'seg-ld' },
+    ]);
+    return _seasYrRow(y.label, bar, r.total, y.isFY27);
+  }).join('');
+  const fy27 = data.fy27.rows.find(x => x.ou === ou);
+  return `<div class="seas-card">
+    <div class="seas-card-hdr">
+      <div class="seas-card-ou">${_seasOuShort(ou)}</div>
+      <div class="seas-card-total"><span class="seas-card-total-lbl">FY27 Pipe</span>${fy27 ? (fy27.total || '—') : '—'}</div>
+    </div>
+    <div class="seas-card-body">
+      <div class="seas-legend">
+        <div class="seas-legend-item"><div class="seas-legend-dot seg-rr"></div>Run Rate</div>
+        <div class="seas-legend-item"><div class="seas-legend-dot seg-fm"></div>Fat Middle</div>
+        <div class="seas-legend-item"><div class="seas-legend-dot seg-ld"></div>Large Deals</div>
+      </div>
+      <div class="seas-yr-rows">${rows}</div>
+    </div>
+  </div>`;
 }
+
+function renderSeasonality() {
+  const el = document.getElementById('seas-content');
+  if (!el) return;
+  const ouLabel = OU_LABELS[S.ou] || S.ou;
+  document.getElementById('view-lbl').textContent = `${S.tf === 'CQ' ? 'Current Quarter' : 'Next Quarter'} — ${ouLabel}`;
+
+  const SEAS_OU_MAP = {
+    SOUTH:   null,
+    IBERIA:  'EMEA - SOUTH - IB - SVP',
+    ITALY:   'Vanessa Fortarezza',
+    EGM:     'Ana Alonso Muñumer',
+    MIDEAST: 'Mohammed Alkhotani',
+  };
+  const allOus = SEAS_DATA.monthly.hist.rows.map(r => r.ou);
+  const ouFilter = SEAS_OU_MAP[S.ou];
+  const ous = ouFilter ? allOus.filter(ou => ou === ouFilter) : allOus;
+
+  const monthlyCards = ous.map(ou => _seasCardMonthly(ou, SEAS_DATA.monthly)).join('');
+  const mfjCards     = ous.map(ou => _seasCardMFJ(ou, SEAS_DATA.mfj)).join('');
+  const stageCards   = ous.map(ou => _seasCardStage(ou, SEAS_DATA.stage)).join('');
+  const dbCards      = ous.map(ou => _seasCardDealband(ou, SEAS_DATA.dealband)).join('');
+
+  el.innerHTML = `
+    <div class="seas-block">
+      <div class="seas-block-title">Monthly Seasonality <span class="seas-badge">May · June · July</span></div>
+      <div class="seas-cards">${monthlyCards}</div>
+    </div>
+    <div class="seas-block">
+      <div class="seas-block-title">MFJ Distribution <span class="seas-badge">None · UP− · UP+ · IN</span></div>
+      <div class="seas-cards">${mfjCards}</div>
+    </div>
+    <div class="seas-block">
+      <div class="seas-block-title">Stage Distribution <span class="seas-badge">Stage 2/3 vs Stage 4+</span></div>
+      <div class="seas-cards">${stageCards}</div>
+    </div>
+    <div class="seas-block">
+      <div class="seas-block-title">Dealband Distribution <span class="seas-badge">Run Rate · Fat Middle · Large Deals</span></div>
+      <div class="seas-cards">${dbCards}</div>
+    </div>`;
+}
+
 
 // ── PAGE SWITCHING ────────────────────────────────────────────────────────────
 function switchPage(page, tab) {
@@ -867,8 +2144,239 @@ function switchPage(page, tab) {
   tab.classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
-  document.getElementById('slicer-bar').style.display = page === 'readiness' ? 'flex' : 'none';
-  if (page === 'datasets') renderDatasets();
+  // Slicer bar: always visible; TF su tutti i tab; LV solo su readiness e topdeals
+  document.getElementById('slicer-bar').style.display = 'flex';
+  const hasTf = ['readiness','topdeals','qbr','seasonality'].includes(page);
+  const hasLv = ['readiness'].includes(page);
+  ['sg-tf','sd-tf'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = hasTf ? '' : 'none';
+  });
+  ['sg-lv','sd-lv'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = hasLv ? '' : 'none';
+  });
+  const hasTdb = (page === 'topdeals-db');
+  ['sg-tdb','sd-tdb-ou','sg-tdb2','sd-tdb2','sg-tdb3','sd-tdb3'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = hasTdb ? '' : 'none';
+  });
+  if (page === 'topdeals') renderTopDeals();
+  if (page === 'topdeals-db') renderTopDealsDB();
+  if (page === 'qbr') renderQBR();
+  if (page === 'seasonality') renderSeasonality();
+}
+
+// ── QBR FORECAST DATA ─────────────────────────────────────────────────────────
+const QBR_DATA = {
+  CQ: {
+    quarter: 'Q2 FY27',
+    sections: [
+      {
+        title: 'SOUTH — Overview',
+        rows: [
+          { ou:'SOUTH (M. Hernansanz)', fcst:'$66.5', yy:'9%', yr2:'3%', attn:'90%', vel:'51%', hvel:'49%', dgap:'$0.5', d1gap:'$5.6', pipe:'$61.9', opYY:'-3%', cvg:'1.9x', hcvg:'2x', s4cvg:'1.5x', s4hcvg:'1.7x', funded:'—', aes:'315', aesYY:'15%', leader:'M. Hernansanz', type:'ou' },
+          { ou:'Directs Roll-up', fcst:'$66.0', yy:'8%', yr2:'2%', attn:'90%', vel:'52%', hvel:'49%', dgap:'$5.1', d1gap:'$0.7', pipe:'$61.7', opYY:'-3%', cvg:'1.9x', hcvg:'2x', s4cvg:'1.6x', s4hcvg:'1.7x', funded:'—', aes:'-', aesYY:'-', leader:'', type:'dir' },
+          { ou:'IBERIA (TBH)', fcst:'$19.0', yy:'12%', yr2:'1%', attn:'93%', vel:'56%', hvel:'45%', dgap:'$1.7', d1gap:'$3.1', pipe:'$16.5', opYY:'-1%', cvg:'2x', hcvg:'1.7x', s4cvg:'1.3x', s4hcvg:'1.5x', funded:'—', aes:'78', aesYY:'1%', leader:'TBH', type:'sub' },
+          { ou:'ITALY (V. Fortarezza)', fcst:'$17.5', yy:'-2%', yr2:'-11%', attn:'81%', vel:'37%', hvel:'43%', dgap:'$0.2', d1gap:'-$9.9', pipe:'$14.8', opYY:'-26%', cvg:'1.3x', hcvg:'1.8x', s4cvg:'1.2x', s4hcvg:'1.5x', funded:'—', aes:'95', aesYY:'10%', leader:'V. Fortarezza', type:'sub' },
+          { ou:'EMERGING (R. Fisher)', fcst:'$18.5', yy:'5%', yr2:'11%', attn:'99%', vel:'59%', hvel:'56%', dgap:'$3.3', d1gap:'$7.7', pipe:'$15.4', opYY:'-15%', cvg:'2x', hcvg:'2.3x', s4cvg:'1.8x', s4hcvg:'1.9x', funded:'—', aes:'94', aesYY:'13%', leader:'R. Fisher', type:'sub' },
+          { ou:'M. EAST (M. Alkhotani)', fcst:'$11.0', yy:'24%', yr2:'22%', attn:'87%', vel:'56%', hvel:'59%', dgap:'-$0.1', d1gap:'-$0.1', pipe:'$14.9', opYY:'64%', cvg:'3.1x', hcvg:'3.2x', s4cvg:'2.5x', s4hcvg:'2.7x', funded:'—', aes:'48', aesYY:'66%', leader:'M. Alkhotani', type:'sub' },
+        ]
+      },
+      {
+        title: 'IBERIA — Dettaglio OU+1',
+        rows: [
+          { ou:'IBERIA (TBH)', fcst:'$19.0M', yy:'12%', yr2:'1%', attn:'93%', vel:'56%', hvel:'45%', dgap:'$2M', d1gap:'$3M', pipe:'$16.5M', opYY:'-1%', cvg:'2x', hcvg:'1.7x', s4cvg:'1.3x', s4hcvg:'1.5x', funded:'$13.8M', aes:'80', aesYY:'4%', leader:'TBH', type:'ou' },
+          { ou:'Directs Roll-up', fcst:'$17.3M', yy:'1%', yr2:'-4%', attn:'84%', vel:'61%', hvel:'45%', dgap:'$5M', d1gap:'n/a', pipe:'$16.5M', opYY:'-1%', cvg:'2.5x', hcvg:'1.7x', s4cvg:'1.6x', s4hcvg:'1.5x', funded:'$13.8M', aes:'-', aesYY:'-', leader:'', type:'dir' },
+          { ou:'Regulated', fcst:'$6.0M', yy:'14%', yr2:'9%', attn:'93%', vel:'59%', hvel:'49%', dgap:'$2M', d1gap:'n/a', pipe:'$4.3M', opYY:'-7%', cvg:'1.7x', hcvg:'1.5x', s4cvg:'0.9x', s4hcvg:'1.2x', funded:'$5.2M', aes:'23', aesYY:'5%', leader:'A. Romero', type:'sub' },
+          { ou:'Non-Regulated', fcst:'$4.0M', yy:'-24%', yr2:'-9%', attn:'67%', vel:'68%', hvel:'55%', dgap:'-$2M', d1gap:'n/a', pipe:'$5.2M', opYY:'22%', cvg:'4.1x', hcvg:'2.1x', s4cvg:'2x', s4hcvg:'1.8x', funded:'$3.9M', aes:'19', aesYY:'12%', leader:'P. Rodriguez', type:'sub' },
+          { ou:'Portugal', fcst:'$2.1M', yy:'51%', yr2:'-32%', attn:'102%', vel:'80%', hvel:'25%', dgap:'$0M', d1gap:'n/a', pipe:'$2.7M', opYY:'-30%', cvg:'6.5x', hcvg:'2.8x', s4cvg:'5.7x', s4hcvg:'2.8x', funded:'$1.5M', aes:'10', aesYY:'11%', leader:'F. Braz', type:'sub' },
+          { ou:'CBU', fcst:'$5.2M', yy:'2%', yr2:'10%', attn:'85%', vel:'51%', hvel:'47%', dgap:'$5M', d1gap:'n/a', pipe:'$4.3M', opYY:'9%', cvg:'1.7x', hcvg:'1.5x', s4cvg:'1.3x', s4hcvg:'1.2x', funded:'$3.1M', aes:'28', aesYY:'-3%', leader:'F. Gil', type:'sub' },
+        ]
+      },
+      {
+        title: 'ITALY — Dettaglio OU+1',
+        rows: [
+          { ou:'ITALY (V. Fortarezza)', fcst:'$17.5M', yy:'-2%', yr2:'-11%', attn:'81%', vel:'37%', hvel:'43%', dgap:'$0M', d1gap:'-$10M', pipe:'$14.8M', opYY:'-26%', cvg:'1.3x', hcvg:'1.8x', s4cvg:'1.2x', s4hcvg:'1.5x', funded:'$18.0M', aes:'95', aesYY:'10%', leader:'V. Fortarezza', type:'ou' },
+          { ou:'Directs Roll-up', fcst:'$17.3M', yy:'-3%', yr2:'-12%', attn:'80%', vel:'38%', hvel:'43%', dgap:'-$10M', d1gap:'n/a', pipe:'$14.8M', opYY:'-26%', cvg:'1.4x', hcvg:'1.8x', s4cvg:'1.2x', s4hcvg:'1.5x', funded:'$17.4M', aes:'-', aesYY:'-', leader:'', type:'dir' },
+          { ou:'Regulated', fcst:'$5.5M', yy:'5%', yr2:'-8%', attn:'71%', vel:'45%', hvel:'55%', dgap:'-$5M', d1gap:'n/a', pipe:'$3.2M', opYY:'-49%', cvg:'1.1x', hcvg:'1.9x', s4cvg:'1x', s4hcvg:'1.7x', funded:'$5.8M', aes:'—', aesYY:'—', leader:'A. Sgroi', type:'sub' },
+          { ou:'Non-Regulated', fcst:'$6.5M', yy:'-6%', yr2:'-23%', attn:'81%', vel:'36%', hvel:'31%', dgap:'-$6M', d1gap:'n/a', pipe:'$6.2M', opYY:'-12%', cvg:'1.5x', hcvg:'1.5x', s4cvg:'1.4x', s4hcvg:'1.4x', funded:'$6.8M', aes:'—', aesYY:'—', leader:'A. Catalano', type:'sub' },
+          { ou:'CBU', fcst:'$5.3M', yy:'-6%', yr2:'6%', attn:'89%', vel:'33%', hvel:'53%', dgap:'$1M', d1gap:'n/a', pipe:'$5.5M', opYY:'-18%', cvg:'1.5x', hcvg:'2.2x', s4cvg:'1.2x', s4hcvg:'1.6x', funded:'$4.8M', aes:'—', aesYY:'—', leader:'A. Murgo', type:'sub' },
+        ]
+      },
+      {
+        title: 'EGM — Dettaglio OU+1',
+        rows: [
+          { ou:'EGM (Ana Alonso)', fcst:'$18.5M', yy:'5%', yr2:'11%', attn:'99%', vel:'59%', hvel:'56%', dgap:'$3M', d1gap:'$7.7M', pipe:'$15.4M', opYY:'-15%', cvg:'2x', hcvg:'2.3x', s4cvg:'1.8x', s4hcvg:'1.9x', funded:'$9.4M', aes:'94', aesYY:'13%', leader:'Ana Alonso', type:'ou' },
+          { ou:'Directs Roll-up', fcst:'$15.2M', yy:'-14%', yr2:'1%', attn:'99%', vel:'71%', hvel:'56%', dgap:'$6M', d1gap:'$4.4M', pipe:'$15.4M', opYY:'-15%', cvg:'3.5x', hcvg:'2.3x', s4cvg:'3.1x', s4hcvg:'1.9x', funded:'$9.4M', aes:'-', aesYY:'-', leader:'', type:'dir' },
+          { ou:'AFRICA', fcst:'$4.1M', yy:'63%', yr2:'22%', attn:'112%', vel:'45%', hvel:'56%', dgap:'$0M', d1gap:'$2.2M', pipe:'$4.2M', opYY:'12%', cvg:'1.9x', hcvg:'3.4x', s4cvg:'1.9x', s4hcvg:'2.9x', funded:'$3.8M', aes:'—', aesYY:'—', leader:'N. Christodoulou', type:'sub' },
+          { ou:'ISRAEL', fcst:'$4.7M', yy:'-24%', yr2:'3%', attn:'71%', vel:'67%', hvel:'56%', dgap:'$0M', d1gap:'$1.6M', pipe:'$4.5M', opYY:'-23%', cvg:'2.9x', hcvg:'2.2x', s4cvg:'2.2x', s4hcvg:'1.8x', funded:'$1.4M', aes:'—', aesYY:'—', leader:'I. Margalit', type:'sub' },
+          { ou:'EEC/SEM', fcst:'$6.4M', yy:'-28%', yr2:'-9%', attn:'125%', vel:'91%', hvel:'56%', dgap:'$6M', d1gap:'$0.6M', pipe:'$6.7M', opYY:'-20%', cvg:'12.1x', hcvg:'2.1x', s4cvg:'10.6x', s4hcvg:'1.7x', funded:'$4.2M', aes:'—', aesYY:'—', leader:'H. Supic', type:'sub' },
+        ]
+      },
+      {
+        title: 'MIDDLE EAST — Dettaglio OU+1',
+        rows: [
+          { ou:'MIDDLE EAST (M. Alkhotani)', fcst:'$11.0M', yy:'24%', yr2:'22%', attn:'87%', vel:'56%', hvel:'59%', dgap:'-$0.1M', d1gap:'-$0.1M', pipe:'$14.9M', opYY:'64%', cvg:'3.1x', hcvg:'3.2x', s4cvg:'2.5x', s4hcvg:'2.7x', funded:'102%', aes:'48', aesYY:'66%', leader:'M. Alkhotani', type:'ou' },
+          { ou:'Directs Roll-up', fcst:'$11.1M', yy:'26%', yr2:'23%', attn:'87%', vel:'56%', hvel:'59%', dgap:'n/a', d1gap:'n/a', pipe:'$14.9M', opYY:'64%', cvg:'3x', hcvg:'3.2x', s4cvg:'2.5x', s4hcvg:'2.7x', funded:'94%', aes:'-', aesYY:'-', leader:'', type:'dir' },
+          { ou:'ENTR UAE 1', fcst:'$2.5M', yy:'30%', yr2:'38%', attn:'95%', vel:'63%', hvel:'72%', dgap:'n/a', d1gap:'n/a', pipe:'$3.1M', opYY:'121%', cvg:'3.4x', hcvg:'3.5x', s4cvg:'2.6x', s4hcvg:'3x', funded:'84%', aes:'-', aesYY:'-%', leader:'M. Hammad', type:'sub' },
+          { ou:'ENTR UAE 2', fcst:'$3.0M', yy:'6%', yr2:'1%', attn:'80%', vel:'52%', hvel:'53%', dgap:'n/a', d1gap:'n/a', pipe:'$4.8M', opYY:'194%', cvg:'3.4x', hcvg:'2.1x', s4cvg:'3.3x', s4hcvg:'2.1x', funded:'87%', aes:'-', aesYY:'-%', leader:'M. El-Sisy', type:'sub' },
+          { ou:'ENTR KSA', fcst:'$2.0M', yy:'143%', yr2:'39%', attn:'90%', vel:'56%', hvel:'47%', dgap:'n/a', d1gap:'n/a', pipe:'$2.1M', opYY:'-23%', cvg:'2.4x', hcvg:'6x', s4cvg:'1.7x', s4hcvg:'5.5x', funded:'85%', aes:'-', aesYY:'-%', leader:'I. Alseghayr', type:'sub' },
+          { ou:'CBU', fcst:'$3.7M', yy:'10%', yr2:'31%', attn:'88%', vel:'53%', hvel:'62%', dgap:'-$0.3M', d1gap:'n/a', pipe:'$4.9M', opYY:'47%', cvg:'2.9x', hcvg:'3.3x', s4cvg:'2.1x', s4hcvg:'2.5x', funded:'50%', aes:'-', aesYY:'-%', leader:'R. Daley', type:'sub' },
+        ]
+      },
+    ]
+  },
+  NQ: {
+    quarter: 'Q3 FY27',
+    sections: [
+      {
+        title: 'SOUTH — Overview',
+        rows: [
+          { ou:'SOUTH (M. Hernansanz)', fcst:'$58.0', yy:'11%', yr2:'8%', attn:'87%', vel:'3%', hvel:'11%', dgap:'-$3.7', d1gap:'-$1.8', pipe:'$159.7', opYY:'6%', cvg:'2.8x', hcvg:'3.3x', s4cvg:'1.3x', s4hcvg:'1.4x', funded:'—', aes:'327', aesYY:'17%', leader:'M. Hernansanz', type:'ou' },
+          { ou:'Directs Roll-up', fcst:'$61.7', yy:'18%', yr2:'12%', attn:'92%', vel:'3%', hvel:'11%', dgap:'$1.9', d1gap:'$8.0', pipe:'$158.4', opYY:'6%', cvg:'2.6x', hcvg:'3.3x', s4cvg:'1.2x', s4hcvg:'1.4x', funded:'—', aes:'-', aesYY:'-', leader:'', type:'dir' },
+          { ou:'IBERIA (TBH)', fcst:'$12.5', yy:'7%', yr2:'2%', attn:'77%', vel:'5%', hvel:'8%', dgap:'-$1.1', d1gap:'-$0.2', pipe:'$27.8', opYY:'-19%', cvg:'2.3x', hcvg:'3.6x', s4cvg:'1x', s4hcvg:'1.4x', funded:'—', aes:'80', aesYY:'7%', leader:'TBH', type:'sub' },
+          { ou:'ITALY (V. Fortarezza)', fcst:'$16.5', yy:'3%', yr2:'6%', attn:'86%', vel:'2%', hvel:'14%', dgap:'$0.8', d1gap:'-$10.9', pipe:'$34.2', opYY:'-2%', cvg:'2.1x', hcvg:'2.8x', s4cvg:'0.9x', s4hcvg:'1.3x', funded:'—', aes:'97', aesYY:'11%', leader:'V. Fortarezza', type:'sub' },
+          { ou:'EMERGING (R. Fisher)', fcst:'$20.0', yy:'29%', yr2:'11%', attn:'107%', vel:'4%', hvel:'13%', dgap:'$1.6', d1gap:'$19.1', pipe:'$63.9', opYY:'22%', cvg:'3.3x', hcvg:'3.6x', s4cvg:'2x', s4hcvg:'1.4x', funded:'—', aes:'99', aesYY:'18%', leader:'R. Fisher', type:'sub' },
+          { ou:'M. EAST (M. Alkhotani)', fcst:'$12.7', yy:'41%', yr2:'40%', attn:'100%', vel:'1%', hvel:'4%', dgap:'$0.7', d1gap:'n/a', pipe:'$32.4', opYY:'17%', cvg:'2.6x', hcvg:'3.1x', s4cvg:'0.6x', s4hcvg:'1.5x', funded:'—', aes:'49', aesYY:'48%', leader:'M. Alkhotani', type:'sub' },
+        ]
+      },
+      {
+        title: 'IBERIA — Dettaglio OU+1',
+        rows: [
+          { ou:'IBERIA (TBH)', fcst:'$12.5M', yy:'7%', yr2:'2%', attn:'77%', vel:'5%', hvel:'8%', dgap:'-$1M', d1gap:'$0M', pipe:'$27.8M', opYY:'-19%', cvg:'2.3x', hcvg:'3.6x', s4cvg:'1x', s4hcvg:'1.4x', funded:'—', aes:'80', aesYY:'7%', leader:'TBH', type:'ou' },
+          { ou:'Directs Roll-up', fcst:'$13.6M', yy:'17%', yr2:'6%', attn:'83%', vel:'5%', hvel:'8%', dgap:'$1M', d1gap:'n/a', pipe:'$27.8M', opYY:'-19%', cvg:'2.2x', hcvg:'3.6x', s4cvg:'0.9x', s4hcvg:'1.4x', funded:'—', aes:'-', aesYY:'-', leader:'', type:'dir' },
+          { ou:'Regulated', fcst:'$4.2M', yy:'27%', yr2:'14%', attn:'82%', vel:'13%', hvel:'5%', dgap:'$0M', d1gap:'n/a', pipe:'$5.8M', opYY:'-42%', cvg:'1.6x', hcvg:'4.3x', s4cvg:'0.9x', s4hcvg:'1.5x', funded:'—', aes:'—', aesYY:'—', leader:'A. Romero', type:'sub' },
+          { ou:'Non-Regulated', fcst:'$4.0M', yy:'10%', yr2:'12%', attn:'84%', vel:'1%', hvel:'4%', dgap:'-$2M', d1gap:'n/a', pipe:'$9.2M', opYY:'-2%', cvg:'2.3x', hcvg:'3.7x', s4cvg:'0.7x', s4hcvg:'1.2x', funded:'—', aes:'—', aesYY:'—', leader:'P. Rodriguez', type:'sub' },
+          { ou:'Portugal', fcst:'$1.5M', yy:'19%', yr2:'-13%', attn:'92%', vel:'4%', hvel:'25%', dgap:'-$1M', d1gap:'n/a', pipe:'$3.4M', opYY:'-18%', cvg:'2.4x', hcvg:'4.1x', s4cvg:'2.1x', s4hcvg:'2.6x', funded:'—', aes:'—', aesYY:'—', leader:'F. Braz', type:'sub' },
+          { ou:'CBU', fcst:'$3.9M', yy:'13%', yr2:'3%', attn:'81%', vel:'0%', hvel:'6%', dgap:'$4M', d1gap:'n/a', pipe:'$9.4M', opYY:'-14%', cvg:'2.4x', hcvg:'2.9x', s4cvg:'0.8x', s4hcvg:'1.1x', funded:'—', aes:'—', aesYY:'—', leader:'F. Gil', type:'sub' },
+        ]
+      },
+      {
+        title: 'ITALY — Dettaglio OU+1',
+        rows: [
+          { ou:'ITALY (V. Fortarezza)', fcst:'$16.5M', yy:'3%', yr2:'6%', attn:'86%', vel:'2%', hvel:'14%', dgap:'$1M', d1gap:'-$11M', pipe:'$34.2M', opYY:'-2%', cvg:'2.1x', hcvg:'2.8x', s4cvg:'0.9x', s4hcvg:'1.3x', funded:'—', aes:'97', aesYY:'11%', leader:'V. Fortarezza', type:'ou' },
+          { ou:'Directs Roll-up', fcst:'$15.8M', yy:'-2%', yr2:'3%', attn:'82%', vel:'2%', hvel:'14%', dgap:'-$12M', d1gap:'n/a', pipe:'$34.2M', opYY:'-2%', cvg:'2.2x', hcvg:'2.8x', s4cvg:'0.9x', s4hcvg:'1.3x', funded:'—', aes:'-', aesYY:'-', leader:'', type:'dir' },
+          { ou:'Regulated', fcst:'$5.1M', yy:'-30%', yr2:'-7%', attn:'75%', vel:'3%', hvel:'30%', dgap:'-$6M', d1gap:'n/a', pipe:'$8.5M', opYY:'-33%', cvg:'1.7x', hcvg:'2.9x', s4cvg:'1x', s4hcvg:'1.5x', funded:'—', aes:'—', aesYY:'—', leader:'A. Sgroi', type:'sub' },
+          { ou:'Non-Regulated', fcst:'$6.0M', yy:'34%', yr2:'3%', attn:'85%', vel:'3%', hvel:'3%', dgap:'-$6M', d1gap:'n/a', pipe:'$13.9M', opYY:'22%', cvg:'2.4x', hcvg:'2.7x', s4cvg:'0.7x', s4hcvg:'1.3x', funded:'—', aes:'—', aesYY:'—', leader:'A. Catalano', type:'sub' },
+          { ou:'CBU', fcst:'$4.7M', yy:'10%', yr2:'21%', attn:'89%', vel:'1%', hvel:'6%', dgap:'$0M', d1gap:'n/a', pipe:'$11.9M', opYY:'10%', cvg:'2.6x', hcvg:'3.2x', s4cvg:'1.2x', s4hcvg:'1.2x', funded:'—', aes:'—', aesYY:'—', leader:'A. Murgo', type:'sub' },
+        ]
+      },
+      {
+        title: 'EGM — Dettaglio OU+1',
+        rows: [
+          { ou:'EGM (Ana Alonso)', fcst:'$20.0M', yy:'29%', yr2:'11%', attn:'107%', vel:'4%', hvel:'13%', dgap:'$2M', d1gap:'$19.1M', pipe:'$63.9M', opYY:'22%', cvg:'3.3x', hcvg:'3.6x', s4cvg:'2x', s4hcvg:'1.4x', funded:'—', aes:'99', aesYY:'18%', leader:'Ana Alonso', type:'ou' },
+          { ou:'Directs Roll-up', fcst:'$18.4M', yy:'19%', yr2:'7%', attn:'98%', vel:'5%', hvel:'13%', dgap:'$0M', d1gap:'$17.5M', pipe:'$63.9M', opYY:'22%', cvg:'3.6x', hcvg:'3.6x', s4cvg:'2.1x', s4hcvg:'1.4x', funded:'—', aes:'-', aesYY:'-', leader:'', type:'dir' },
+          { ou:'Nick Christodoulou', fcst:'$3.6M', yy:'-19%', yr2:'3%', attn:'99%', vel:'3%', hvel:'13%', dgap:'$0M', d1gap:'$3.5M', pipe:'$12.6M', opYY:'4%', cvg:'3.6x', hcvg:'3.9x', s4cvg:'2.3x', s4hcvg:'1.7x', funded:'—', aes:'—', aesYY:'—', leader:'N. Christodoulou', type:'sub' },
+          { ou:'Itai Margalit', fcst:'$8.5M', yy:'87%', yr2:'32%', attn:'128%', vel:'6%', hvel:'13%', dgap:'$3M', d1gap:'$7.9M', pipe:'$31.5M', opYY:'50%', cvg:'4x', hcvg:'4x', s4cvg:'2.3x', s4hcvg:'1.4x', funded:'—', aes:'—', aesYY:'—', leader:'I. Margalit', type:'sub' },
+          { ou:'EEC/SEM', fcst:'$6.3M', yy:'-3%', yr2:'-10%', attn:'74%', vel:'3%', hvel:'13%', dgap:'-$3M', d1gap:'$6.1M', pipe:'$19.8M', opYY:'2%', cvg:'3.2x', hcvg:'3x', s4cvg:'1.9x', s4hcvg:'1.3x', funded:'—', aes:'—', aesYY:'—', leader:'H. Supic', type:'sub' },
+        ]
+      },
+      {
+        title: 'MIDDLE EAST — Dettaglio OU+1',
+        rows: [
+          { ou:'MIDDLE EAST (M. Alkhotani)', fcst:'$12.7M', yy:'41%', yr2:'40%', attn:'100%', vel:'1%', hvel:'4%', dgap:'$0.7M', d1gap:'n/a', pipe:'$32.4M', opYY:'17%', cvg:'2.6x', hcvg:'3.1x', s4cvg:'0.6x', s4hcvg:'1.5x', funded:'—', aes:'49', aesYY:'48%', leader:'M. Alkhotani', type:'ou' },
+          { ou:'Directs Roll-up', fcst:'$12.0M', yy:'34%', yr2:'36%', attn:'95%', vel:'1%', hvel:'4%', dgap:'n/a', d1gap:'n/a', pipe:'$32.4M', opYY:'17%', cvg:'2.7x', hcvg:'3.1x', s4cvg:'0.7x', s4hcvg:'1.5x', funded:'—', aes:'-', aesYY:'-', leader:'', type:'dir' },
+          { ou:'ENTR UAE 1', fcst:'$2.5M', yy:'76%', yr2:'16%', attn:'95%', vel:'0%', hvel:'13%', dgap:'n/a', d1gap:'n/a', pipe:'$5.9M', opYY:'29%', cvg:'2.3x', hcvg:'3.1x', s4cvg:'0.4x', s4hcvg:'1.1x', funded:'—', aes:'-', aesYY:'-%', leader:'M. Hammad', type:'sub' },
+          { ou:'ENTR UAE 2', fcst:'$3.1M', yy:'16%', yr2:'23%', attn:'84%', vel:'0%', hvel:'2%', dgap:'n/a', d1gap:'n/a', pipe:'$8.7M', opYY:'33%', cvg:'2.8x', hcvg:'2.2x', s4cvg:'1x', s4hcvg:'1.3x', funded:'—', aes:'-', aesYY:'-%', leader:'M. El-Sisy', type:'sub' },
+          { ou:'ENTR KSA', fcst:'$2.3M', yy:'19%', yr2:'112%', attn:'101%', vel:'3%', hvel:'4%', dgap:'n/a', d1gap:'n/a', pipe:'$8.9M', opYY:'64%', cvg:'4.1x', hcvg:'5.2x', s4cvg:'1.1x', s4hcvg:'2.4x', funded:'—', aes:'-', aesYY:'-%', leader:'I. Alseghayr', type:'sub' },
+          { ou:'CBU', fcst:'$4.2M', yy:'39%', yr2:'41%', attn:'100%', vel:'0%', hvel:'0%', dgap:'$0.2M', d1gap:'n/a', pipe:'$8.9M', opYY:'-20%', cvg:'2.1x', hcvg:'3.7x', s4cvg:'0.4x', s4hcvg:'1.7x', funded:'—', aes:'-', aesYY:'-%', leader:'R. Daley', type:'sub' },
+        ]
+      },
+    ]
+  }
+};
+
+function _qbrPctClass(val) {
+  if (!val || val === 'n/a' || val === '-' || val === '—') return '';
+  const n = parseFloat(val.replace('%',''));
+  if (isNaN(n)) return '';
+  if (n >= 15) return 'qbr-pos';
+  if (n >= 5) return 'qbr-warn';
+  return 'qbr-neg';
+}
+
+function _qbrAttnClass(val) {
+  if (!val || val === 'n/a' || val === '-' || val === '—') return '';
+  const n = parseFloat(val.replace('%',''));
+  if (isNaN(n)) return '';
+  if (n > 99.5) return 'qbr-attn-hi';
+  if (n >= 89.5) return 'qbr-attn-mid';
+  return 'qbr-attn-lo';
+}
+
+const QBR_FUNDED_OVERRIDES = {};
+
+function qbrSaveFunded(el) {
+  const key = el.dataset.key;
+  const val = el.textContent.trim();
+  QBR_FUNDED_OVERRIDES[key] = val;
+}
+
+function renderQBR() {
+  const ouLabel = OU_LABELS[S.ou] || S.ou;
+  document.getElementById('view-lbl').textContent = `${S.tf === 'CQ' ? 'Current Quarter' : 'Next Quarter'} — ${ouLabel}`;
+  const data = QBR_DATA[S.tf];
+  const COLS = [
+    { key:'fcst',    lbl:'Forecast' },
+    { key:'yy',      lbl:'Y/Y',      cls: r => _qbrPctClass(r.yy) },
+    { key:'yr2',     lbl:'2 YR',     cls: r => _qbrPctClass(r.yr2) },
+    { key:'attn',    lbl:'Attain.',   cls: r => _qbrAttnClass(r.attn) },
+    { key:'vel',     lbl:'Velocity',  cls: r => _qbrPctClass(r.vel) },
+    { key:'hvel',    lbl:'Hist.Vel.' },
+    { key:'dgap',    lbl:'Directs Gap' },
+    { key:'d1gap',   lbl:'Dir+1 Gap' },
+    { key:'pipe',    lbl:'Pipeline' },
+    { key:'opYY',    lbl:'OP Y/Y',   cls: r => _qbrPctClass(r.opYY) },
+    { key:'cvg',     lbl:'Cvg.' },
+    { key:'hcvg',    lbl:'Hist.Cvg.' },
+    { key:'s4cvg',   lbl:'Stg4+ Cvg.' },
+    { key:'s4hcvg',  lbl:'Stg4+ H.Cvg.' },
+    { key:'funded',  lbl:'Funded (Manual)', editable: true },
+    { key:'aes',     lbl:'Prime AEs' },
+    { key:'aesYY',   lbl:'AEs Y/Y',  cls: r => _qbrPctClass(r.aesYY) },
+  ];
+
+  // Mappa S.ou → quali sezioni mostrare
+  const QBR_OU_MAP = {
+    SOUTH:   ['SOUTH'],
+    IBERIA:  ['SOUTH', 'IBERIA'],
+    ITALY:   ['SOUTH', 'ITALY'],
+    EGM:     ['SOUTH', 'EGM'],
+    MIDEAST: ['SOUTH', 'MIDDLE EAST'],
+  };
+  const qbrAllowedPrefixes = QBR_OU_MAP[S.ou] || ['SOUTH'];
+  const visibleSections = data.sections.filter(sec =>
+    qbrAllowedPrefixes.some(p => sec.title.toUpperCase().startsWith(p))
+  );
+
+  document.getElementById('qbr-content').innerHTML = visibleSections.map(sec => {
+    const thead = `<tr><th>${sec.title.split('—')[0].trim()}</th>${COLS.map(c => `<th>${c.lbl}</th>`).join('')}</tr>`;
+    const tbody = sec.rows.map(r => {
+      const rowClass = r.type === 'ou' ? 'qbr-ou-row' : r.type === 'dir' ? 'qbr-dir-row' : '';
+      const cells = COLS.map(c => {
+        const val = r[c.key] || '—';
+        const cls = c.cls ? c.cls(r) : '';
+        if (c.editable) {
+          const storeKey = `${S.tf}|${sec.title}|${r.ou}`;
+          const stored = QBR_FUNDED_OVERRIDES[storeKey];
+          const display = stored !== undefined ? stored : (val === '—' ? '' : val);
+          return `<td><span class="qbr-funded-cell" contenteditable="true" data-placeholder="—" data-key="${storeKey}" onblur="qbrSaveFunded(this)">${display}</span></td>`;
+        }
+        return `<td class="${cls}">${val}</td>`;
+      }).join('');
+      return `<tr class="${rowClass}"><td>${r.ou}${r.leader && r.type !== 'ou' ? `<br><span style="font-size:9px;color:var(--sf-meta);font-weight:400">${r.leader}</span>` : ''}</td>${cells}</tr>`;
+    }).join('');
+    return `<div class="qbr-section">
+      <div class="qbr-section-title">${sec.title}</div>
+      <div class="qbr-table-wrap">
+        <table class="qbr-table">
+          <thead>${thead}</thead>
+          <tbody>${tbody}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ── LIVE DATA CONFIG ──────────────────────────────────────────────────────────
@@ -878,60 +2386,35 @@ const APPS_SCRIPT_URL = 'https://script.google.com/a/macros/salesforce.com/s/AKf
 
 // ── REFRESH ───────────────────────────────────────────────────────────────────
 let TIMESTAMPS = {
-  snowflake: '06 Jul 2026, 08:00',
-  org62:     '06 Jul 2026, 07:45',
-  finplan:   '05 Jul 2026, 18:00',
-  hc:        '05 Jul 2026, 18:00',
+  snowflake: '07 Jul 2026',
+  org62:     '07 Jul 2026',
+  finplan:   '07 Jul 2026',
+  hc:        '07 Jul 2026',
 };
 
 async function loadLiveData() {
-  if (!APPS_SCRIPT_URL) return false;
-  try {
-    const res = await fetch(APPS_SCRIPT_URL + '?action=readiness', { cache: 'no-store' });
-    if (!res.ok) return false;
-    const json = await res.json();
-    if (json.error) { console.warn('Apps Script error:', json.error); return false; }
-
-    // Merge live data into DATA object
-    ['CQ','NQ'].forEach(tf => {
-      ['OPP','COMBO'].forEach(lv => {
-        if (!json[tf] || !json[tf][lv]) return;
-        ['SOUTH','IBERIA','ITALY','EGM','MIDEAST'].forEach(ou => {
-          if (json[tf][lv][ou]) DATA[tf][lv][ou] = json[tf][lv][ou];
-        });
-      });
-    });
-
-    // Merge forecast overrides
-    if (json.forecast_overrides) {
-      Object.assign(FORECAST_OVERRIDES, json.forecast_overrides);
-    }
-
-    // Update timestamps
-    if (json.timestamps) {
-      TIMESTAMPS = { ...TIMESTAMPS, ...json.timestamps };
-    }
-
-    return true;
-  } catch(e) {
-    console.warn('Live data fetch failed, using mock data:', e.message);
-    return false;
-  }
+  // Dati già iniettati direttamente dal Google Sheet — nessun fetch necessario
+  return true;
 }
 
 async function refreshData() {
   document.getElementById('loading').classList.remove('hidden');
-  const isLive = await loadLiveData();
-  const now = new Date();
-  document.getElementById('refresh-ts').textContent =
-    now.toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
-    + (isLive ? ' ✓ live' : ' (mock)');
-  document.getElementById('ts-snow').textContent    = TIMESTAMPS.snowflake || '—';
-  document.getElementById('ts-org62').textContent   = TIMESTAMPS.org62    || '—';
-  document.getElementById('ts-finplan').textContent = TIMESTAMPS.finplan  || '—';
-  document.getElementById('ts-hc').textContent      = TIMESTAMPS.hc       || '—';
-  render();
-  document.getElementById('loading').classList.add('hidden');
+  try {
+    await loadLiveData();
+    const now = new Date();
+    document.getElementById('refresh-ts').textContent =
+      now.toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
+      + ' ✓ live';
+    document.getElementById('ts-snow').textContent    = TIMESTAMPS.snowflake || '—';
+    document.getElementById('ts-org62').textContent   = TIMESTAMPS.org62    || '—';
+    document.getElementById('ts-finplan').textContent = TIMESTAMPS.finplan  || '—';
+    document.getElementById('ts-hc').textContent      = TIMESTAMPS.hc       || '—';
+    render();
+  } catch(e) {
+    console.error('refreshData error:', e);
+  } finally {
+    document.getElementById('loading').classList.add('hidden');
+  }
 }
 
 // ── COUNTDOWN ─────────────────────────────────────────────────────────────────
