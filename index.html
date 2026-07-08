@@ -1152,6 +1152,9 @@ function tdLookupInput(inp, ouKey, tf) {
   const q = inp.value.trim();
   const dd = document.getElementById(id + '-dd');
   if (q.length < 2) { dd.style.display = 'none'; return; }
+  // Mostra subito spinner
+  dd.innerHTML = '<div style="padding:8px 12px;font-size:11px;color:var(--sf-meta)">Searching…</div>';
+  dd.style.display = 'block';
   clearTimeout(_tdLookupTimer);
   _tdLookupTimer = setTimeout(() => tdLookupFetch(id, ouKey, tf, q), 400);
 }
@@ -1166,15 +1169,18 @@ function tdLookupFetch(id, ouKey, tf, q) {
   const cbName = '_tdCb_' + Date.now();
   const script = document.createElement('script');
   script.src = `${APPS_SCRIPT_URL}?action=lookup&q=${encodeURIComponent(q)}&qtr=${tf}&ou=${ouKey}&callback=${cbName}`;
+  script.onerror = function() {
+    delete window[cbName]; script.remove();
+    const dd = document.getElementById(id + '-dd');
+    if (dd) dd.innerHTML = '<div style="padding:8px 12px;font-size:11px;color:var(--sf-warning)">Error — check Apps Script deployment</div>';
+  };
   window[cbName] = function(data) {
     delete window[cbName];
     script.remove();
     if (!data || !data.results) return;
     _tdLookupCache[cacheKey] = data.results;
     const dd = document.getElementById(id + '-dd');
-    if (dd && document.getElementById(id + '-inp') === document.activeElement) {
-      _tdRenderDropdown(dd, id, ouKey, tf, data.results);
-    }
+    if (dd) _tdRenderDropdown(dd, id, ouKey, tf, data.results);
   };
   document.head.appendChild(script);
 }
