@@ -1564,7 +1564,14 @@ function renderDealband(bands) {
 }
 
 // ── COMMENTS ─────────────────────────────────────────────────────────────────
-const COMMENTS = [];
+const COMMENTS_KEY = 'readiness_comments_fy27';
+
+function _loadComments() {
+  try { return JSON.parse(localStorage.getItem(COMMENTS_KEY) || '[]'); } catch(e) { return []; }
+}
+function _saveComments(arr) {
+  try { localStorage.setItem(COMMENTS_KEY, JSON.stringify(arr)); } catch(e) {}
+}
 
 function renderCommentContext() {
   const ouLabel = OU_LABELS[S.ou];
@@ -1578,16 +1585,84 @@ function renderCommentContext() {
 function renderCommentsList() {
   const list = document.getElementById('comments-list');
   if (!list) return;
-  const relevant = COMMENTS.filter(c => c.context === document.getElementById('cmt-context').textContent);
+  const ctx = document.getElementById('cmt-context').textContent;
+  const all = _loadComments();
+  const relevant = all.filter(c => c.context === ctx);
   if (!relevant.length) {
     list.innerHTML = '<div style="font-size:11px;color:var(--sf-meta);padding:4px 0 12px">No comments yet for this view.</div>';
     return;
   }
-  list.innerHTML = relevant.map(c => `
-    <div class="cmt-item">
-      <div class="cmt-meta">${c.author} · ${c.time}${c.ai ? '<span class="cmt-badge ai">✦ AI polished</span>' : ''}</div>
-      <div class="cmt-text">${c.text}</div>
+  list.innerHTML = relevant.map((c, i) => `
+    <div class="cmt-item" style="position:relative">
+      <div class="cmt-meta">
+        ${c.author} · ${c.time}
+        ${c.ai ? '<span class="cmt-badge ai">✦ AI polished</span>' : ''}
+        ${c.editedBy ? `<span style="font-size:10px;color:var(--sf-meta);margin-left:6px">· last edited by <strong>${c.editedBy}</strong> at ${c.editedAt}</span>` : ''}
+        <button onclick="_deleteComment('${c.id}')" style="float:right;background:none;border:none;cursor:pointer;color:var(--sf-meta);font-size:11px;padding:0 4px" title="Delete">✕</button>
+      </div>
+      <div class="cmt-text" id="cmttext-${c.id}" contenteditable="false" onclick="_startEditComment('${c.id}')">${c.text}</div>
+      <div id="cmtedit-${c.id}" style="display:none;margin-top:6px">
+        <input id="cmtedit-author-${c.id}" placeholder="Your name" style="width:150px;padding:4px 8px;border:1px solid var(--sf-border);border-radius:4px;font-size:11px;margin-bottom:4px">
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <button class="cmt-btn ai" onclick="_saveEditComment('${c.id}')" style="font-size:10px;padding:3px 10px">Save</button>
+          <button class="cmt-btn" onclick="_cancelEditComment('${c.id}')" style="font-size:10px;padding:3px 10px;border-color:var(--sf-border);color:var(--sf-meta)">Cancel</button>
+        </div>
+      </div>
     </div>`).join('');
+}
+
+function _startEditComment(id) {
+  const el = document.getElementById('cmttext-' + id);
+  const editZone = document.getElementById('cmtedit-' + id);
+  if (!el || !editZone) return;
+  el.contentEditable = 'true';
+  el.style.border = '1px solid var(--sf-blue)';
+  el.style.borderRadius = '4px';
+  el.style.padding = '4px';
+  el.focus();
+  editZone.style.display = 'block';
+}
+
+function _cancelEditComment(id) {
+  const el = document.getElementById('cmttext-' + id);
+  const editZone = document.getElementById('cmtedit-' + id);
+  if (!el || !editZone) return;
+  const c = _loadComments().find(x => x.id === id);
+  if (c) el.textContent = c.text;
+  el.contentEditable = 'false';
+  el.style.border = '';
+  el.style.padding = '';
+  editZone.style.display = 'none';
+}
+
+function _saveEditComment(id) {
+  const el = document.getElementById('cmttext-' + id);
+  const authorEl = document.getElementById('cmtedit-author-' + id);
+  const editZone = document.getElementById('cmtedit-' + id);
+  if (!el) return;
+  const newText = el.textContent.trim();
+  if (!newText) return;
+  const editor = (authorEl && authorEl.value.trim()) || 'Anonymous';
+  const now = new Date().toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+  const all = _loadComments();
+  const idx = all.findIndex(x => x.id === id);
+  if (idx !== -1) {
+    all[idx].text = newText;
+    all[idx].editedBy = editor;
+    all[idx].editedAt = now;
+    _saveComments(all);
+  }
+  el.contentEditable = 'false';
+  el.style.border = '';
+  el.style.padding = '';
+  if (editZone) editZone.style.display = 'none';
+  renderCommentsList();
+}
+
+function _deleteComment(id) {
+  const all = _loadComments().filter(c => c.id !== id);
+  _saveComments(all);
+  renderCommentsList();
 }
 
 function polishComment() {
@@ -1595,8 +1670,6 @@ function polishComment() {
   if (!draft) { document.getElementById('cmt-status').textContent = 'Write something first.'; return; }
   const ctx = document.getElementById('cmt-context').textContent;
   document.getElementById('cmt-status').textContent = '✦ Polishing…';
-
-  // Chiama Claude via Apps Script proxy se disponibile, altrimenti local polish
   const polished = localPolish(draft, ctx);
   document.getElementById('cmt-polished').textContent = polished;
   document.getElementById('cmt-polished-wrap').style.display = 'block';
@@ -1604,7 +1677,6 @@ function polishComment() {
 }
 
 function localPolish(draft, ctx) {
-  // Semplice polish locale: capitalizza, completa frasi, tono formale
   var s = draft.trim();
   s = s.charAt(0).toUpperCase() + s.slice(1);
   if (!s.endsWith('.') && !s.endsWith(':')) s += '.';
@@ -1623,10 +1695,14 @@ function submitComment() {
   if (!text) { document.getElementById('cmt-status').textContent = 'Nothing to submit.'; return; }
   const ctx = document.getElementById('cmt-context').textContent;
   const now = new Date().toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-  COMMENTS.push({ author, text, context: ctx, time: now, ai: false });
+  const id = 'c' + Date.now();
+  const all = _loadComments();
+  all.push({ id, author, text, context: ctx, time: now, ai: false });
+  _saveComments(all);
+  document.getElementById('cmt-author').value = author; // mantieni il nome
   document.getElementById('cmt-draft').value = '';
   document.getElementById('cmt-polished-wrap').style.display = 'none';
-  document.getElementById('cmt-status').textContent = 'Submitted.';
+  document.getElementById('cmt-status').textContent = 'Saved.';
   setTimeout(() => { document.getElementById('cmt-status').textContent = ''; }, 2000);
   renderCommentsList();
 }
