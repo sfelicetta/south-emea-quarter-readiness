@@ -66,6 +66,8 @@ function doGet(e) {
       const qtr   = (e && e.parameter && e.parameter.qtr)   || 'CQ';
       const logic = (e && e.parameter && e.parameter.logic) || 'Opportunity';
       payload = buildTDB(qtr, logic);
+    } else if (action === 'getComments') {
+      payload = getComments();
     } else {
       payload = { error: 'unknown action' };
     }
@@ -88,6 +90,18 @@ function doPost(e) {
     if (body.action === 'writeForecast') {
       writeForecast(body.key, body.value);
       return ContentService.createTextOutput(JSON.stringify({ ok: true }))
+        .setMimeType(ContentService.MimeType.JSON);
+    } else if (body.action === 'saveComment') {
+      var result = saveComment(body.id, body.author, body.text, body.context, body.time);
+      return ContentService.createTextOutput(JSON.stringify(result))
+        .setMimeType(ContentService.MimeType.JSON);
+    } else if (body.action === 'editComment') {
+      var result = editComment(body.id, body.text, body.editedBy, body.editedAt);
+      return ContentService.createTextOutput(JSON.stringify(result))
+        .setMimeType(ContentService.MimeType.JSON);
+    } else if (body.action === 'deleteComment') {
+      var result = deleteComment(body.id);
+      return ContentService.createTextOutput(JSON.stringify(result))
         .setMimeType(ContentService.MimeType.JSON);
     }
     return ContentService.createTextOutput(JSON.stringify({ error: 'unknown action' }))
@@ -568,6 +582,69 @@ function buildTDB(qtr, logic) {
   });
 
   return { quarter: quarter, logic: logic, ous: ous };
+}
+
+// ── Comments (shared storage on Sheet tab "_Comments") ───────────────────────
+// Columns: A=id, B=author, C=text, D=context, E=time, F=editedBy, G=editedAt
+
+var COMMENTS_SHEET = '_Comments';
+
+function _getCommentsSheet() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var sh = ss.getSheetByName(COMMENTS_SHEET);
+  if (!sh) {
+    sh = ss.insertSheet(COMMENTS_SHEET);
+    sh.getRange('A1:G1').setValues([['id','author','text','context','time','editedBy','editedAt']]);
+  }
+  return sh;
+}
+
+function getComments() {
+  var sh = _getCommentsSheet();
+  var rows = sh.getDataRange().getValues();
+  var comments = [];
+  for (var i = 1; i < rows.length; i++) {
+    var r = rows[i];
+    if (!r[0]) continue;
+    comments.push({
+      id: String(r[0]), author: String(r[1]), text: String(r[2]),
+      context: String(r[3]), time: String(r[4]),
+      editedBy: String(r[5]||''), editedAt: String(r[6]||'')
+    });
+  }
+  return { comments: comments };
+}
+
+function saveComment(id, author, text, context, time) {
+  var sh = _getCommentsSheet();
+  sh.appendRow([id, author, text, context, time, '', '']);
+  return { ok: true };
+}
+
+function editComment(id, newText, editedBy, editedAt) {
+  var sh = _getCommentsSheet();
+  var rows = sh.getDataRange().getValues();
+  for (var i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(id)) {
+      sh.getRange(i + 1, 3).setValue(newText);
+      sh.getRange(i + 1, 6).setValue(editedBy);
+      sh.getRange(i + 1, 7).setValue(editedAt);
+      return { ok: true };
+    }
+  }
+  return { ok: false, error: 'not found' };
+}
+
+function deleteComment(id) {
+  var sh = _getCommentsSheet();
+  var rows = sh.getDataRange().getValues();
+  for (var i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(id)) {
+      sh.deleteRow(i + 1);
+      return { ok: true };
+    }
+  }
+  return { ok: false, error: 'not found' };
 }
 
 // ── Test ──────────────────────────────────────────────────────────────────────
