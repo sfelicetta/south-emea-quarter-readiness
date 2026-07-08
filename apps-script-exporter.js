@@ -466,25 +466,30 @@ function buildTDB(qtr, logic) {
     var fq   = String(row[5] || '').trim();
     if (year !== fiscalYear || fq !== fiscalQtr) continue;
 
-    // Determina OU
-    var lvl2 = String(row[0] || '').trim();
+    // Determina OU da colonna B (OVA_LVL_03_USR_NM = OU head)
+    var lvl3 = String(row[1] || '').trim();
     var ou;
-    if (IB_PATTERN.test(lvl2)) {
+    if (IB_PATTERN.test(lvl3)) {
       ou = 'IBERIA';
     } else {
-      ou = OU_MAP[lvl2.toLowerCase()] || null;
-      // fallback: SOUTH aggrega tutto
-      if (!ou) ou = 'SOUTH';
+      ou = OU_MAP[lvl3.toLowerCase()] || null;
+      if (!ou) continue; // salta righe non mappabili (es. headers)
     }
 
     // Determina nome account e banda in base alla logica
+    // Opportunity → OPPORTUNITY_DEALBAND (col K=10), COMBO_GLOBAL_COMPANY_NAME (col H=7)
+    // GlobalCompany → COMBO_GLOBAL_DEALBAND (col P=15), COMBO_GLOBAL_COMPANY_NAME (col H=7)
+    // ComboCompany  → COMBO_COMPANY_DEALBAND (col Q=16), COMBO_COMPANY_NAME (col J=9)
     var name, bandRaw;
-    if (logic === 'Opportunity' || logic === 'GlobalCompany') {
-      name    = String(row[7] || '').trim();   // COMBO_GLOBAL_COMPANY_NAME
+    if (logic === 'Opportunity') {
+      name    = String(row[7]  || '').trim();
+      bandRaw = String(row[10] || '').trim().toLowerCase(); // OPPORTUNITY_DEALBAND
+    } else if (logic === 'GlobalCompany') {
+      name    = String(row[7]  || '').trim();
       bandRaw = String(row[15] || '').trim().toLowerCase(); // COMBO_GLOBAL_DEALBAND
     } else {
       // ComboCompany
-      name    = String(row[9] || '').trim();   // COMBO_COMPANY_NAME
+      name    = String(row[9]  || '').trim();
       bandRaw = String(row[16] || '').trim().toLowerCase(); // COMBO_COMPANY_DEALBAND
     }
     if (!name) continue;
@@ -494,16 +499,14 @@ function buildTDB(qtr, logic) {
     var pipe = parseFloat(String(row[13] || '0').replace(/,/g,'')) || 0;
     var mgr  = String(row[11] || '').trim().toUpperCase();
 
-    // Accumula
+    // Accumula per OU specifico
     acc[ou][band].pipe[name] = (acc[ou][band].pipe[name] || 0) + pipe;
     if (mgr === 'IN') {
       acc[ou][band].commit[name] = (acc[ou][band].commit[name] || 0) + pipe;
     }
-    // SOUTH è la somma di tutti
-    if (ou !== 'SOUTH') {
-      acc['SOUTH'][band].pipe[name] = (acc['SOUTH'][band].pipe[name] || 0) + pipe;
-      if (mgr === 'IN') acc['SOUTH'][band].commit[name] = (acc['SOUTH'][band].commit[name] || 0) + pipe;
-    }
+    // SOUTH aggrega sempre tutti gli OU figli
+    acc['SOUTH'][band].pipe[name] = (acc['SOUTH'][band].pipe[name] || 0) + pipe;
+    if (mgr === 'IN') acc['SOUTH'][band].commit[name] = (acc['SOUTH'][band].commit[name] || 0) + pipe;
   }
 
   // Costruisci output
