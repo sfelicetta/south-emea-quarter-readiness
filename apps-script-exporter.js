@@ -59,9 +59,10 @@ function doGet(e) {
     if (action === 'readiness') {
       payload = buildPayload();
     } else if (action === 'lookup') {
-      const q  = (e && e.parameter && e.parameter.q)  || '';
+      const q   = (e && e.parameter && e.parameter.q)   || '';
       const qtr = (e && e.parameter && e.parameter.qtr) || 'CQ';
-      payload = lookupAccounts(q, qtr);
+      const ou  = (e && e.parameter && e.parameter.ou)  || 'SOUTH';
+      payload = lookupAccounts(q, qtr, ou);
     } else if (action === 'tdb') {
       const qtr   = (e && e.parameter && e.parameter.qtr)   || 'CQ';
       const logic = (e && e.parameter && e.parameter.logic) || 'Opportunity';
@@ -374,46 +375,60 @@ function emptyOU() {
 // Cerca account in Openpipe e [Org62] Commit per il quarter selezionato.
 // qtr: 'CQ' → Q2 FY27 | 'NQ' → Q3 FY27
 // Ritorna: { results: [{ name, pipe, commit }] } — max 20 risultati
-function lookupAccounts(q, qtr) {
+// ou: 'SOUTH'|'IBERIA'|'ITALY'|'EGM'|'MIDEAST' — filtra per OVA_LVL_03 (col B)
+// Logica identica alla formula B6 di "CQ Top Deals": GROUP BY H, SUM(N), +commit MGR=IN
+function lookupAccounts(q, qtr, ou) {
   if (!q || q.length < 2) return { results: [] };
-  const qLow = q.toLowerCase();
+  var qLow = q.toLowerCase();
 
-  // Map quarter code → valori Sheet
   var fiscalYear = 'FY 2027';
   var fiscalQtr  = qtr === 'NQ' ? 'FQ 3' : 'FQ 2';
 
-  var ss = SpreadsheetApp.openById(SHEET_ID);
+  // Mappa OU → OVA_LVL_03 values (stesso mapping di buildTDB)
+  var OU_LVL3 = {
+    ITALY:   ['vanessa fortarezza'],
+    EGM:     ['ana alonso muñumer'],
+    MIDEAST: ['mohammed alkhotani'],
+  };
+  var IB_PATTERN = /emea\s*-\s*south\s*-\s*ib/i;
 
-  // ── Openpipe: aggrega OPENPIPE per COMBO_GLOBAL_COMPANY_NAME ──────────────
-  var opSheet = ss.getSheetByName('Openpipe');
-  var opRows  = opSheet.getDataRange().getValues();
-  // col index (0-based): H=7 name, E=4 year, F=5 qtr, N=13 openpipe, L=11 mgr_fcst
-  var pipeMap   = {};  // name → pipe $
-  var commitMap = {};  // name → commit $
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var opRows = ss.getSheetByName('Openpipe').getDataRange().getValues();
+
+  // col (0-based): A=0 lvl2, B=1 lvl3, E=4 year, F=5 qtr,
+  //               H=7 global_name, N=13 openpipe, L=11 mgr_fcst
+  var pipeMap   = {};
+  var commitMap = {};
+
   for (var i = 1; i < opRows.length; i++) {
     var row = opRows[i];
+    if (String(row[4]||'').trim() !== fiscalYear || String(row[5]||'').trim() !== fiscalQtr) continue;
+
+    // Filtro OU
+    if (ou && ou !== 'SOUTH') {
+      var lvl3 = String(row[1]||'').trim().toLowerCase();
+      if (ou === 'IBERIA') {
+        if (!IB_PATTERN.test(lvl3)) continue;
+      } else {
+        var allowed = OU_LVL3[ou] || [];
+        if (allowed.indexOf(lvl3) < 0) continue;
+      }
+    }
+    // Per SOUTH non filtra (include tutti gli OU figli)
+
     var name = String(row[7] || '').trim();
     if (!name || name.toLowerCase().indexOf(qLow) < 0) continue;
-    var year = String(row[4] || '').trim();
-    var fqtr = String(row[5] || '').trim();
-    if (year !== fiscalYear || fqtr !== fiscalQtr) continue;
+
     var pipe = parseFloat(String(row[13] || '0').replace(/,/g, '')) || 0;
     var mgr  = String(row[11] || '').trim().toUpperCase();
     pipeMap[name] = (pipeMap[name] || 0) + pipe;
     if (mgr === 'IN') commitMap[name] = (commitMap[name] || 0) + pipe;
   }
 
-  // ── [Org62] Commit: aggrega Forecast Amount per Global Company ────────────
-  // col index: A=0 role, D=3 quarter (es. "Q2 FY27"), F=5 amount
-  // Qui non abbiamo global company name direttamente — skip, usiamo solo openpipe
-  // (il commit già aggregato sopra via MGR_FORCST_JUDG_TXT = IN)
-
-  // ── Costruisci risultati ──────────────────────────────────────────────────
-  var names = Object.keys(pipeMap);
-  var results = names.map(function(n) {
+  var results = Object.keys(pipeMap).map(function(n) {
     return {
       name:   n,
-      pipe:   Math.round(pipeMap[n]) / 1000000,   // in $M
+      pipe:   Math.round(pipeMap[n]) / 1000000,
       commit: Math.round(commitMap[n] || 0) / 1000000,
     };
   }).sort(function(a, b) { return b.pipe - a.pipe; }).slice(0, 20);

@@ -1152,21 +1152,12 @@ function tdLookupInput(inp, ouKey, tf) {
   const q = inp.value.trim();
   const dd = document.getElementById(id + '-dd');
   if (q.length < 2) { dd.style.display = 'none'; return; }
-
-  // Mostra subito i risultati locali (fallback)
-  const localAccounts = (TD_LOOKUP[tf] && TD_LOOKUP[tf][ouKey]) || [];
-  const localMatches = localAccounts.filter(a => a.name.toLowerCase().includes(q.toLowerCase()));
-  if (localMatches.length) {
-    _tdRenderDropdown(dd, id, ouKey, tf, localMatches);
-  }
-
-  // Debounce: aspetta 400ms prima di chiamare il backend
   clearTimeout(_tdLookupTimer);
   _tdLookupTimer = setTimeout(() => tdLookupFetch(id, ouKey, tf, q), 400);
 }
 
 function tdLookupFetch(id, ouKey, tf, q) {
-  const cacheKey = tf + '|' + q.toLowerCase();
+  const cacheKey = tf + '|' + ouKey + '|' + q.toLowerCase();
   if (_tdLookupCache[cacheKey]) {
     const dd = document.getElementById(id + '-dd');
     if (dd) _tdRenderDropdown(dd, id, ouKey, tf, _tdLookupCache[cacheKey]);
@@ -1174,7 +1165,7 @@ function tdLookupFetch(id, ouKey, tf, q) {
   }
   const cbName = '_tdCb_' + Date.now();
   const script = document.createElement('script');
-  script.src = `${APPS_SCRIPT_URL}?action=lookup&q=${encodeURIComponent(q)}&qtr=${tf}&callback=${cbName}`;
+  script.src = `${APPS_SCRIPT_URL}?action=lookup&q=${encodeURIComponent(q)}&qtr=${tf}&ou=${ouKey}&callback=${cbName}`;
   window[cbName] = function(data) {
     delete window[cbName];
     script.remove();
