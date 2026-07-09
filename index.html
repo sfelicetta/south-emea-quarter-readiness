@@ -279,51 +279,45 @@
     .qbr-funded-cell:focus { background: #fffbe6; border-bottom: 1.5px solid var(--sf-blue); }
     .qbr-funded-cell:empty:before { content: attr(data-placeholder); color: #bbb; font-style: italic; }
 
-    /* ── SEASONALITY & OP STATUS ── */
-    .seas-block { margin-bottom: 36px; }
-    .seas-block-title { font-size: 13px; font-weight: 700; color: var(--sf-blue); margin-bottom: 14px; padding-bottom: 6px; border-bottom: 2px solid var(--sf-blue); letter-spacing: .02em; display: flex; align-items: center; gap: 8px; }
-    .seas-block-title .seas-badge { font-size: 9px; font-weight: 700; background: var(--sf-blue); color: #fff; padding: 2px 8px; border-radius: 10px; letter-spacing: .05em; }
-    /* OU cards grid */
-    .seas-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 14px; }
-    .seas-card { background: var(--sf-card); border: 1px solid var(--sf-border); border-radius: var(--r); box-shadow: var(--sh); overflow: hidden; max-width: 480px; }
-    .seas-card-hdr { background: linear-gradient(135deg, #0176d3 0%, #032d60 100%); color: #fff; padding: 10px 14px 8px; display: flex; justify-content: space-between; align-items: flex-start; }
-    .seas-card-ou { font-size: 14px; font-weight: 700; line-height: 1.3; }
-    .seas-card-total { font-size: 18px; font-weight: 800; letter-spacing: -.02em; text-align: right; }
-    .seas-card-total-lbl { font-size: 11px; font-weight: 400; opacity: .75; display: block; }
-    .seas-card-body { padding: 10px 14px 12px; }
-    /* Legend at top of card */
-    .seas-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 9px; }
-    .seas-legend-item { display: flex; align-items: center; gap: 3px; font-size: 9px; color: var(--sf-meta); font-weight: 600; }
-    .seas-legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
-    /* Year timeline rows */
-    .seas-yr-rows { display: flex; flex-direction: column; gap: 4px; }
-    .seas-yr-row { display: flex; align-items: center; gap: 6px; padding: 4px 5px; border-radius: 4px; }
-    .seas-yr-row.seas-hist { background: #f0f4ff; }
-    .seas-yr-row.seas-fy27 { background: #fff8e1; border-left: 3px solid #f59e0b; }
-    .seas-yr-lbl { font-size: 11px; font-weight: 700; color: var(--sf-meta); width: 54px; flex-shrink: 0; text-transform: uppercase; letter-spacing: .04em; }
-    .seas-yr-row.seas-fy27 .seas-yr-lbl { color: #b45309; }
-    .seas-yr-bar { flex: 1; min-width: 0; }
-    .seas-yr-total { font-size: 12px; font-weight: 700; color: #1a1a2e; min-width: 50px; text-align: right; flex-shrink: 0; }
-    .seas-yr-row.seas-fy27 .seas-yr-total { color: var(--sf-blue); }
-    /* Stacked bar */
-    .seas-bar { display: flex; height: 20px; border-radius: 3px; overflow: hidden; gap: 1px; background: #e8edf5; }
-    .seas-bar-seg { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; transition: flex .3s; }
-    /* Monthly bar colors */
-    .seg-may  { background: #5b9bd5; }
-    .seg-jun  { background: #2e75b6; }
-    .seg-jul  { background: #1f497d; }
-    /* MFJ bar colors */
-    .seg-none { background: #c5c9d4; }
-    .seg-upm  { background: #e07b00; }
-    .seg-upp  { background: #2e75b6; }
-    .seg-inn  { background: #1e7e34; }
-    /* Stage bar colors */
-    .seg-s23  { background: #e07b00; }
-    .seg-s4   { background: #1e7e34; }
-    /* Dealband bar colors */
-    .seg-rr   { background: #5b9bd5; }
-    .seg-fm   { background: #2e75b6; }
-    .seg-ld   { background: #1f497d; }
+    /* ── READINESS TABLE ── */
+    .rd-table-wrap { overflow-x:auto; margin-bottom:14px; }
+    .rd-table { width:100%; border-collapse:collapse; font-size:11px; white-space:nowrap; background:var(--sf-card); border:1px solid var(--sf-border); border-radius:var(--r); box-shadow:var(--sh); }
+    .rd-table th { padding:5px 10px; background:var(--sf-bg); border-bottom:1.5px solid var(--sf-border); font-size:9px; font-weight:700; color:var(--sf-meta); text-transform:uppercase; letter-spacing:.04em; text-align:right; }
+    .rd-table th:first-child { text-align:left; min-width:130px; }
+    .rd-table th.rd-editable-hdr { color:var(--sf-blue); }
+    .rd-table td { padding:5px 10px; border-bottom:1px solid #f0f2f5; text-align:right; font-variant-numeric:tabular-nums; }
+    .rd-table td:first-child { text-align:left; font-weight:600; }
+    .rd-table tr:last-child td { border-bottom:none; }
+    .rd-table tr:hover td { background:var(--sf-blue-light); }
+    .rd-table .rd-total td { font-weight:700; color:var(--sf-blue); background:#f4f6ff; border-top:1.5px solid var(--sf-border); }
+    .rd-fcst-input { width:80px; border:none; border-bottom:1.5px dashed #aab4d0; outline:none; background:transparent; font-size:11px; font-family:inherit; color:var(--sf-blue); font-weight:700; text-align:right; padding:1px 3px; cursor:text; font-variant-numeric:tabular-nums; }
+    .rd-fcst-input:focus { border-bottom-color:var(--sf-blue); background:#f0f7ff; border-radius:2px; }
+    /* Dealband opportunity lists */
+    .rd-band-section { margin-bottom:18px; }
+    .rd-band-title { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.7px; color:#fff; background:var(--sf-blue); padding:4px 12px; border-radius:var(--r) var(--r) 0 0; display:flex; align-items:center; gap:8px; }
+    .rd-opp-table { width:100%; border-collapse:collapse; font-size:11px; background:var(--sf-card); border:1px solid var(--sf-border); border-top:none; border-radius:0 0 var(--r) var(--r); }
+    .rd-opp-table th { padding:4px 10px; background:var(--sf-bg); border-bottom:1px solid var(--sf-border); font-size:9px; font-weight:700; color:var(--sf-meta); text-transform:uppercase; letter-spacing:.04em; text-align:right; }
+    .rd-opp-table th:first-child { text-align:left; }
+    .rd-opp-table td { padding:4px 10px; border-bottom:1px solid #f0f2f5; text-align:right; font-variant-numeric:tabular-nums; font-size:11px; }
+    .rd-opp-table td:first-child { text-align:left; max-width:200px; overflow:hidden; text-overflow:ellipsis; }
+    .rd-opp-table tr:last-child td { border-bottom:none; }
+    .rd-opp-table tr:hover td { background:var(--sf-blue-light); }
+    .rd-chk { cursor:pointer; width:13px; height:13px; accent-color:var(--sf-blue); }
+    .rd-in-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:#4bc076; margin-right:3px; vertical-align:middle; }
+    /* Top Deals v2 */
+    .td2-table-wrap { overflow-x:auto; margin-bottom:18px; }
+    .td2-table { width:100%; border-collapse:collapse; font-size:11px; white-space:nowrap; background:var(--sf-card); border:1px solid var(--sf-border); border-radius:var(--r); box-shadow:var(--sh); }
+    .td2-table th { padding:5px 10px; background:var(--sf-bg); border-bottom:1.5px solid var(--sf-border); font-size:9px; font-weight:700; color:var(--sf-meta); text-transform:uppercase; letter-spacing:.04em; text-align:right; }
+    .td2-table th:first-child { text-align:left; min-width:180px; }
+    .td2-table th.td2-in-hdr { color:#2e844a; }
+    .td2-table td { padding:5px 10px; border-bottom:1px solid #f0f2f5; text-align:right; font-variant-numeric:tabular-nums; }
+    .td2-table td:first-child { text-align:left; }
+    .td2-table tr:last-child td { border-bottom:none; }
+    .td2-table tr:hover td { background:var(--sf-blue-light); }
+    .td2-table .td2-total td { font-weight:700; color:var(--sf-blue); background:#f4f6ff; border-top:1.5px solid var(--sf-border); }
+    .td2-commit-input { width:90px; border:none; border-bottom:1.5px dashed #aab4d0; outline:none; background:transparent; font-size:11px; font-family:inherit; color:var(--sf-blue); font-weight:700; text-align:right; padding:1px 3px; cursor:text; font-variant-numeric:tabular-nums; }
+    .td2-commit-input:focus { border-bottom-color:var(--sf-blue); background:#f0f7ff; border-radius:2px; }
+    .td2-loading { text-align:center; padding:40px; color:var(--sf-meta); font-size:12px; }
 
     /* ── FOOTER ── */
     .dash-footer { margin: 4px 24px 16px; padding: 9px 14px; background: #fff; border: 1px solid var(--sf-border); border-radius: var(--r); display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
@@ -399,7 +393,6 @@
   <div class="page-tab" onclick="switchPage('topdeals',this)">Top Deals<span class="tab-tip">Ranked list of the largest open opportunities and closed deals per OU. Search any account to surface its Open Pipe and Commit for the selected quarter.</span></div>
   <div class="page-tab" onclick="switchPage('topdeals-db',this)">Top Deals by Dealband<span class="tab-tip">Deal pipeline sliced by size tier (&lt;$100K · $100K–$500K · $500K–$1M · $1M+) and DB logic (Opportunity · Global Company · Combo Company). All combinations available except NQ + Global Company (not in source data).</span></div>
   <div class="page-tab" onclick="switchPage('qbr',this)">QBR Forecast<span class="tab-tip">Full QBR forecast table by OU and OU+1 sub-teams. Shows Forecast, Y/Y, Attainment, Velocity, Pipeline Coverage, Stage 4 Coverage, AE headcount, and Funded. Switch CQ ↔ NQ via Timeframe.</span></div>
-  <div class="page-tab" onclick="switchPage('seasonality',this)">Seasonality &amp; OP Status<span class="tab-tip">Year-over-year seasonality patterns from FY24 → FY27. Each card shows monthly bookings, MFJ, stage mix, and deal band split alongside a 3-year historical average as a benchmark.</span></div>
 </div>
 
 <!-- SLICER BAR -->
@@ -475,39 +468,18 @@
 <!-- ════════════════════════════════════════════════════════════ -->
 <div class="page active" id="page-readiness">
 
-  <p class="tab-desc">Real-time quarter health check for <strong>South EMEA</strong>. Use the filters above to switch between Current Quarter (Q2 FY27) and Next Quarter (Q3 FY27), toggle Opportunity vs. Combo level, and drill into a specific Operating Unit. KPIs are pulled live from Snowflake and Org62 — the goal is to give Sales leaders a single view of forecast momentum, pipeline coverage, and deal band distribution heading into a QBR.</p>
-
-  <!-- ① KPI ROW — Forecast momentum -->
-  <div class="section-lbl">Forecast Momentum</div>
-  <div class="kpi-grid kpi-top" id="kpi-grid-top"></div>
-
-  <!-- ③ KPI ROW — Pipeline health -->
-  <div class="section-lbl">Pipeline Health</div>
-  <div class="kpi-grid kpi-mid" id="kpi-grid-mid"></div>
-
-  <!-- ④ DEAL BAND + COVERAGE side by side -->
-  <div class="section-lbl">Deal Band Distribution &amp; Coverage</div>
-  <div class="grid-2 mb14">
-    <div class="card">
-      <div class="card-hdr">
-        <h3 id="db-title">Pipeline by Band</h3>
-        <span class="card-sub" id="db-sub"></span>
-      </div>
-      <div class="card-body">
-        <div class="db-hdr">
-          <span>Band</span>
-          <span>Pipeline bar</span>
-          <span style="text-align:right">Pipe $M</span>
-          <span style="text-align:right">ACV PY $M</span>
-          <span style="text-align:right">Y/Y Pipe</span>
-        </div>
-        <div class="db-rows" id="db-rows"></div>
-      </div>
-    </div>
-    <div id="cov-cards"></div>
+  <!-- Main dealband table -->
+  <div class="section-lbl" id="rd-table-lbl">Quarter Readiness — by Deal Band</div>
+  <div class="rd-table-wrap" id="rd-table-wrap">
+    <!-- populated by render() -->
   </div>
 
-  <!-- ⑥ COMMENTI -->
+  <!-- Opportunity detail lists — only visible on OPP view -->
+  <div id="rd-opplists-wrap">
+    <!-- populated by render() -->
+  </div>
+
+  <!-- Comments -->
   <div class="section-lbl">Comments</div>
   <div class="card mb14" id="comments-card">
     <div class="card-hdr" style="justify-content:space-between">
@@ -549,11 +521,10 @@
   <div class="td-header">
     <div>
       <h2 style="font-size:14px;font-weight:700;margin-bottom:2px">Top Deals</h2>
-      <p style="font-size:11px;color:var(--sf-meta)">Open pipeline, commit and closed deals by OU — live data from Google Sheet</p>
-      <p class="tab-desc">A ranked view of the <strong>largest open opportunities and closed deals</strong> for each Operating Unit in the selected quarter. Use the <strong>Timeframe</strong> filter to compare CQ vs. NQ pipeline. The search bar at the bottom of each table lets you look up any account to instantly surface its Open Pipe and Commit values.</p>
+      <p style="font-size:11px;color:var(--sf-meta)">Top open pipeline sorted by Commit — live data from Google Sheet</p>
     </div>
   </div>
-  <div id="td-content"></div>
+  <div id="td2-content"></div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════ -->
@@ -582,20 +553,6 @@
     </div>
   </div>
   <div id="qbr-content"></div>
-</div>
-
-<!-- ════════════════════════════════════════════════════════════ -->
-<!--  PAGE 5: SEASONALITY & OP STATUS                            -->
-<!-- ════════════════════════════════════════════════════════════ -->
-<div class="page" id="page-seasonality">
-  <div class="td-header" style="margin-bottom:18px">
-    <div>
-      <h2 style="font-size:14px;font-weight:700;margin-bottom:2px">CQ Seasonality &amp; OP Status</h2>
-      <p style="font-size:11px;color:var(--sf-meta)">Q2 FY27 — 3-year historical average vs. current commit</p>
-      <p class="tab-desc">Year-over-year seasonality patterns across <strong>FY24 → FY25 → FY26 → 3yr historical average → FY27</strong>, for each OU. Four dimensions are shown: <strong>Monthly distribution</strong> (May/June/July split), <strong>MFJ forecast category</strong> (None / UP− / UP+ / IN), <strong>Stage distribution</strong> (Stage 2/3 vs. Stage 4+), and <strong>Dealband distribution</strong> (Run Rate / Fat Middle / Large Deals). The goal is to benchmark FY27 behavior against historical norms and spot early signals of over- or under-performance.</p>
-    </div>
-  </div>
-  <div id="seas-content"></div>
 </div>
 
 <!-- FOOTER -->
@@ -977,65 +934,112 @@ const TOP_DEALS = {
   }
 };
 
+// ── TOP DEALS v2 — Live from Apps Script, sorted by Commit ───────────────────
+const TD2_CACHE = {}; // tf → payload
+const TD2_COMMIT_OVERRIDES = {}; // key → string
+
+function td2CommitKey(tf, ou, name) {
+  return tf + '_' + ou + '_' + name.replace(/[^a-z0-9]/gi,'_').slice(0,30);
+}
+
 function renderTopDeals() {
+  renderTopDeals2();
+}
+
+function renderTopDeals2() {
   const ouLabel = OU_LABELS[S.ou] || S.ou;
   document.getElementById('view-lbl').textContent = `${S.tf === 'CQ' ? 'Current Quarter' : 'Next Quarter'} — ${ouLabel}`;
-  const data = TOP_DEALS[S.tf];
-  const visibleOus = S.ou === 'SOUTH' ? data.ous : data.ous.filter(ou => ou.key === S.ou);
-  const maxPipe = Math.max(...visibleOus.flatMap(ou => ou.open.map(d => d.pipe)));
+  const el = document.getElementById('td2-content');
+  if (!el) return;
 
-  document.getElementById('td-content').innerHTML = visibleOus.map(ou => {
-    const ouName = data.ouLabel[ou.key] || ou.key;
+  const cached = TD2_CACHE[S.tf];
+  if (cached) {
+    _td2Render(cached);
+    return;
+  }
 
-    const openRows = ou.open.map(d => {
-      const barW = Math.round((d.pipe / maxPipe) * 80);
-      const hasCommit = d.commit > 0;
+  el.innerHTML = `<div class="td2-loading">
+    <div style="display:inline-block;width:20px;height:20px;border:2px solid #ddd;border-top-color:var(--sf-blue);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:8px"></div><br>
+    Loading Top Deals…
+  </div>`;
+
+  const cbName = '_td2Cb_' + S.tf;
+  const script = document.createElement('script');
+  script.src = APPS_SCRIPT_URL + '?action=topdeals2&qtr=' + S.tf + '&ou=SOUTH&callback=' + cbName;
+  window[cbName] = function(data) {
+    delete window[cbName]; script.remove();
+    if (!data || data.error) {
+      el.innerHTML = `<div class="tdb-notice"><strong>Error loading data.</strong><br>${data && data.error ? data.error : 'Check Apps Script deployment.'}</div>`;
+      return;
+    }
+    TD2_CACHE[S.tf] = data;
+    _td2Render(data);
+  };
+  script.onerror = function() {
+    script.remove();
+    el.innerHTML = `<div class="tdb-notice"><strong>Could not reach Apps Script.</strong></div>`;
+  };
+  document.head.appendChild(script);
+}
+
+function _td2Render(payload) {
+  const el = document.getElementById('td2-content');
+  if (!el) return;
+  const quarter = payload.quarter || '';
+
+  const ouKeys = S.ou === 'SOUTH'
+    ? ['SOUTH', 'IBERIA', 'ITALY', 'EGM', 'MIDEAST']
+    : [S.ou];
+
+  el.innerHTML = ouKeys.map(ouKey => {
+    const list = (payload.ous && payload.ous[ouKey]) || [];
+    if (!list.length) return '';
+    const ouLabel = OU_LABELS[ouKey] || ouKey;
+
+    const rows = list.map(d => {
+      const savedCommit = TD2_COMMIT_OVERRIDES[td2CommitKey(S.tf, ouKey, d.name)] || '';
+      const inVal  = d.in_ > 0  ? `<span class="td-commit-dot"></span>$${d.in_.toFixed(2)}M`  : '<span style="color:var(--sf-meta)">—</span>';
+      const uppVal = d.upp > 0 ? `$${d.upp.toFixed(2)}M` : '<span style="color:var(--sf-meta)">—</span>';
+      const upmVal = d.upm > 0 ? `$${d.upm.toFixed(2)}M` : '<span style="color:var(--sf-meta)">—</span>';
       return `<tr>
         <td>${d.name}</td>
-        <td>
-          <div class="td-bar-wrap">
-            <div class="td-bar" style="width:${barW}px"></div>
-            <span>$${d.pipe.toFixed(1)}M</span>
-          </div>
-        </td>
-        <td>${hasCommit ? `<span class="td-commit-dot"></span>$${d.commit.toFixed(2)}M` : '<span style="color:var(--sf-meta)">—</span>'}</td>
+        <td>$${d.pipe.toFixed(2)}M</td>
+        <td>${inVal}</td>
+        <td>${uppVal}</td>
+        <td>${upmVal}</td>
+        <td><input class="td2-commit-input" type="text" value="${savedCommit}" placeholder="—"
+          onchange="TD2_COMMIT_OVERRIDES[td2CommitKey('${S.tf}','${ouKey}',${JSON.stringify(d.name)})]=this.value" /></td>
       </tr>`;
     }).join('');
-    const openTotal = `<tr class="td-total"><td>Total</td><td style="text-align:right;font-variant-numeric:tabular-nums">$${ou.totalOpen.toFixed(1)}M</td><td style="text-align:right;font-variant-numeric:tabular-nums">$${ou.totalCommit.toFixed(1)}M</td></tr>`;
 
-    const closedRows = (ou.closedFY27 || []).map(d =>
-      `<tr><td>${d.name}</td><td>$${d.closed.toFixed(2)}M</td></tr>`
-    ).join('');
-    const closedTotal = ou.totalClosedFY27 != null
-      ? `<tr class="td-total"><td>Total</td><td style="text-align:right">$${ou.totalClosedFY27.toFixed(2)}M</td></tr>`
-      : '';
+    const totals = list.reduce((acc, d) => {
+      acc.pipe += d.pipe; acc.in_ += d.in_; acc.upp += d.upp; acc.upm += d.upm;
+      return acc;
+    }, { pipe:0, in_:0, upp:0, upm:0 });
+
+    const totalRow = `<tr class="td2-total">
+      <td>Total (top ${list.length})</td>
+      <td>$${totals.pipe.toFixed(2)}M</td>
+      <td>$${totals.in_.toFixed(2)}M</td>
+      <td>${totals.upp > 0 ? '$'+totals.upp.toFixed(2)+'M' : '—'}</td>
+      <td>${totals.upm > 0 ? '$'+totals.upm.toFixed(2)+'M' : '—'}</td>
+      <td></td>
+    </tr>`;
 
     return `<div class="td-ou-section">
-      <div class="td-ou-title">
-        ${ouName}
-        <span class="td-ou-sub">Top Open ${data.quarter}</span>
-      </div>
-      <div class="td-grid">
-        <div class="td-card">
-          <div class="td-card-hdr">
-            Open Pipeline &amp; Commit
-            <span class="td-card-sub">${data.quarter}</span>
-          </div>
-          <table class="td-table">
-            <thead><tr><th>Account</th><th>Open Pipe</th><th>Commit</th></tr></thead>
-            <tbody>${openRows}${openTotal}${_tdLookupRow(ou.key, S.tf)}</tbody>
-          </table>
-        </div>
-        <div class="td-card">
-          <div class="td-card-hdr">
-            Top ACV Closed
-            <span class="td-card-sub">${data.quarter}</span>
-          </div>
-          <table class="td-table">
-            <thead><tr><th>Account</th><th>ACV Closed $M</th></tr></thead>
-            <tbody>${closedRows}${closedTotal}</tbody>
-          </table>
-        </div>
+      <div class="td-ou-title">${ouLabel}<span class="td-ou-sub">${quarter} — sorted by Commit</span></div>
+      <div class="td2-table-wrap">
+        <table class="td2-table">
+          <thead><tr>
+            <th style="text-align:left">Account Name</th>
+            <th>Open Pipe</th>
+            <th class="td2-in-hdr">IN (Commit)</th>
+            <th>UP+</th>
+            <th>UP−</th>
+            <th class="rd-editable-hdr">Commit Finale</th>
+          </tr></thead>
+          <tbody>${rows}${totalRow}</tbody>
+        </table>
       </div>
     </div>`;
   }).join('');
@@ -1430,43 +1434,186 @@ function setFilter(dim, val, btn) {
   else if (pageId === 'topdeals') renderTopDeals();
   else if (pageId === 'topdeals-db') renderTopDealsDB();
   else if (pageId === 'qbr') renderQBR();
-  else if (pageId === 'seasonality') renderSeasonality();
 }
 
 // ── RENDER ───────────────────────────────────────────────────────────────────
 const OU_LABELS = { SOUTH:'EMEA South', IBERIA:'Iberia', ITALY:'Italy', EGM:'EGM', MIDEAST:'Middle East' };
 
+// ── FORECAST OVERRIDES (per-band, per session) ────────────────────────────────
+const BAND_FORECAST_OVERRIDES = {}; // key: tf_lv_ou_band → value string
+
+function bandFcstKey(band) {
+  return S.tf + '_' + S.lv + '_' + S.ou + '_' + band;
+}
+
+function saveBandFcst(band, val) {
+  BAND_FORECAST_OVERRIDES[bandFcstKey(band)] = val;
+}
+
 function render() {
   const d = DATA[S.tf][S.lv][S.ou];
   const ouLabel = OU_LABELS[S.ou];
   const lvLabel = S.lv === 'COMBO' ? 'Combo' : 'Opportunity';
-  const tfLabel = S.tf === 'CQ' ? 'Current Quarter (Q2 FY27)' : 'Next Quarter (Q3 FY27)';
   const q = S.tf === 'NQ' ? 'Q3' : 'Q2';
+  const qLabel = q + ' FY27';
 
   document.getElementById('view-lbl').textContent = `${S.tf === 'CQ' ? 'Current Quarter' : 'Next Quarter'} — ${lvLabel} — ${ouLabel}`;
-  document.getElementById('db-sub').textContent = `${ouLabel} · ${lvLabel}`;
 
-  // KPI top row: forecast momentum
+  // ── Dealband summary table ────────────────────────────────────────────────────
   const k = d.kpis;
-  document.getElementById('kpi-grid-top').innerHTML = [
-    kpiCard('kpi-acv',    k.acv_py.lbl,      k.acv_py.val,          null,                    null),
-    kpiCard('kpi-fcst',   k.forecast.lbl,    k.forecast.val,        null,                    null),
-    kpiCard('kpi-yoy',    k.yoy.lbl,         k.yoy.val,             'vs '+q+' FY26',         k.yoy.dir),
-    kpiCard('kpi-closed', k.closed_qtd.lbl,  k.closed_qtd.val,      k.closed_qtd.delta,      k.closed_qtd.dir),
-  ].join('');
+  const bands = d.bands;
 
-  // KPI mid row: pipeline health
-  document.getElementById('kpi-grid-mid').innerHTML = [
-    kpiCard('kpi-pipe',    k.pipeline.lbl,      k.pipeline.val,          null, null),
-    kpiCard('kpi-pgrowth', k.pipe_growth.lbl,   k.pipe_growth.val,       null, k.pipe_growth.dir || 'neu'),
-    kpiCard('kpi-deals',   k.deals_cmt.lbl,     String(k.deals_cmt.val), null, null),
-    kpiCard('kpi-bco',     k.bco_ae.lbl,        k.bco_ae.val,            null, null),
-  ].join('');
+  const BAND_KEYS = ['$0–$100K', '$100–$500K', '$500K–$1M', '$1M+'];
+  const BAND_LABELS = {
+    '$0–$100K':   '<$100K',
+    '$100–$500K': '$100K–$500K',
+    '$500K–$1M':  '$500K–$1M',
+    '$1M+':       '$1M+',
+  };
 
-  // Coverage section
-  renderCoverageCards();
-  renderDealband(d.bands);
+  // Sheet data per-band from DATA (from mkOU → bd())
+  // bd() stores: { band, pipe, fcst (=acvPY), yoy, dir }
+  // For the table we show: ACV PY = fcst | Pipe = pipe | Y/Y pipe = yoy
+  // Forecast FY27: editable input, default to — (not in current data structure)
+  // Pipe Coverage: from COV object
+  // Closed QTD: from total row only
+  // BCO/# Deals: from total row only
+
+  const colHeaders = `
+    <tr>
+      <th style="text-align:left">Deal Band</th>
+      <th>${q} FY26 ACV</th>
+      <th class="rd-editable-hdr">${q} FY27 Forecast</th>
+      <th>Y/Y</th>
+      <th>${q} FY27 Pipe</th>
+      <th>Pipe Growth Y/Y</th>
+      <th>Pipe Coverage (Hist)</th>
+      <th># Deals</th>
+      <th>Closed QTD</th>
+    </tr>`;
+
+  const bandRows = BAND_KEYS.map(bk => {
+    const b = bands.find(x => x.band === bk);
+    if (!b) return '';
+    const savedFcst = BAND_FORECAST_OVERRIDES[bandFcstKey(bk)] || '';
+    const yoyClass = b.dir === 'neg' ? 'style="color:var(--sf-danger)"' : b.dir === 'pos' ? 'style="color:var(--sf-success)"' : '';
+    return `<tr>
+      <td>${BAND_LABELS[bk]}</td>
+      <td>$${b.fcst}M</td>
+      <td><input class="rd-fcst-input" type="text" value="${savedFcst}" placeholder="—" onchange="saveBandFcst('${bk}',this.value)" /></td>
+      <td ${yoyClass}>${b.yoy}</td>
+      <td>$${b.pipe}M</td>
+      <td ${yoyClass}>${b.yoy}</td>
+      <td>—</td>
+      <td>—</td>
+      <td>—</td>
+    </tr>`;
+  }).join('');
+
+  // Total row
+  const covRaw = COV[S.tf][S.lv][S.ou] || '—';
+  const totalFcstSaved = BAND_FORECAST_OVERRIDES[bandFcstKey('Total')] || '';
+  const totalRow = `<tr class="rd-total">
+    <td>Total</td>
+    <td>${k.acv_py.val}</td>
+    <td><input class="rd-fcst-input" type="text" value="${totalFcstSaved}" placeholder="${k.forecast.val}" onchange="saveBandFcst('Total',this.value)" /></td>
+    <td>${k.yoy.val}</td>
+    <td>${k.pipeline.val}</td>
+    <td>${k.pipe_growth.val}</td>
+    <td>${covRaw}</td>
+    <td>${k.deals_cmt.val}</td>
+    <td>${k.closed_qtd.val}</td>
+  </tr>`;
+
+  document.getElementById('rd-table-wrap').innerHTML = `
+    <table class="rd-table">
+      <thead>${colHeaders}</thead>
+      <tbody>${bandRows}${totalRow}</tbody>
+    </table>`;
+
+  // ── Opportunity lists per band — only on OPP view ─────────────────────────────
+  const oppWrap = document.getElementById('rd-opplists-wrap');
+  if (S.lv === 'OPP') {
+    oppWrap.style.display = '';
+    renderOppLists();
+  } else {
+    oppWrap.style.display = 'none';
+    oppWrap.innerHTML = '';
+  }
+
   renderCommentContext();
+}
+
+function renderOppLists() {
+  const BAND_KEYS = ['$0–$100K', '$100–$500K', '$500K–$1M', '$1M+'];
+  const BAND_LABELS = {
+    '$0–$100K':   '<$100K',
+    '$100–$500K': '$100K–$500K',
+    '$500K–$1M':  '$500K–$1M',
+    '$1M+':       '$1M+',
+  };
+  const BAND_TD_KEYS = { '$0–$100K':'lt100', '$100–$500K':'100to500', '$500K–$1M':'500to1m', '$1M+':'gt1m' };
+  const oppWrap = document.getElementById('rd-opplists-wrap');
+
+  // Try live TDB data first (from TDB_CACHE)
+  const tf = S.tf;
+  const tdbData = TDB_CACHE[tf] && TDB_CACHE[tf]['Opportunity'];
+
+  if (!tdbData) {
+    // Trigger a fetch of TDB data for Opportunity logic
+    oppWrap.innerHTML = `<div style="text-align:center;padding:30px;color:var(--sf-meta);font-size:12px;">
+      <div style="display:inline-block;width:20px;height:20px;border:2px solid #ddd;border-top-color:var(--sf-blue);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:8px"></div><br>
+      Loading opportunity detail…
+    </div>`;
+    const cbName = '_tdbCbRD_' + tf;
+    const script = document.createElement('script');
+    script.src = APPS_SCRIPT_URL + '?action=tdb&qtr=' + tf + '&logic=Opportunity&callback=' + cbName;
+    window[cbName] = function(data) {
+      delete window[cbName]; script.remove();
+      if (!data || data.error) { oppWrap.innerHTML = ''; return; }
+      if (!TDB_CACHE[tf]) TDB_CACHE[tf] = {};
+      TDB_CACHE[tf]['Opportunity'] = data;
+      if (S.lv === 'OPP') renderOppLists();
+    };
+    script.onerror = function() { script.remove(); oppWrap.innerHTML = ''; };
+    document.head.appendChild(script);
+    return;
+  }
+
+  const ouData = tdbData.ous.find(o => o.key === S.ou);
+  if (!ouData) { oppWrap.innerHTML = ''; return; }
+
+  const html = BAND_KEYS.map(bk => {
+    const tdbKey = BAND_TD_KEYS[bk];
+    const band = ouData.bands[tdbKey];
+    if (!band || !band.open27 || !band.open27.length) return '';
+    const isLt100 = (bk === '$0–$100K');
+
+    const rows = band.open27.map(d => {
+      const mfj = d.in_ > 0 ? `<span class="rd-in-dot"></span>IN` : '—';
+      const chkCell = isLt100
+        ? '<td></td>'
+        : `<td style="text-align:center"><input type="checkbox" class="rd-chk" /></td>`;
+      return `<tr>
+        <td>${d.name}</td>
+        <td>$${d.pipe.toFixed(2)}M</td>
+        <td>${mfj}</td>
+        ${chkCell}
+      </tr>`;
+    }).join('');
+
+    const chkHeader = isLt100 ? '' : '<th style="text-align:center">Include in Forecast?</th>';
+
+    return `<div class="rd-band-section">
+      <div class="rd-band-title">${BAND_LABELS[bk]}</div>
+      <table class="rd-opp-table">
+        <thead><tr><th>Account</th><th>Open Pipe</th><th>MFJ</th>${chkHeader}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+
+  oppWrap.innerHTML = html || '<div style="color:var(--sf-meta);font-size:12px;padding:12px">No opportunity data available.</div>';
 }
 
 function kpiKey(id) {
@@ -1826,448 +1973,6 @@ async function commitEdit(id, originalVal) {
   if (savingEl) { savingEl.style.display = 'inline-block'; setTimeout(() => { savingEl.style.display = 'none'; }, 1200); }
 }
 
-// ── SEASONALITY & OP STATUS ───────────────────────────────────────────────────
-
-const SEAS_OUS = [
-  { key: 'south',  label: 'Marco Hernansanz' },
-  { key: 'iberia', label: 'EMEA - SOUTH - IB - SVP' },
-  { key: 'italy',  label: 'Vanessa Fortarezza' },
-  { key: 'egm',    label: 'Ana Alonso Muñumer' },
-  { key: 'me',     label: 'Mohammed Alkhotani' },
-];
-
-const SEAS_DATA = {
-  monthly: {
-    title: 'Monthly Seasonality — May / June / July',
-    hist: {
-      label: '3 Yr. Hist. Average',
-      rows: [
-        { ou: 'Marco Hernansanz',          may: '17%', jun: '26%', jul: '57%', q2: '$57.7M' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   may: '15%', jun: '23%', jul: '62%', q2: '$16.3M' },
-        { ou: 'Vanessa Fortarezza',         may: '11%', jun: '27%', jul: '61%', q2: '$18.0M' },
-        { ou: 'Ana Alonso Muñumer',         may: '23%', jun: '27%', jul: '51%', q2: '$15.8M' },
-        { ou: 'Mohammed Alkhotani',         may: '28%', jun: '23%', jul: '49%', q2: '$7.6M' },
-      ]
-    },
-    fy24: {
-      label: 'FY 2024',
-      rows: [
-        { ou: 'Marco Hernansanz',          may: '18%', jun: '31%', jul: '50%', q2: '$48.6M' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   may: '15%', jun: '24%', jul: '61%', q2: '$13.0M' },
-        { ou: 'Vanessa Fortarezza',         may: '13%', jun: '38%', jul: '50%', q2: '$14.1M' },
-        { ou: 'Ana Alonso Muñumer',         may: '21%', jun: '34%', jul: '45%', q2: '$14.8M' },
-        { ou: 'Mohammed Alkhotani',         may: '32%', jun: '25%', jul: '43%', q2: '$6.5M' },
-      ]
-    },
-    fy25: {
-      label: 'FY 2025',
-      rows: [
-        { ou: 'Marco Hernansanz',          may: '16%', jun: '22%', jul: '62%', q2: '$63.2M' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   may: '14%', jun: '22%', jul: '64%', q2: '$18.8M' },
-        { ou: 'Vanessa Fortarezza',         may: '9%',  jun: '23%', jul: '69%', q2: '$22.1M' },
-        { ou: 'Ana Alonso Muñumer',         may: '28%', jun: '19%', jul: '52%', q2: '$14.9M' },
-        { ou: 'Mohammed Alkhotani',         may: '19%', jun: '22%', jul: '59%', q2: '$7.4M' },
-      ]
-    },
-    fy26: {
-      label: 'FY 2026',
-      rows: [
-        { ou: 'Marco Hernansanz',          may: '18%', jun: '24%', jul: '58%', q2: '$61.2M' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   may: '15%', jun: '22%', jul: '62%', q2: '$17.0M' },
-        { ou: 'Vanessa Fortarezza',         may: '13%', jun: '22%', jul: '65%', q2: '$17.8M' },
-        { ou: 'Ana Alonso Muñumer',         may: '18%', jun: '27%', jul: '55%', q2: '$17.6M' },
-        { ou: 'Mohammed Alkhotani',         may: '33%', jun: '23%', jul: '44%', q2: '$8.8M' },
-      ]
-    },
-    fy27: {
-      label: 'Q2 FY27 Commit',
-      rows: [
-        { ou: 'Marco Hernansanz',          may: '20%', jun: '23%', jul: '57%', q2: '$66.5M' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   may: '18%', jun: '26%', jul: '56%', q2: '$19.0M' },
-        { ou: 'Vanessa Fortarezza',         may: '15%', jun: '15%', jul: '69%', q2: '$17.5M' },
-        { ou: 'Ana Alonso Muñumer',         may: '24%', jun: '28%', jul: '48%', q2: '$18.5M' },
-        { ou: 'Mohammed Alkhotani',         may: '23%', jun: '21%', jul: '56%', q2: '$11.0M' },
-      ]
-    },
-  },
-
-  mfj: {
-    title: 'MFJ Distribution (None / UP- / UP+ / IN)',
-    hist: {
-      label: '3 Yr. Hist. Average',
-      rows: [
-        { ou: 'Marco Hernansanz',          none: '4%', upm: '22%', upp: '37%', inn: '37%', total: '' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   none: '5%', upm: '29%', upp: '31%', inn: '36%', total: '' },
-        { ou: 'Vanessa Fortarezza',         none: '4%', upm: '14%', upp: '35%', inn: '46%', total: '' },
-        { ou: 'Ana Alonso Muñumer',         none: '5%', upm: '23%', upp: '44%', inn: '29%', total: '' },
-        { ou: 'Mohammed Alkhotani',         none: '3%', upm: '22%', upp: '39%', inn: '36%', total: '' },
-      ]
-    },
-    fy24: {
-      label: 'FY 2024',
-      rows: [
-        { ou: 'Marco Hernansanz',          none: '4%', upm: '26%', upp: '35%', inn: '36%', total: '$50.6M' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   none: '6%', upm: '33%', upp: '24%', inn: '37%', total: '$16.3M' },
-        { ou: 'Vanessa Fortarezza',         none: '2%', upm: '18%', upp: '40%', inn: '41%', total: '$12.7M' },
-        { ou: 'Ana Alonso Muñumer',         none: '3%', upm: '25%', upp: '43%', inn: '29%', total: '$15.9M' },
-        { ou: 'Mohammed Alkhotani',         none: '3%', upm: '23%', upp: '32%', inn: '42%', total: '$5.7M' },
-      ]
-    },
-    fy25: {
-      label: 'FY 2025',
-      rows: [
-        { ou: 'Marco Hernansanz',          none: '6%', upm: '19%', upp: '38%', inn: '36%', total: '$60.1M' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   none: '5%', upm: '29%', upp: '44%', inn: '22%', total: '$15.7M' },
-        { ou: 'Vanessa Fortarezza',         none: '10%', upm: '13%', upp: '30%', inn: '47%', total: '$19.0M' },
-        { ou: 'Ana Alonso Muñumer',         none: '4%', upm: '18%', upp: '41%', inn: '36%', total: '$14.3M' },
-        { ou: 'Mohammed Alkhotani',         none: '3%', upm: '19%', upp: '40%', inn: '38%', total: '$11.1M' },
-      ]
-    },
-    fy26: {
-      label: 'FY 2026',
-      rows: [
-        { ou: 'Marco Hernansanz',          none: '3%', upm: '20%', upp: '37%', inn: '39%', total: '$64.1M' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   none: '2%', upm: '24%', upp: '24%', inn: '50%', total: '$16.8M' },
-        { ou: 'Vanessa Fortarezza',         none: '1%', upm: '11%', upp: '36%', inn: '51%', total: '$19.9M' },
-        { ou: 'Ana Alonso Muñumer',         none: '7%', upm: '25%', upp: '47%', inn: '22%', total: '$18.1M' },
-        { ou: 'Mohammed Alkhotani',         none: '3%', upm: '23%', upp: '46%', inn: '28%', total: '$9.1M' },
-      ]
-    },
-    fy27: {
-      label: 'Q2 FY27 Pipe',
-      rows: [
-        { ou: 'Marco Hernansanz',          none: '3%', upm: '18%', upp: '37%', inn: '41%', total: '$61.9M' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   none: '6%', upm: '21%', upp: '42%', inn: '31%', total: '$16.5M' },
-        { ou: 'Vanessa Fortarezza',         none: '1%', upm: '9%',  upp: '31%', inn: '59%', total: '$14.8M' },
-        { ou: 'Ana Alonso Muñumer',         none: '2%', upm: '30%', upp: '27%', inn: '41%', total: '$15.4M' },
-        { ou: 'Mohammed Alkhotani',         none: '3%', upm: '12%', upp: '49%', inn: '35%', total: '$14.9M' },
-      ]
-    },
-  },
-
-  stage: {
-    title: 'Stage Distribution (Stage 2/3 vs Stage 4+)',
-    hist: {
-      label: '3 Yr. Hist. Average',
-      rows: [
-        { ou: 'Marco Hernansanz',          s23: '14%', s4: '86%', total: '' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   s23: '16%', s4: '84%', total: '' },
-        { ou: 'Vanessa Fortarezza',         s23: '12%', s4: '88%', total: '' },
-        { ou: 'Ana Alonso Muñumer',         s23: '16%', s4: '84%', total: '' },
-        { ou: 'Mohammed Alkhotani',         s23: '12%', s4: '88%', total: '' },
-      ]
-    },
-    fy24: {
-      label: 'FY 2024',
-      rows: [
-        { ou: 'Marco Hernansanz',          s23: '15%', s4: '85%', total: '$50.6M' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   s23: '18%', s4: '82%', total: '$16.3M' },
-        { ou: 'Vanessa Fortarezza',         s23: '9%',  s4: '91%', total: '$12.7M' },
-        { ou: 'Ana Alonso Muñumer',         s23: '17%', s4: '83%', total: '$15.9M' },
-        { ou: 'Mohammed Alkhotani',         s23: '9%',  s4: '91%', total: '$5.7M' },
-      ]
-    },
-    fy25: {
-      label: 'FY 2025',
-      rows: [
-        { ou: 'Marco Hernansanz',          s23: '14%', s4: '86%', total: '$60.1M' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   s23: '16%', s4: '84%', total: '$15.7M' },
-        { ou: 'Vanessa Fortarezza',         s23: '10%', s4: '90%', total: '$19.0M' },
-        { ou: 'Ana Alonso Muñumer',         s23: '18%', s4: '82%', total: '$14.3M' },
-        { ou: 'Mohammed Alkhotani',         s23: '10%', s4: '90%', total: '$11.1M' },
-      ]
-    },
-    fy26: {
-      label: 'FY 2026',
-      rows: [
-        { ou: 'Marco Hernansanz',          s23: '15%', s4: '85%', total: '$64.1M' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   s23: '12%', s4: '88%', total: '$16.8M' },
-        { ou: 'Vanessa Fortarezza',         s23: '15%', s4: '85%', total: '$19.9M' },
-        { ou: 'Ana Alonso Muñumer',         s23: '14%', s4: '86%', total: '$18.1M' },
-        { ou: 'Mohammed Alkhotani',         s23: '18%', s4: '82%', total: '$9.1M' },
-      ]
-    },
-    fy27: {
-      label: 'Q2 FY27 Pipe',
-      rows: [
-        { ou: 'Marco Hernansanz',          s23: '20%', s4: '80%', total: '$61.9M' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   s23: '36%', s4: '64%', total: '$16.5M' },
-        { ou: 'Vanessa Fortarezza',         s23: '10%', s4: '90%', total: '$14.8M' },
-        { ou: 'Ana Alonso Muñumer',         s23: '13%', s4: '87%', total: '$15.4M' },
-        { ou: 'Mohammed Alkhotani',         s23: '18%', s4: '82%', total: '$14.9M' },
-      ]
-    },
-  },
-
-  dealband: {
-    title: 'Dealband Distribution (Run Rate / Fat Middle / Large Deals)',
-    hist: {
-      label: '3 Yr. Hist. Average',
-      rows: [
-        { ou: 'Marco Hernansanz',          rr: '43%', fm: '43%', ld: '14%', total: '' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   rr: '41%', fm: '42%', ld: '16%', total: '' },
-        { ou: 'Vanessa Fortarezza',         rr: '38%', fm: '44%', ld: '19%', total: '' },
-        { ou: 'Ana Alonso Muñumer',         rr: '50%', fm: '46%', ld: '4%',  total: '' },
-        { ou: 'Mohammed Alkhotani',         rr: '43%', fm: '42%', ld: '15%', total: '' },
-      ]
-    },
-    fy24: {
-      label: 'FY 2024',
-      rows: [
-        { ou: 'Marco Hernansanz',          rr: '47%', fm: '45%', ld: '8%',  total: '$50.6M' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   rr: '44%', fm: '41%', ld: '15%', total: '$16.3M' },
-        { ou: 'Vanessa Fortarezza',         rr: '47%', fm: '44%', ld: '9%',  total: '$12.7M' },
-        { ou: 'Ana Alonso Muñumer',         rr: '48%', fm: '48%', ld: '4%',  total: '$15.9M' },
-        { ou: 'Mohammed Alkhotani',         rr: '55%', fm: '45%', ld: '0%',  total: '$5.7M' },
-      ]
-    },
-    fy25: {
-      label: 'FY 2025',
-      rows: [
-        { ou: 'Marco Hernansanz',          rr: '35%', fm: '40%', ld: '24%', total: '$60.1M' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   rr: '38%', fm: '41%', ld: '21%', total: '$15.7M' },
-        { ou: 'Vanessa Fortarezza',         rr: '28%', fm: '34%', ld: '38%', total: '$19.0M' },
-        { ou: 'Ana Alonso Muñumer',         rr: '48%', fm: '48%', ld: '4%',  total: '$14.3M' },
-        { ou: 'Mohammed Alkhotani',         rr: '27%', fm: '41%', ld: '32%', total: '$11.1M' },
-      ]
-    },
-    fy26: {
-      label: 'FY 2026',
-      rows: [
-        { ou: 'Marco Hernansanz',          rr: '45%', fm: '46%', ld: '10%', total: '$64.1M' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   rr: '42%', fm: '44%', ld: '14%', total: '$16.8M' },
-        { ou: 'Vanessa Fortarezza',         rr: '38%', fm: '53%', ld: '9%',  total: '$19.9M' },
-        { ou: 'Ana Alonso Muñumer',         rr: '54%', fm: '41%', ld: '5%',  total: '$18.1M' },
-        { ou: 'Mohammed Alkhotani',         rr: '46%', fm: '41%', ld: '14%', total: '$9.1M' },
-      ]
-    },
-    fy27: {
-      label: 'Q2 FY27 Pipe',
-      rows: [
-        { ou: 'Marco Hernansanz',          rr: '40%', fm: '38%', ld: '22%', total: '$61.9M' },
-        { ou: 'EMEA - SOUTH - IB - SVP',   rr: '33%', fm: '47%', ld: '21%', total: '$16.5M' },
-        { ou: 'Vanessa Fortarezza',         rr: '46%', fm: '39%', ld: '15%', total: '$14.8M' },
-        { ou: 'Ana Alonso Muñumer',         rr: '51%', fm: '21%', ld: '27%', total: '$15.4M' },
-        { ou: 'Mohammed Alkhotani',         rr: '29%', fm: '46%', ld: '25%', total: '$14.9M' },
-      ]
-    },
-  },
-};
-
-// Parse "17%" → 17
-function _pct(v) { return parseFloat(String(v).replace('%','')) || 0; }
-
-// Stacked bar from array of {val, cls}
-function _seasBar(segs) {
-  return '<div class="seas-bar">' + segs.map(s => {
-    const w = Math.max(s.val, 0);
-    const txt = w >= 10 ? w + '%' : '';
-    return `<div class="seas-bar-seg ${s.cls}" style="flex:${w || 0.001}">${txt}</div>`;
-  }).join('') + '</div>';
-}
-
-// Short OU name for card header
-function _seasOuShort(ou) {
-  const MAP = {
-    'Marco Hernansanz':        'SOUTH',
-    'EMEA - SOUTH - IB - SVP': 'IBERIA',
-    'Vanessa Fortarezza':      'ITALY',
-    'Ana Alonso Muñumer':      'EGM',
-    'Mohammed Alkhotani':      'MIDDLE EAST',
-  };
-  return MAP[ou] || ou;
-}
-
-// Single year row inside a card
-function _seasYrRow(label, bar, total, isFY27) {
-  const cls = isFY27 ? 'seas-yr-row seas-fy27' : 'seas-yr-row';
-  return `<div class="${cls}">
-    <div class="seas-yr-lbl">${label}</div>
-    <div class="seas-yr-bar">${bar}</div>
-    <div class="seas-yr-total">${total || '—'}</div>
-  </div>`;
-}
-
-function _seasCardMonthly(ou, data) {
-  const years = [
-    { key:'fy24', label:'FY24' },
-    { key:'fy25', label:'FY25' },
-    { key:'fy26', label:'FY26' },
-    { key:'hist', label:'3yr avg' },
-    { key:'fy27', label:'FY27', isFY27: true },
-  ];
-  const rows = years.map(y => {
-    const r = data[y.key].rows.find(x => x.ou === ou);
-    if (!r) return '';
-    const bar = _seasBar([
-      { val: _pct(r.may), cls: 'seg-may' },
-      { val: _pct(r.jun), cls: 'seg-jun' },
-      { val: _pct(r.jul), cls: 'seg-jul' },
-    ]);
-    return _seasYrRow(y.label, bar, r.q2, y.isFY27);
-  }).join('');
-  const fy27 = data.fy27.rows.find(x => x.ou === ou);
-  return `<div class="seas-card">
-    <div class="seas-card-hdr">
-      <div class="seas-card-ou">${_seasOuShort(ou)}</div>
-      <div class="seas-card-total"><span class="seas-card-total-lbl">FY27 Commit</span>${fy27 ? fy27.q2 : '—'}</div>
-    </div>
-    <div class="seas-card-body">
-      <div class="seas-legend">
-        <div class="seas-legend-item"><div class="seas-legend-dot seg-may"></div>May</div>
-        <div class="seas-legend-item"><div class="seas-legend-dot seg-jun"></div>June</div>
-        <div class="seas-legend-item"><div class="seas-legend-dot seg-jul"></div>July</div>
-      </div>
-      <div class="seas-yr-rows">${rows}</div>
-    </div>
-  </div>`;
-}
-
-function _seasCardMFJ(ou, data) {
-  const years = [
-    { key:'fy24', label:'FY24' },
-    { key:'fy25', label:'FY25' },
-    { key:'fy26', label:'FY26' },
-    { key:'hist', label:'3yr avg' },
-    { key:'fy27', label:'FY27 Pipe', isFY27: true },
-  ];
-  const rows = years.map(y => {
-    const r = data[y.key].rows.find(x => x.ou === ou);
-    if (!r) return '';
-    const bar = _seasBar([
-      { val: _pct(r.none), cls: 'seg-none' },
-      { val: _pct(r.upm),  cls: 'seg-upm'  },
-      { val: _pct(r.upp),  cls: 'seg-upp'  },
-      { val: _pct(r.inn),  cls: 'seg-inn'  },
-    ]);
-    return _seasYrRow(y.label, bar, r.total, y.isFY27);
-  }).join('');
-  const fy27 = data.fy27.rows.find(x => x.ou === ou);
-  return `<div class="seas-card">
-    <div class="seas-card-hdr">
-      <div class="seas-card-ou">${_seasOuShort(ou)}</div>
-      <div class="seas-card-total"><span class="seas-card-total-lbl">FY27 Pipe</span>${fy27 ? (fy27.total || '—') : '—'}</div>
-    </div>
-    <div class="seas-card-body">
-      <div class="seas-legend">
-        <div class="seas-legend-item"><div class="seas-legend-dot seg-none"></div>None</div>
-        <div class="seas-legend-item"><div class="seas-legend-dot seg-upm"></div>UP−</div>
-        <div class="seas-legend-item"><div class="seas-legend-dot seg-upp"></div>UP+</div>
-        <div class="seas-legend-item"><div class="seas-legend-dot seg-inn"></div>IN</div>
-      </div>
-      <div class="seas-yr-rows">${rows}</div>
-    </div>
-  </div>`;
-}
-
-function _seasCardStage(ou, data) {
-  const years = [
-    { key:'fy24', label:'FY24' },
-    { key:'fy25', label:'FY25' },
-    { key:'fy26', label:'FY26' },
-    { key:'hist', label:'3yr avg' },
-    { key:'fy27', label:'FY27 Pipe', isFY27: true },
-  ];
-  const rows = years.map(y => {
-    const r = data[y.key].rows.find(x => x.ou === ou);
-    if (!r) return '';
-    const bar = _seasBar([
-      { val: _pct(r.s23), cls: 'seg-s23' },
-      { val: _pct(r.s4),  cls: 'seg-s4'  },
-    ]);
-    return _seasYrRow(y.label, bar, r.total, y.isFY27);
-  }).join('');
-  const fy27 = data.fy27.rows.find(x => x.ou === ou);
-  return `<div class="seas-card">
-    <div class="seas-card-hdr">
-      <div class="seas-card-ou">${_seasOuShort(ou)}</div>
-      <div class="seas-card-total"><span class="seas-card-total-lbl">FY27 Pipe</span>${fy27 ? (fy27.total || '—') : '—'}</div>
-    </div>
-    <div class="seas-card-body">
-      <div class="seas-legend">
-        <div class="seas-legend-item"><div class="seas-legend-dot seg-s23"></div>Stage 2/3</div>
-        <div class="seas-legend-item"><div class="seas-legend-dot seg-s4"></div>Stage 4+</div>
-      </div>
-      <div class="seas-yr-rows">${rows}</div>
-    </div>
-  </div>`;
-}
-
-function _seasCardDealband(ou, data) {
-  const years = [
-    { key:'fy24', label:'FY24' },
-    { key:'fy25', label:'FY25' },
-    { key:'fy26', label:'FY26' },
-    { key:'hist', label:'3yr avg' },
-    { key:'fy27', label:'FY27 Pipe', isFY27: true },
-  ];
-  const rows = years.map(y => {
-    const r = data[y.key].rows.find(x => x.ou === ou);
-    if (!r) return '';
-    const bar = _seasBar([
-      { val: _pct(r.rr), cls: 'seg-rr' },
-      { val: _pct(r.fm), cls: 'seg-fm' },
-      { val: _pct(r.ld), cls: 'seg-ld' },
-    ]);
-    return _seasYrRow(y.label, bar, r.total, y.isFY27);
-  }).join('');
-  const fy27 = data.fy27.rows.find(x => x.ou === ou);
-  return `<div class="seas-card">
-    <div class="seas-card-hdr">
-      <div class="seas-card-ou">${_seasOuShort(ou)}</div>
-      <div class="seas-card-total"><span class="seas-card-total-lbl">FY27 Pipe</span>${fy27 ? (fy27.total || '—') : '—'}</div>
-    </div>
-    <div class="seas-card-body">
-      <div class="seas-legend">
-        <div class="seas-legend-item"><div class="seas-legend-dot seg-rr"></div>Run Rate</div>
-        <div class="seas-legend-item"><div class="seas-legend-dot seg-fm"></div>Fat Middle</div>
-        <div class="seas-legend-item"><div class="seas-legend-dot seg-ld"></div>Large Deals</div>
-      </div>
-      <div class="seas-yr-rows">${rows}</div>
-    </div>
-  </div>`;
-}
-
-function renderSeasonality() {
-  const el = document.getElementById('seas-content');
-  if (!el) return;
-  const ouLabel = OU_LABELS[S.ou] || S.ou;
-  document.getElementById('view-lbl').textContent = `${S.tf === 'CQ' ? 'Current Quarter' : 'Next Quarter'} — ${ouLabel}`;
-
-  const SEAS_OU_MAP = {
-    SOUTH:   null,
-    IBERIA:  'EMEA - SOUTH - IB - SVP',
-    ITALY:   'Vanessa Fortarezza',
-    EGM:     'Ana Alonso Muñumer',
-    MIDEAST: 'Mohammed Alkhotani',
-  };
-  const allOus = SEAS_DATA.monthly.hist.rows.map(r => r.ou);
-  const ouFilter = SEAS_OU_MAP[S.ou];
-  const ous = ouFilter ? allOus.filter(ou => ou === ouFilter) : allOus;
-
-  const monthlyCards = ous.map(ou => _seasCardMonthly(ou, SEAS_DATA.monthly)).join('');
-  const mfjCards     = ous.map(ou => _seasCardMFJ(ou, SEAS_DATA.mfj)).join('');
-  const stageCards   = ous.map(ou => _seasCardStage(ou, SEAS_DATA.stage)).join('');
-  const dbCards      = ous.map(ou => _seasCardDealband(ou, SEAS_DATA.dealband)).join('');
-
-  el.innerHTML = `
-    <div class="seas-block">
-      <div class="seas-block-title">Monthly Seasonality <span class="seas-badge">May · June · July</span></div>
-      <div class="seas-cards">${monthlyCards}</div>
-    </div>
-    <div class="seas-block">
-      <div class="seas-block-title">MFJ Distribution <span class="seas-badge">None · UP− · UP+ · IN</span></div>
-      <div class="seas-cards">${mfjCards}</div>
-    </div>
-    <div class="seas-block">
-      <div class="seas-block-title">Stage Distribution <span class="seas-badge">Stage 2/3 vs Stage 4+</span></div>
-      <div class="seas-cards">${stageCards}</div>
-    </div>
-    <div class="seas-block">
-      <div class="seas-block-title">Dealband Distribution <span class="seas-badge">Run Rate · Fat Middle · Large Deals</span></div>
-      <div class="seas-cards">${dbCards}</div>
-    </div>`;
-}
 
 
 // ── PAGE SWITCHING ────────────────────────────────────────────────────────────
@@ -2278,7 +1983,7 @@ function switchPage(page, tab) {
   document.getElementById('page-' + page).classList.add('active');
   // Slicer bar: always visible; TF su tutti i tab; LV solo su readiness e topdeals
   document.getElementById('slicer-bar').style.display = 'flex';
-  const hasTf = ['readiness','topdeals','qbr','seasonality'].includes(page);
+  const hasTf = ['readiness','topdeals','qbr'].includes(page);
   const hasLv = ['readiness'].includes(page);
   ['sg-tf','sd-tf'].forEach(id => {
     const el = document.getElementById(id);
@@ -2293,10 +1998,9 @@ function switchPage(page, tab) {
     const el = document.getElementById(id);
     if (el) el.style.display = hasTdb ? '' : 'none';
   });
-  if (page === 'topdeals') renderTopDeals();
+  if (page === 'topdeals') renderTopDeals2();
   if (page === 'topdeals-db') renderTopDealsDB();
   if (page === 'qbr') renderQBR();
-  if (page === 'seasonality') renderSeasonality();
 }
 
 // ── QBR FORECAST DATA ─────────────────────────────────────────────────────────
