@@ -293,7 +293,10 @@
     .rd-fcst-input { width:80px; border:none; border-bottom:1.5px dashed #aab4d0; outline:none; background:transparent; font-size:11px; font-family:inherit; color:var(--sf-blue); font-weight:700; text-align:right; padding:1px 3px; cursor:text; font-variant-numeric:tabular-nums; }
     .rd-fcst-input:focus { border-bottom-color:var(--sf-blue); background:#f0f7ff; border-radius:2px; }
     /* Dealband opportunity lists */
-    .rd-band-section { margin-bottom:18px; }
+    .rd-bands-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; align-items:start; }
+    @media(max-width:1200px) { .rd-bands-grid { grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:700px)  { .rd-bands-grid { grid-template-columns:1fr; } }
+    .rd-band-section { margin-bottom:0; }
     .rd-band-title { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.7px; color:#fff; background:var(--sf-blue); padding:4px 12px; border-radius:var(--r) var(--r) 0 0; display:flex; align-items:center; gap:8px; }
     .rd-opp-table { width:100%; border-collapse:collapse; font-size:11px; background:var(--sf-card); border:1px solid var(--sf-border); border-top:none; border-radius:0 0 var(--r) var(--r); }
     .rd-opp-table th { padding:4px 10px; background:var(--sf-bg); border-bottom:1px solid var(--sf-border); font-size:9px; font-weight:700; color:var(--sf-meta); text-transform:uppercase; letter-spacing:.04em; text-align:right; }
@@ -1611,9 +1614,11 @@ function renderOppLists() {
         <tbody>${rows}</tbody>
       </table>
     </div>`;
-  }).join('');
+  }).filter(Boolean).join('');
 
-  oppWrap.innerHTML = html || '<div style="color:var(--sf-meta);font-size:12px;padding:12px">No opportunity data available.</div>';
+  oppWrap.innerHTML = html
+    ? `<div class="rd-bands-grid">${html}</div>`
+    : '<div style="color:var(--sf-meta);font-size:12px;padding:12px">No opportunity data available.</div>';
 }
 
 function kpiKey(id) {
