@@ -325,6 +325,15 @@
     .td2-commit-input:focus { border-bottom-color:var(--sf-blue); background:#f0f7ff; border-radius:2px; }
     .td2-loading { text-align:center; padding:40px; color:var(--sf-meta); font-size:12px; }
 
+    .rd-ou-section { margin-bottom:18px; }
+    .rd-ou-header { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.7px; color:var(--sf-blue); padding:5px 2px 3px; border-bottom:2px solid var(--sf-blue); margin-bottom:6px; }
+    .rd-table .rd-qbr td { font-weight:600; color:#2e844a; background:#f0fff5; font-style:italic; }
+    .rd-table .rd-delta td { font-weight:700; font-style:italic; }
+    .rd-table .rd-delta td.rd-delta-neg { color:var(--sf-danger); }
+    .rd-table .rd-delta td.rd-delta-pos { color:var(--sf-success); }
+    .rd-col-pos { color:var(--sf-success); }
+    .rd-col-neg { color:var(--sf-danger); }
+
     /* ── FOOTER ── */
     .dash-footer { margin: 4px 24px 16px; padding: 9px 14px; background: #fff; border: 1px solid var(--sf-border); border-radius: var(--r); display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
     .ft { font-size: 10px; color: var(--sf-meta); }
@@ -1456,67 +1465,219 @@ function saveBandFcst(band, val) {
   BAND_FORECAST_OVERRIDES[bandFcstKey(band)] = val;
 }
 
+// Cache dati live da action=readiness
+const RD_CACHE = {};
+
 function render() {
-  const d = DATA[S.tf][S.lv][S.ou];
   const ouLabel = OU_LABELS[S.ou];
   const lvLabel = S.lv === 'COMBO' ? 'Combo' : 'Opportunity';
   const q = S.tf === 'NQ' ? 'Q3' : 'Q2';
-  const qLabel = q + ' FY27';
 
   document.getElementById('view-lbl').textContent = `${S.tf === 'CQ' ? 'Current Quarter' : 'Next Quarter'} — ${lvLabel} — ${ouLabel}`;
 
-  // ── Dealband summary table ────────────────────────────────────────────────────
-  const k = d.kpis;
-  const bands = d.bands;
+  // Se dati live disponibili, usa quelli; altrimenti usa DATA hardcoded
+  const livePayload = RD_CACHE[S.tf] && RD_CACHE[S.tf][S.lv];
+  if (livePayload) {
+    _renderRDTable(livePayload, q);
+  } else {
+    _renderRDFallback(q);
+    _fetchRDLive();
+  }
 
-  const BAND_KEYS = ['$0–$100K', '$100–$500K', '$500K–$1M', '$1M+'];
-  const BAND_LABELS = {
-    '$0–$100K':   '<$100K',
-    '$100–$500K': '$100K–$500K',
-    '$500K–$1M':  '$500K–$1M',
-    '$1M+':       '$1M+',
+  // ── Opportunity lists per band — only on OPP view ────────────────────────────
+  const oppWrap = document.getElementById('rd-opplists-wrap');
+  if (S.lv === 'OPP') {
+    oppWrap.style.display = '';
+    renderOppLists();
+  } else {
+    oppWrap.style.display = 'none';
+    oppWrap.innerHTML = '';
+  }
+
+  renderCommentContext();
+}
+
+function _fetchRDLive() {
+  const tf = S.tf;
+  const cbName = '_rdCb_' + tf + '_' + S.lv;
+  if (window[cbName]) return; // fetch già in corso
+  const script = document.createElement('script');
+  script.src = APPS_SCRIPT_URL + '?action=readiness&callback=' + cbName;
+  window[cbName] = function(data) {
+    delete window[cbName]; script.remove();
+    if (!data || data.error) return;
+    if (!RD_CACHE[tf]) RD_CACHE[tf] = {};
+    RD_CACHE[tf]['OPP']   = data[tf] && data[tf]['OPP'];
+    RD_CACHE[tf]['COMBO'] = data[tf] && data[tf]['COMBO'];
+    if (data.timestamps) {
+      TIMESTAMPS = data.timestamps;
+      document.getElementById('ts-snow').textContent    = data.timestamps.snowflake || '—';
+      document.getElementById('ts-org62').textContent   = data.timestamps.org62    || '—';
+      document.getElementById('ts-finplan').textContent = data.timestamps.finplan  || '—';
+      document.getElementById('ts-hc').textContent      = data.timestamps.hc       || '—';
+    }
+    const lv = S.lv;
+    if (S.tf === tf && (document.getElementById('page-readiness') || {}).classList && document.getElementById('page-readiness').classList.contains('active')) {
+      const livePayload = RD_CACHE[tf] && RD_CACHE[tf][lv];
+      if (livePayload) _renderRDTable(livePayload, tf === 'NQ' ? 'Q3' : 'Q2');
+    }
+  };
+  script.onerror = function() { delete window[cbName]; script.remove(); };
+  document.head.appendChild(script);
+}
+
+// Definisce quali OU mostrare in base al filtro S.ou
+// SOUTH → tutte e 5 in ordine
+// altrimenti → SOUTH + OU selezionata
+const RD_OU_ORDER = ['SOUTH', 'IBERIA', 'ITALY', 'EGM', 'MIDEAST'];
+const RD_OU_LABELS = { SOUTH:'EMEA South', IBERIA:'Iberia', ITALY:'Italy', EGM:'EGM', MIDEAST:'Middle East' };
+
+function _rdOuList() {
+  if (S.ou === 'SOUTH') return RD_OU_ORDER;
+  return ['SOUTH', S.ou];
+}
+
+function _renderRDTable(liveAll, q) {
+  const BAND_DISPLAY_KEYS = ['$0–$100K', '$100–$500K', '$500K–$1M', '$1M+'];
+  const BAND_DISPLAY_LABELS = {
+    '$0–$100K':'<$100K', '$100–$500K':'$100K–$500K', '$500K–$1M':'$500K–$1M', '$1M+':'$1M+',
   };
 
-  // Sheet data per-band from DATA (from mkOU → bd())
-  // bd() stores: { band, pipe, fcst (=acvPY), yoy, dir }
-  // For the table we show: ACV PY = fcst | Pipe = pipe | Y/Y pipe = yoy
-  // Forecast FY27: editable input, default to — (not in current data structure)
-  // Pipe Coverage: from COV object
-  // Closed QTD: from total row only
-  // BCO/# Deals: from total row only
+  const colHeaders = `<tr>
+    <th style="text-align:left">Deal Band</th>
+    <th>${q} FY26 ACV</th>
+    <th class="rd-editable-hdr">${q} FY27 Forecast</th>
+    <th>Y/Y</th>
+    <th>${q} FY27 Pipe</th>
+    <th>Pipe Growth Y/Y</th>
+    <th>Pipe Coverage (Hist)</th>
+    <th># Deals in Commit</th>
+    <th>BCO per AE</th>
+    <th>FY27 Closed QTD</th>
+    <th>Closed Y/Y</th>
+  </tr>`;
 
-  const colHeaders = `
-    <tr>
-      <th style="text-align:left">Deal Band</th>
-      <th>${q} FY26 ACV</th>
-      <th class="rd-editable-hdr">${q} FY27 Forecast</th>
-      <th>Y/Y</th>
-      <th>${q} FY27 Pipe</th>
-      <th>Pipe Growth Y/Y</th>
-      <th>Pipe Coverage (Hist)</th>
-      <th># Deals</th>
-      <th>Closed QTD</th>
+  const sectionsHtml = _rdOuList().map(ouKey => {
+    const d = liveAll[ouKey];
+    if (!d) return '';
+
+    const k = d.kpis || {};
+    const bands = d.bands || [];
+
+    const bandRows = BAND_DISPLAY_KEYS.map(bk => {
+      const b = bands.find(x => x.band === bk);
+      const isLt100 = (bk === '$0–$100K');
+      const savedFcst = BAND_FORECAST_OVERRIDES[S.tf + '_' + S.lv + '_' + ouKey + '_' + bk] || '';
+      const bcoVal = isLt100 && b && b.bco > 0
+        ? (b.bco >= 1000 ? '$' + Math.round(b.bco/1000) + 'K' : '$' + Math.round(b.bco))
+        : '—';
+      const yoyFcstCls = !b ? '' : (parseFloat(b.yoyFcst) >= 0 ? 'rd-col-pos' : 'rd-col-neg');
+      const yoyPipeCls = !b ? '' : (parseFloat(b.yoyPipe) >= 0 ? 'rd-col-pos' : 'rd-col-neg');
+      const yoyClosedCls = !b ? '' : (parseFloat(b.yoyClosed) >= 0 ? 'rd-col-pos' : 'rd-col-neg');
+      const fcstPlaceholder = b && b.forecast > 0 ? '$' + b.forecast + 'M' : '—';
+      return `<tr>
+        <td>${BAND_DISPLAY_LABELS[bk]}</td>
+        <td>${b && b.acvPY > 0 ? '$' + b.acvPY + 'M' : '—'}</td>
+        <td><input class="rd-fcst-input" type="text" value="${savedFcst}" placeholder="${fcstPlaceholder}"
+          onchange="BAND_FORECAST_OVERRIDES['${S.tf}_${S.lv}_${ouKey}_${bk}']=this.value" /></td>
+        <td class="${yoyFcstCls}">${b ? b.yoyFcst : '—'}</td>
+        <td>${b && b.pipe > 0 ? '$' + b.pipe + 'M' : '—'}</td>
+        <td class="${yoyPipeCls}">${b ? b.yoyPipe : '—'}</td>
+        <td>${b ? b.histCov : '—'}</td>
+        <td>${b && b.deals > 0 ? b.deals : '—'}</td>
+        <td>${bcoVal}</td>
+        <td>${b && b.closedQTD > 0 ? '$' + b.closedQTD + 'M' : '—'}</td>
+        <td class="${yoyClosedCls}">${b ? b.yoyClosed : '—'}</td>
+      </tr>`;
+    }).join('');
+
+    // Total row
+    const totalFcstSaved = BAND_FORECAST_OVERRIDES[S.tf + '_' + S.lv + '_' + ouKey + '_Total'] || '';
+    const totalFcstPlaceholder = k.forecast ? k.forecast.val : '—';
+    const totalRow = `<tr class="rd-total">
+      <td>Total</td>
+      <td>${k.acv_py ? k.acv_py.val : '—'}</td>
+      <td><input class="rd-fcst-input" type="text" value="${totalFcstSaved}" placeholder="${totalFcstPlaceholder}"
+        onchange="BAND_FORECAST_OVERRIDES['${S.tf}_${S.lv}_${ouKey}_Total']=this.value" /></td>
+      <td>${k.yoy ? k.yoy.val : '—'}</td>
+      <td>${k.pipeline ? k.pipeline.val : '—'}</td>
+      <td>${k.pipe_growth ? k.pipe_growth.val : '—'}</td>
+      <td>${k.hist_pipe_cov ? k.hist_pipe_cov.val : '—'}</td>
+      <td>${k.deals_cmt ? k.deals_cmt.val : '—'}</td>
+      <td>—</td>
+      <td>${k.closed_qtd ? k.closed_qtd.val : '—'}</td>
+      <td>${k.yoy_closed ? k.yoy_closed.val : (k.closed_qtd ? k.closed_qtd.delta || '—' : '—')}</td>
     </tr>`;
+
+    // QBR Frcst row
+    const qbrFcst = d.qbrFcst !== null && d.qbrFcst !== undefined ? d.qbrFcst : null;
+    const qbrRow = qbrFcst !== null ? `<tr class="rd-qbr">
+      <td>QBR Frcst</td>
+      <td>—</td>
+      <td>$${qbrFcst}M</td>
+      <td colspan="8">—</td>
+    </tr>` : '';
+
+    // DELTA row
+    const delta = d.delta !== null && d.delta !== undefined ? d.delta : null;
+    const deltaClass = delta !== null ? (delta < 0 ? 'rd-delta-neg' : 'rd-delta-pos') : '';
+    const deltaRow = delta !== null ? `<tr class="rd-delta">
+      <td class="${deltaClass}">DELTA</td>
+      <td colspan="2" class="${deltaClass}">${delta < 0 ? '-' : '+'}$${Math.abs(delta).toFixed(1)}M</td>
+      <td colspan="8">—</td>
+    </tr>` : '';
+
+    return `<div class="rd-ou-section">
+      <div class="rd-ou-header">${RD_OU_LABELS[ouKey] || ouKey}</div>
+      <div class="rd-table-wrap">
+        <table class="rd-table">
+          <thead>${colHeaders}</thead>
+          <tbody>${bandRows}${totalRow}${qbrRow}${deltaRow}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('rd-table-wrap').innerHTML = sectionsHtml;
+}
+
+function _renderRDFallback(q) {
+  const d = DATA[S.tf][S.lv][S.ou];
+  const k = d.kpis;
+  const bands = d.bands;
+  const BAND_KEYS = ['$0–$100K', '$100–$500K', '$500K–$1M', '$1M+'];
+  const BAND_LABELS = {'$0–$100K':'<$100K','$100–$500K':'$100K–$500K','$500K–$1M':'$500K–$1M','$1M+':'$1M+'};
+
+  const colHeaders = `<tr>
+    <th style="text-align:left">Deal Band</th>
+    <th>${q} FY26 ACV</th>
+    <th class="rd-editable-hdr">${q} FY27 Forecast</th>
+    <th>Y/Y</th>
+    <th>${q} FY27 Pipe</th>
+    <th>Pipe Growth Y/Y</th>
+    <th>Pipe Coverage (Hist)</th>
+    <th># Deals in Commit</th>
+    <th>BCO per AE</th>
+    <th>FY27 Closed QTD</th>
+    <th>Closed Y/Y</th>
+  </tr>`;
 
   const bandRows = BAND_KEYS.map(bk => {
     const b = bands.find(x => x.band === bk);
     if (!b) return '';
     const savedFcst = BAND_FORECAST_OVERRIDES[bandFcstKey(bk)] || '';
-    const yoyClass = b.dir === 'neg' ? 'style="color:var(--sf-danger)"' : b.dir === 'pos' ? 'style="color:var(--sf-success)"' : '';
+    const yoyClass = b.dir === 'neg' ? 'rd-col-neg' : b.dir === 'pos' ? 'rd-col-pos' : '';
     return `<tr>
       <td>${BAND_LABELS[bk]}</td>
       <td>$${b.fcst}M</td>
       <td><input class="rd-fcst-input" type="text" value="${savedFcst}" placeholder="—" onchange="saveBandFcst('${bk}',this.value)" /></td>
-      <td ${yoyClass}>${b.yoy}</td>
+      <td class="${yoyClass}">${b.yoy}</td>
       <td>$${b.pipe}M</td>
-      <td ${yoyClass}>${b.yoy}</td>
-      <td>—</td>
-      <td>—</td>
-      <td>—</td>
+      <td class="${yoyClass}">${b.yoy}</td>
+      <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
     </tr>`;
   }).join('');
 
-  // Total row
   const covRaw = COV[S.tf][S.lv][S.ou] || '—';
   const totalFcstSaved = BAND_FORECAST_OVERRIDES[bandFcstKey('Total')] || '';
   const totalRow = `<tr class="rd-total">
@@ -1528,26 +1689,21 @@ function render() {
     <td>${k.pipe_growth.val}</td>
     <td>${covRaw}</td>
     <td>${k.deals_cmt.val}</td>
+    <td>—</td>
     <td>${k.closed_qtd.val}</td>
+    <td>${k.closed_qtd.delta || '—'}</td>
   </tr>`;
 
   document.getElementById('rd-table-wrap').innerHTML = `
-    <table class="rd-table">
-      <thead>${colHeaders}</thead>
-      <tbody>${bandRows}${totalRow}</tbody>
-    </table>`;
-
-  // ── Opportunity lists per band — only on OPP view ─────────────────────────────
-  const oppWrap = document.getElementById('rd-opplists-wrap');
-  if (S.lv === 'OPP') {
-    oppWrap.style.display = '';
-    renderOppLists();
-  } else {
-    oppWrap.style.display = 'none';
-    oppWrap.innerHTML = '';
-  }
-
-  renderCommentContext();
+    <div class="rd-ou-section">
+      <div class="rd-ou-header">${OU_LABELS[S.ou]}</div>
+      <div class="rd-table-wrap" style="margin-bottom:0">
+        <table class="rd-table">
+          <thead>${colHeaders}</thead>
+          <tbody>${bandRows}${totalRow}</tbody>
+        </table>
+      </div>
+    </div>`;
 }
 
 function renderOppLists() {
@@ -2239,8 +2395,28 @@ let TIMESTAMPS = {
 };
 
 async function loadLiveData() {
-  // Dati già iniettati direttamente dal Google Sheet — nessun fetch necessario
-  return true;
+  return new Promise(function(resolve) {
+    const cbName = '_rdInitCb';
+    const script = document.createElement('script');
+    script.src = APPS_SCRIPT_URL + '?action=readiness&callback=' + cbName;
+    const timeout = setTimeout(function() {
+      delete window[cbName]; script.remove(); resolve(false);
+    }, 12000);
+    window[cbName] = function(data) {
+      clearTimeout(timeout); delete window[cbName]; script.remove();
+      if (!data || data.error) { resolve(false); return; }
+      ['CQ','NQ'].forEach(function(tf) {
+        if (!data[tf]) return;
+        if (!RD_CACHE[tf]) RD_CACHE[tf] = {};
+        RD_CACHE[tf]['OPP']   = data[tf]['OPP'];
+        RD_CACHE[tf]['COMBO'] = data[tf]['COMBO'];
+      });
+      if (data.timestamps) TIMESTAMPS = data.timestamps;
+      resolve(true);
+    };
+    script.onerror = function() { clearTimeout(timeout); delete window[cbName]; script.remove(); resolve(false); };
+    document.head.appendChild(script);
+  });
 }
 
 async function refreshData() {

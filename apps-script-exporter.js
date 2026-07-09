@@ -175,9 +175,9 @@ function parseTab(ss, tabName) {
 
   const rows = sheet.getDataRange().getValues();
 
-  // Per ogni OU: { total: {...}, bands: { bandKey: {...} } }
+  // Per ogni OU: { total: {...}, bands: { bandKey: {...} }, qbrFcst: null, delta: null }
   const ouData = {};
-  OU_KEYS.forEach(function(k) { ouData[k] = { total: null, bands: {} }; });
+  OU_KEYS.forEach(function(k) { ouData[k] = { total: null, bands: {}, qbrFcst: null, delta: null }; });
 
   var inSection = false;
 
@@ -216,17 +216,38 @@ function parseTab(ss, tabName) {
       return;
     }
 
+    // Righe speciali: QBR Frcst e DELTA
+    if (cellLo.indexOf('qbr') === 0) {
+      if (ouData[ou].qbrFcst === null) {
+        ouData[ou].qbrFcst = nM(row[3]) !== 0 ? nM(row[3]) : nM(row[2]);
+      }
+      return;
+    }
+    if (cellLo === 'delta') {
+      if (ouData[ou].delta === null) {
+        var dv3 = nM(row[3]), dv2 = nM(row[2]);
+        ouData[ou].delta = dv3 !== 0 ? dv3 : dv2;
+      }
+      return;
+    }
+
     // Righe banda → dati per il grafico distribution
     const canonBand = BAND_NORM[cellLo];
     if (!canonBand) return;
 
     const cov = parseCov(row[7]);
     ouData[ou].bands[canonBand] = {
-      acvPY:   nM(row[2]),
-      pipe:    nM(row[5]),
-      yoyPipe: nPct(row[6]),
-      pipeCov: cov.current,
-      histCov: cov.hist,
+      acvPY:     nM(row[2]),
+      forecast:  nM(row[3]),
+      yoyFcst:   nPct(row[4]),
+      pipe:      nM(row[5]),
+      yoyPipe:   nPct(row[6]),
+      pipeCov:   cov.current,
+      histCov:   cov.hist,
+      deals:     parseDeals(row[8]),
+      bco:       parseBCO(row[9]),
+      closedQTD: nM(row[10]),
+      yoyClosed: nPct(row[11]),
     };
   });
 
@@ -265,15 +286,34 @@ function parseTab(ss, tabName) {
       },
       bands: BAND_ORDER.map(function(band) {
         const b = d.bands[band];
-        if (!b) return { band: band, fcst: 0, pipe: 0, yoy: '—', dir: 'neu' };
+        if (!b) return {
+          band: band, acvPY: 0, forecast: 0, yoyFcst: '—', pipe: 0,
+          yoyPipe: '—', pipeCov: '—', histCov: '—', deals: 0,
+          bco: 0, closedQTD: 0, yoyClosed: '—',
+          fcst: 0, yoy: '—', dir: 'neu',
+        };
+        var yoyPipeDir = band === '<$0' ? 'neg' : (b.yoyPipe >= 0 ? 'pos' : 'neg');
         return {
-          band: band,
-          fcst: r1(b.acvPY),       // ACV PY come riferimento per-banda
-          pipe: r1(b.pipe),
+          band:      band,
+          acvPY:     r1(b.acvPY),
+          forecast:  r1(b.forecast),
+          yoyFcst:   fmtPct(b.yoyFcst),
+          pipe:      r1(b.pipe),
+          yoyPipe:   fmtPct(b.yoyPipe),
+          pipeCov:   Math.abs(b.pipeCov).toFixed(1) + 'x',
+          histCov:   Math.abs(b.histCov).toFixed(1) + 'x',
+          deals:     b.deals,
+          bco:       b.bco > 0 ? b.bco : 0,
+          closedQTD: r1(b.closedQTD),
+          yoyClosed: fmtPct(b.yoyClosed),
+          // backward-compat
+          fcst: r1(b.acvPY),
           yoy:  fmtPct(b.yoyPipe),
-          dir:  band === '<$0' ? 'neg' : (b.yoyPipe >= 0 ? 'pos' : 'neg'),
+          dir:  yoyPipeDir,
         };
       }),
+      qbrFcst: d.qbrFcst !== null ? r1(d.qbrFcst) : null,
+      delta:   d.delta   !== null ? r1(d.delta)   : null,
       aes: [],
       coverage: BAND_ORDER.map(function(band) {
         const b = d.bands[band] || {};
