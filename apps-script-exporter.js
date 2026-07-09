@@ -180,38 +180,49 @@ function parseTab(ss, tabName) {
   OU_KEYS.forEach(function(k) { ouData[k] = { total: null, bands: {}, qbrFcst: null, delta: null }; });
 
   var inSection = false;
+  // NQ OPP ha una colonna extra (Forecast Bottom Up / Top Down) → tutte le colonne shiftano di +1
+  var shifted = false;
 
   rows.forEach(function(row) {
     // IMPORTANTE: i dati iniziano dalla colonna 1 (col 0 sempre vuota)
     const cell = String(row[1] || '').trim();
     const cellLo = cell.toLowerCase();
 
-    // Rileva riga header di ogni sezione
+    // Rileva riga header di ogni sezione — e auto-rileva colonna extra
     if (cellLo === 'deal band') {
       inSection = true;
+      // Se col 3 contiene "Bottom" o "Top Down" → layout shiftato
+      var h3 = String(row[3] || '').toLowerCase();
+      shifted = (h3.indexOf('bottom') >= 0 || h3.indexOf('top down') >= 0);
       return;
     }
     if (!inSection) return;
 
-    // OU dalla colonna 15
-    const ou = mapOU(String(row[15] || '').trim());
+    // OU: per tab shiftati col 15 è vuota, nome OU è in col 14 o meno
+    var ouRaw = String(row[15] || row[14] || '').trim();
+    const ou = mapOU(ouRaw);
     if (!ou) return;
+
+    // Offset colonne: shiftato → forecast=col4, yoy=col5, pipe=col6, ...
+    var C = shifted
+      ? { fcst:4, yoy:5, pipe:6, pg:7, cov:8, deals:9, bco:10, cqtd:11, ycl:12 }
+      : { fcst:3, yoy:4, pipe:5, pg:6,  cov:7, deals:8, bco:9,  cqtd:10, ycl:11 };
 
     // Riga Total → KPI aggregati
     if (cellLo === 'total') {
-      const cov = parseCov(row[7]);
+      const cov = parseCov(row[C.cov]);
       ouData[ou].total = {
         acvPY:      nM(row[2]),
-        forecast:   nM(row[3]),
-        yoyFcst:    nPct(row[4]),
-        pipe:       nM(row[5]),
-        pipeGrowth: nPct(row[6]),
+        forecast:   nM(row[C.fcst]),
+        yoyFcst:    nPct(row[C.yoy]),
+        pipe:       nM(row[C.pipe]),
+        pipeGrowth: nPct(row[C.pg]),
         pipeCov:    cov.current,
         histCov:    cov.hist,
-        deals:      parseDeals(row[8]),
-        bco:        parseBCO(row[9]),
-        closedQTD:  nM(row[10]),
-        yoyClosed:  nPct(row[11]),
+        deals:      parseDeals(row[C.deals]),
+        bco:        parseBCO(row[C.bco]),
+        closedQTD:  nM(row[C.cqtd]),
+        yoyClosed:  nPct(row[C.ycl]),
       };
       return;
     }
@@ -219,35 +230,37 @@ function parseTab(ss, tabName) {
     // Righe speciali: QBR Frcst e DELTA
     if (cellLo.indexOf('qbr') === 0) {
       if (ouData[ou].qbrFcst === null) {
-        ouData[ou].qbrFcst = nM(row[3]) !== 0 ? nM(row[3]) : nM(row[2]);
+        ouData[ou].qbrFcst = nM(row[C.fcst]) !== 0 ? nM(row[C.fcst]) : nM(row[3]);
       }
       return;
     }
     if (cellLo === 'delta') {
       if (ouData[ou].delta === null) {
-        var dv3 = nM(row[3]), dv2 = nM(row[2]);
-        ouData[ou].delta = dv3 !== 0 ? dv3 : dv2;
+        var dv = nM(row[C.fcst]);
+        if (dv === 0) dv = nM(row[3]);
+        if (dv === 0) dv = nM(row[2]);
+        ouData[ou].delta = dv;
       }
       return;
     }
 
-    // Righe banda → dati per il grafico distribution
+    // Righe banda
     const canonBand = BAND_NORM[cellLo];
     if (!canonBand) return;
 
-    const cov = parseCov(row[7]);
+    const cov = parseCov(row[C.cov]);
     ouData[ou].bands[canonBand] = {
       acvPY:     nM(row[2]),
-      forecast:  nM(row[3]),
-      yoyFcst:   nPct(row[4]),
-      pipe:      nM(row[5]),
-      yoyPipe:   nPct(row[6]),
+      forecast:  nM(row[C.fcst]),
+      yoyFcst:   nPct(row[C.yoy]),
+      pipe:      nM(row[C.pipe]),
+      yoyPipe:   nPct(row[C.pg]),
       pipeCov:   cov.current,
       histCov:   cov.hist,
-      deals:     parseDeals(row[8]),
-      bco:       parseBCO(row[9]),
-      closedQTD: nM(row[10]),
-      yoyClosed: nPct(row[11]),
+      deals:     parseDeals(row[C.deals]),
+      bco:       parseBCO(row[C.bco]),
+      closedQTD: nM(row[C.cqtd]),
+      yoyClosed: nPct(row[C.ycl]),
     };
   });
 
