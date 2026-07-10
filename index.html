@@ -1476,6 +1476,64 @@ function _fcstSave(obj) { try { localStorage.setItem(_LS_FCST_KEY, JSON.stringif
 const BAND_FORECAST_OVERRIDES = _fcstLoad(); // key: tf_lv_ou_band → value string; persisted to localStorage
 const BCO_EXCLUDED = {};             // key: tf_ou_band → [{name, pipe}]
 
+// BP Confirmed Commit totals — key: tf_ou_band → {name → value in M}
+const _LS_BP_KEY = 'rd_bp_commits_v1';
+function _bpLoad() { try { return JSON.parse(localStorage.getItem(_LS_BP_KEY) || '{}'); } catch(e) { return {}; } }
+function _bpSave(obj) { try { localStorage.setItem(_LS_BP_KEY, JSON.stringify(obj)); } catch(e) {} }
+const BP_COMMITS = _bpLoad(); // key: tf_ou_band_name → value in M (number)
+
+function _bpBandTotal(ou, band) {
+  var prefix = S.tf + '_' + ou + '_' + band + '_';
+  var sum = 0;
+  Object.keys(BP_COMMITS).forEach(function(k) {
+    if (k.indexOf(prefix) === 0) sum += BP_COMMITS[k] || 0;
+  });
+  return sum;
+}
+
+function _bpCellId(ou, band) { return 'rd-bp-' + ou + '-' + band.replace(/[^a-zA-Z0-9]/g,'_'); }
+
+function _refreshBpCell(ou, band) {
+  var el = document.getElementById(_bpCellId(ou, band));
+  if (!el) return;
+  var total = _bpBandTotal(ou, band);
+  el.textContent = total > 0 ? '$' + Math.abs(Math.round(total * 10) / 10).toFixed(1) + 'M' : '—';
+}
+
+function _bpTotalCellId(ou) { return 'rd-bp-total-' + ou; }
+
+function _refreshBpTotalCell(ou) {
+  var el = document.getElementById(_bpTotalCellId(ou));
+  if (!el) return;
+  var prefix = S.tf + '_' + ou + '_';
+  var sum = 0;
+  Object.keys(BP_COMMITS).forEach(function(k) {
+    if (k.indexOf(prefix) === 0) sum += BP_COMMITS[k] || 0;
+  });
+  el.textContent = sum > 0 ? '$' + Math.abs(Math.round(sum * 10) / 10).toFixed(1) + 'M' : '—';
+}
+
+function updateBpCommit(inp) {
+  var ou   = inp.dataset.ou;
+  var band = inp.dataset.band;
+  var name = inp.dataset.name;
+  var raw  = inp.value.replace(/[^0-9.-]/g, '');
+  var n    = parseFloat(raw);
+  var key  = S.tf + '_' + ou + '_' + band + '_' + name;
+  if (!isNaN(n) && n > 0) {
+    var m = n >= 1000 ? n / 1e6 : n;
+    m = Math.abs(Math.round(m * 10) / 10);
+    inp.value = '$' + m.toFixed(1) + 'M';
+    BP_COMMITS[key] = m;
+  } else {
+    inp.value = '';
+    delete BP_COMMITS[key];
+  }
+  _bpSave(BP_COMMITS);
+  _refreshBpCell(ou, band);
+  _refreshBpTotalCell(ou);
+}
+
 function _bcoKey(ou, band) { return S.tf + '_' + ou + '_' + band; }
 function _bandCellId(ou, band) { return 'rd-bco-' + ou + '-' + band.replace(/[^a-zA-Z0-9]/g,'_'); }
 
@@ -1708,6 +1766,7 @@ function _renderRDTable(liveAll, q) {
     <th style="text-align:left">Deal Band</th>
     <th>${q} FY26 ACV</th>
     <th class="rd-editable-hdr">${q} FY27 Forecast</th>
+    <th class="rd-editable-hdr">BP Commit</th>
     <th>Y/Y</th>
     <th>${q} FY27 Pipe</th>
     <th>Pipe Growth Y/Y</th>
@@ -1778,6 +1837,7 @@ function _renderRDTable(liveAll, q) {
           data-fcst-ou="${ouKey}" data-acv="${acvPY}" data-yoy-id="${yoyCellId}"
           data-pipe="${pipeVal}" data-cqtd="${cqtdVal}" data-hist-cov="${histCovVal}" data-curr-cov="${currCovVal}" data-cov-id="${covCellId}"
           onchange="BAND_FORECAST_OVERRIDES['${S.tf}_${S.lv}_${ouKey}_${bk}']=this.value;_fcstSave(BAND_FORECAST_OVERRIDES);_updateFcstTotal('${ouKey}');_updateBandYoy(this);_updateBandCov(this)" /></td>
+        <td id="${_bpCellId(ouKey, bk)}">${(function(){var t=_bpBandTotal(ouKey,bk);return t>0?'$'+Math.abs(Math.round(t*10)/10).toFixed(1)+'M':'—';})()}</td>
         <td id="${yoyCellId}" class="${yoyFcstCls2}">${yoyFcstVal}</td>
         <td>${pipeStr}</td>
         <td class="${yoyPipeCls}">${b ? b.yoyPipe : '—'}</td>
@@ -1819,6 +1879,7 @@ function _renderRDTable(liveAll, q) {
         data-fcst-ou-total="${ouKey}" data-acv="${totalAcvPY}" data-yoy-id="${totalYoyId}"
         data-pipe="${totalPipe}" data-cqtd="${totalCqtd}" data-hist-cov="${totalHistCov}" data-curr-cov="${totalCurrCov}" data-cov-id="${totalCovId}"
         onchange="BAND_FORECAST_OVERRIDES['${S.tf}_${S.lv}_${ouKey}_Total']=this.value;_fcstSave(BAND_FORECAST_OVERRIDES);_updateBandYoy(this);_updateBandCov(this)" /></td>
+      <td id="${_bpTotalCellId(ouKey)}">${(function(){var prefix=S.tf+'_'+ouKey+'_';var sum=0;Object.keys(BP_COMMITS).forEach(function(k){if(k.indexOf(prefix)===0)sum+=BP_COMMITS[k]||0;});return sum>0?'$'+Math.abs(Math.round(sum*10)/10).toFixed(1)+'M':'—';})()}</td>
       <td id="${totalYoyId}" class="${totalYoyCls}">${totalYoyVal}</td>
       <td>${k.pipeline ? fmtMStr(k.pipeline.val) : '—'}</td>
       <td>${k.pipe_growth ? k.pipe_growth.val : '—'}</td>
@@ -1835,7 +1896,7 @@ function _renderRDTable(liveAll, q) {
       <td>QBR Frcst</td>
       <td>—</td>
       <td>${fmtM(qbrFcst)}</td>
-      <td colspan="8">—</td>
+      <td colspan="9">—</td>
     </tr>` : '';
 
     // DELTA row
@@ -1844,7 +1905,7 @@ function _renderRDTable(liveAll, q) {
     const deltaRow = delta !== null ? `<tr class="rd-delta">
       <td class="${deltaClass}">DELTA</td>
       <td colspan="2" class="${deltaClass}">${(delta >= 0 ? '+' : '') + fmtM(delta)}</td>
-      <td colspan="8">—</td>
+      <td colspan="9">—</td>
     </tr>` : '';
 
     return `<div class="rd-ou-section">
@@ -1872,6 +1933,7 @@ function _renderRDFallback(q) {
     <th style="text-align:left">Deal Band</th>
     <th>${q} FY26 ACV</th>
     <th class="rd-editable-hdr">${q} FY27 Forecast</th>
+    <th class="rd-editable-hdr">BP Commit</th>
     <th>Y/Y</th>
     <th>${q} FY27 Pipe</th>
     <th>Pipe Growth Y/Y</th>
@@ -1979,9 +2041,12 @@ function renderOppLists() {
         : `<td style="text-align:center"><input type="checkbox" class="rd-chk" ${isExcl ? 'checked' : ''}
             data-ou="${S.ou}" data-band="${bk}" data-name="${d.name.replace(/"/g,'&quot;')}" data-pipe="${d.pipe}"
             onchange="toggleExcluded(this)" /></td>
-           <td style="text-align:right"><input type="text" placeholder="—"
+           <td style="text-align:right"><input type="text"
+            data-ou="${S.ou}" data-band="${bk}" data-name="${d.name.replace(/"/g,'&quot;')}"
+            value="${(function(){var k=S.tf+'_'+S.ou+'_'+bk+'_'+d.name;var v=BP_COMMITS[k];return v>0?'$'+Math.abs(Math.round(v*10)/10).toFixed(1)+'M':'';})()}"
+            placeholder="—"
             style="width:80px;padding:3px 6px;border:1px solid var(--sf-border);border-radius:4px;font-size:11px;text-align:right;font-family:inherit"
-            onblur="var n=parseFloat(this.value.replace(/[^0-9.-]/g,'')); if(!isNaN(n)){var m=n>=1000?n/1e6:n;this.value='$'+Math.abs(Math.round(m*10)/10).toFixed(1)+'M';}" /></td>`;
+            onblur="updateBpCommit(this)" /></td>`;
       return `<tr>
         <td>${d.name}</td>
         <td>${fmtM(d.pipe)}</td>
