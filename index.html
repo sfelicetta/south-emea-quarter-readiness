@@ -397,24 +397,24 @@
 
 <div class="loading" id="loading">
   <div class="spinner"></div>
-  <div style="font-size:13px;font-weight:600">Loading Readiness Data&hellip;</div>
+  <div style="font-size:13px;font-weight:600">Fetching Live Readiness Data&hellip;</div>
 </div>
 
 <!-- HEADER -->
 <header class="hdr">
   <div>
     <h1>South EMEA &mdash; Quarter Readiness</h1>
-    <div class="meta">FY27 &middot; Sales Strategy South &middot; Real-time View</div>
+    <div class="meta">FY27 &middot; Sales Strategy &middot; South EMEA &middot; Live</div>
   </div>
   <button class="refresh-btn" id="refresh-btn" onclick="refreshData()"><span class="refresh-icon">&#8635;</span> <span id="refresh-ts">Loading…</span></button>
 </header>
 
 <!-- PAGE TABS -->
 <div class="page-tabs">
-  <div class="page-tab active" onclick="switchPage('readiness',this)">Readiness View<span class="tab-tip">Real-time quarter health check. KPI tiles for forecast, pipeline coverage, BCO per AE, and deal band distribution — pulled live from Snowflake &amp; Org62. Toggle CQ/NQ, Opp/Combo, and OU.</span></div>
-  <div class="page-tab" onclick="switchPage('topdeals',this)">Top Deals<span class="tab-tip">Ranked list of the largest open opportunities and closed deals per OU. Search any account to surface its Open Pipe and Commit for the selected quarter.</span></div>
-  <div class="page-tab" onclick="switchPage('topdeals-db',this)">Top Deals by Dealband<span class="tab-tip">Deal pipeline sliced by size tier (&lt;$100K · $100K–$500K · $500K–$1M · $1M+) and DB logic (Opportunity · Global Company · Combo Company). All combinations available except NQ + Global Company (not in source data).</span></div>
-  <div class="page-tab" onclick="switchPage('qbr',this)">QBR Forecast<span class="tab-tip">Full QBR forecast table by OU and OU+1 sub-teams. Shows Forecast, Y/Y, Attainment, Velocity, Pipeline Coverage, Stage 4 Coverage, AE headcount, and Funded. Switch CQ ↔ NQ via Timeframe.</span></div>
+  <div class="page-tab active" onclick="switchPage('readiness',this)">Readiness View<span class="tab-tip">Live quarter health check. Deal band breakdown by OU with Forecast, Pipeline Coverage, BCO per AE, and Closed QTD — sourced from Snowflake and Org62. Toggle CQ/NQ, Opportunity/Combo, and OU.</span></div>
+  <div class="page-tab" onclick="switchPage('topdeals',this)">Top Deals<span class="tab-tip">Largest open opportunities ranked by Commit, by OU and quarter. Search any account to retrieve its Open Pipeline and Commit position in real time.</span></div>
+  <div class="page-tab" onclick="switchPage('topdeals-db',this)">Top Deals by Deal Band<span class="tab-tip">Open pipeline and closed deals segmented by deal size (&lt;$100K · $100K–$500K · $500K–$1M · $1M+) and DealBand logic (Opportunity · Global Company · Combo Company). All combinations available across CQ and NQ, except NQ + Global Company.</span></div>
+  <div class="page-tab" onclick="switchPage('qbr',this)">QBR Forecast<span class="tab-tip">Full QBR forecast structured by OU and OU+1 sub-teams. Includes Forecast, Y/Y, 2YR Growth, Attainment, Velocity, Pipeline Coverage, Stage 4 Coverage, and AE headcount. Switch CQ / NQ via the Timeframe filter.</span></div>
 </div>
 
 <!-- SLICER BAR -->
@@ -491,7 +491,7 @@
 <div class="page active" id="page-readiness">
 
   <!-- Main dealband table -->
-  <div class="section-lbl" id="rd-table-lbl">Quarter Readiness — by Deal Band<span class="rd-live-badge" id="rd-live-badge"><span class="rd-live-dot loading" id="rd-live-dot"></span><span id="rd-live-txt">Loading…</span></span></div>
+  <div class="section-lbl" id="rd-table-lbl">Quarter Readiness — Deal Band Breakdown<span class="rd-live-badge" id="rd-live-badge"><span class="rd-live-dot loading" id="rd-live-dot"></span><span id="rd-live-txt">Loading…</span></span></div>
   <div class="rd-table-wrap" id="rd-table-wrap">
     <!-- populated by render() -->
   </div>
@@ -506,16 +506,16 @@
   <div class="card mb14" id="comments-card">
     <div class="card-hdr" style="justify-content:space-between">
       <h3>Add a Comment</h3>
-      <span class="card-sub">Draft → AI polish → Submit</span>
+      <span class="card-sub">Draft &rarr; AI Polish &rarr; Submit</span>
     </div>
     <div class="card-body">
       <div id="comments-list"></div>
       <div class="comment-compose">
         <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
           <input id="cmt-author" placeholder="Your name" style="width:160px;padding:5px 9px;border:1px solid var(--sf-border);border-radius:4px;font-size:12px">
-          <span style="font-size:10px;color:var(--sf-meta)">commenting on <strong id="cmt-context"></strong></span>
+          <span style="font-size:10px;color:var(--sf-meta)">Commenting on <strong id="cmt-context"></strong></span>
         </div>
-        <textarea id="cmt-draft" placeholder="Write a draft comment… (can be rough)" rows="3"
+        <textarea id="cmt-draft" placeholder="Enter your comment — a rough draft is fine." rows="3"
           style="width:100%;padding:8px 10px;border:1px solid var(--sf-border);border-radius:4px;font-size:12px;resize:vertical;font-family:inherit"></textarea>
         <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
           <button class="cmt-btn ai" onclick="polishComment()">✦ Polish with AI</button>
@@ -523,7 +523,7 @@
           <span id="cmt-status" style="font-size:10px;color:var(--sf-meta)"></span>
         </div>
         <div id="cmt-polished-wrap" style="display:none;margin-top:10px">
-          <div style="font-size:10px;font-weight:700;color:var(--sf-blue);margin-bottom:4px">✦ AI Polished Version</div>
+          <div style="font-size:10px;font-weight:700;color:var(--sf-blue);margin-bottom:4px">✦ AI-Polished Version</div>
           <div id="cmt-polished" style="background:var(--sf-blue-light);border:1px solid var(--sf-blue);border-radius:4px;padding:9px 12px;font-size:12px;line-height:1.5"></div>
           <div style="display:flex;gap:8px;margin-top:8px">
             <button class="cmt-btn ai" onclick="usePolished()">Use this version</button>
@@ -543,7 +543,7 @@
   <div class="td-header">
     <div>
       <h2 style="font-size:14px;font-weight:700;margin-bottom:2px">Top Deals</h2>
-      <p style="font-size:11px;color:var(--sf-meta)">Top open pipeline sorted by Commit — live data from Google Sheet</p>
+      <p style="font-size:11px;color:var(--sf-meta)">Largest open opportunities ranked by Commit &mdash; live data</p>
     </div>
   </div>
   <div id="td2-content"></div>
@@ -555,9 +555,9 @@
 <div class="page" id="page-topdeals-db">
   <div class="td-header">
     <div>
-      <h2 style="font-size:14px;font-weight:700;margin-bottom:2px">Top Deals by Dealband</h2>
-      <p style="font-size:11px;color:var(--sf-meta)">Top open pipeline and closed deals by OU, filtered by dealband and DB logic &mdash; live data from Google Sheet</p>
-      <p class="tab-desc">Same deal-level data as Top Deals, but sliced by <strong>deal size band</strong> (&lt;$100K · $100K–$500K · $500K–$1M · $1M+) and <strong>DB logic</strong> (Opportunity · Global Company · Combo Company). All combinations are available across CQ and NQ — the only exception is <strong>NQ + Global Company</strong>, which is not present in the source data.</p>
+      <h2 style="font-size:14px;font-weight:700;margin-bottom:2px">Top Deals by Deal Band</h2>
+      <p style="font-size:11px;color:var(--sf-meta)">Open pipeline and closed deals segmented by deal size and DealBand logic &mdash; live data</p>
+      <p class="tab-desc">Deal-level pipeline segmented by <strong>deal size tier</strong> (&lt;$100K · $100K–$500K · $500K–$1M · $1M+) and <strong>DealBand logic</strong> (Opportunity · Global Company · Combo Company). All combinations available across CQ and NQ — the only exception is <strong>NQ + Global Company</strong>, which is not available in the source data.</p>
     </div>
   </div>
   <div id="tdb-content"></div>
@@ -570,8 +570,8 @@
   <div class="td-header">
     <div>
       <h2 style="font-size:14px;font-weight:700;margin-bottom:2px">QBR Forecast</h2>
-      <p style="font-size:11px;color:var(--sf-meta)">Forecast by OU and OU+1 — data from Google Sheet "QBR CQ/NQ Fcst"</p>
-      <p class="tab-desc">The full QBR forecast table, structured by <strong>OU and OU+1 sub-teams</strong>. Shows Forecast, Y/Y, 2YR growth, Attainment, Velocity, Pipeline, Coverage (current and historical), Stage 4 coverage, AE count and headcount Y/Y. Switch between <strong>Current Quarter</strong> and <strong>Next Quarter</strong> using the Timeframe filter. The <strong>Funded</strong> column is manually editable — values are saved locally for the session.</p>
+      <p style="font-size:11px;color:var(--sf-meta)">Forecast by OU and OU+1 sub-teams &mdash; sourced from QBR CQ/NQ Forecast</p>
+      <p class="tab-desc">Full QBR forecast structured by <strong>OU and OU+1 sub-teams</strong>. Includes Forecast, Y/Y, 2YR Growth, Attainment, Velocity, Pipeline Coverage (current and historical), Stage 4 Coverage, AE headcount, and Headcount Y/Y. Toggle <strong>Current Quarter / Next Quarter</strong> via the Timeframe filter. The <strong>Funded</strong> column is editable — values persist for the session.</p>
     </div>
   </div>
   <div id="qbr-content"></div>
@@ -583,7 +583,7 @@
   <div class="ft"><strong>Org62</strong> Commitment: <span id="ts-org62">—</span></div>
   <div class="ft"><strong>Finplan</strong>: <span id="ts-finplan">—</span></div>
   <div class="ft"><strong>HC Tracker</strong>: <span id="ts-hc">—</span></div>
-  <div class="countdown">Auto-refresh in <span id="countdown">5:00</span></div>
+  <div class="countdown">Auto-refresh in <span id="countdown">5:00</span> min</div>
 </div>
 
 <script>
@@ -1538,7 +1538,7 @@ function render() {
   if (livePayload) {
     _renderRDTable(livePayload, q);
   } else {
-    document.getElementById('rd-table-wrap').innerHTML = '<div style="padding:32px;text-align:center;color:var(--sf-meta);font-size:13px">Loading live data…</div>';
+    document.getElementById('rd-table-wrap').innerHTML = '<div style="padding:32px;text-align:center;color:var(--sf-meta);font-size:13px">Fetching live data — please wait…</div>';
   }
   // Non ri-fetchare se refreshData() è già in corso
   if (!_isRefreshing) _fetchRDLive();
@@ -2498,7 +2498,7 @@ function _setLiveBadge(state, ts) {
   } else {
     dot.className = 'rd-live-dot';
     dot.style.background = 'var(--sf-danger)';
-    txt.textContent = 'Offline — showing cached data';
+    txt.textContent = 'Connection unavailable — displaying last cached data';
     if (btn) { btn.disabled = false; btn.classList.remove('spinning'); }
   }
 }
@@ -2513,12 +2513,12 @@ async function refreshData() {
     const now = new Date();
     const ts = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
     const tsLong = now.toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-    document.getElementById('refresh-ts').textContent = tsLong + (ok ? ' ✓' : ' (cached)');
+    document.getElementById('refresh-ts').textContent = tsLong + (ok ? ' ✓ Live' : ' · Cached');
     document.getElementById('ts-snow').textContent    = TIMESTAMPS.snowflake || '—';
     document.getElementById('ts-org62').textContent   = TIMESTAMPS.org62    || '—';
     document.getElementById('ts-finplan').textContent = TIMESTAMPS.finplan  || '—';
     document.getElementById('ts-hc').textContent      = TIMESTAMPS.hc       || '—';
-    _setLiveBadge(ok ? 'live' : 'offline', ok ? 'Live · ' + ts : null);
+    _setLiveBadge(ok ? 'live' : 'offline', ok ? 'Live · Updated ' + ts : null);
     render();
   } catch(e) {
     console.error('refreshData error:', e);
