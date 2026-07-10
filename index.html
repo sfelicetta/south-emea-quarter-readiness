@@ -1843,7 +1843,6 @@ function renderOppLists() {
     const isLt100 = (bk === '$0–$100K');
 
     const rows = band.open27.map(d => {
-      const mfj = d.in_ > 0 ? `<span class="rd-in-dot"></span>IN` : '—';
       const exclKey = S.tf + '_' + S.ou + '_' + bk;
       const isExcl  = (BCO_EXCLUDED[exclKey] || []).some(x => x.name === d.name);
       const chkCell = isLt100
@@ -1854,7 +1853,6 @@ function renderOppLists() {
       return `<tr>
         <td>${d.name}</td>
         <td>${fmtM(d.pipe)}</td>
-        <td>${mfj}</td>
         ${chkCell}
       </tr>`;
     }).join('');
@@ -1865,7 +1863,7 @@ function renderOppLists() {
       <div class="rd-band-title">${BAND_LABELS[bk]}</div>
       <div class="rd-opp-table-scroll">
         <table class="rd-opp-table" style="border:none;border-radius:0">
-          <thead><tr><th>Account</th><th>Open Pipe</th><th>MFJ</th>${chkHeader}</tr></thead>
+          <thead><tr><th>Account</th><th>Open Pipe</th>${chkHeader}</tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
