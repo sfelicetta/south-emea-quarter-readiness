@@ -1471,6 +1471,37 @@ const OU_LABELS = { SOUTH:'EMEA South', IBERIA:'Iberia', ITALY:'Italy', EGM:'EGM
 
 // ── FORECAST OVERRIDES (per-band, per session) ────────────────────────────────
 const BAND_FORECAST_OVERRIDES = {}; // key: tf_lv_ou_band → value string
+const BCO_EXCLUDED = {};             // key: tf_ou_band → [{name, pipe}]
+
+function _bcoKey(ou, band) { return S.tf + '_' + ou + '_' + band; }
+function _bandCellId(ou, band) { return 'rd-bco-' + ou + '-' + band.replace(/[^a-zA-Z0-9]/g,'_'); }
+
+function toggleExcluded(chk) {
+  const ou   = chk.dataset.ou;
+  const band = chk.dataset.band;
+  const name = chk.dataset.name;
+  const pipe = parseFloat(chk.dataset.pipe) || 0;
+  const key  = S.tf + '_' + ou + '_' + band;
+  if (!BCO_EXCLUDED[key]) BCO_EXCLUDED[key] = [];
+  if (!chk.checked) {
+    if (!BCO_EXCLUDED[key].find(d => d.name === name))
+      BCO_EXCLUDED[key].push({name, pipe});
+  } else {
+    BCO_EXCLUDED[key] = BCO_EXCLUDED[key].filter(d => d.name !== name);
+  }
+  _refreshBcoCell(ou, band);
+}
+
+function _refreshBcoCell(ou, band) {
+  const el = document.getElementById(_bandCellId(ou, band));
+  if (!el) return;
+  const key = S.tf + '_' + ou + '_' + band;
+  const excl = BCO_EXCLUDED[key] || [];
+  if (!excl.length) { el.innerHTML = el.dataset.default || '—'; return; }
+  el.innerHTML = excl.map(d =>
+    `<div style="white-space:nowrap;font-size:10px;font-weight:600;color:var(--sf-danger)">${d.name}</div>`
+  ).join('');
+}
 
 function bandFcstKey(band) {
   return S.tf + '_' + S.lv + '_' + S.ou + '_' + band;
@@ -1629,7 +1660,12 @@ function _renderRDTable(liveAll, q) {
       const pipeStr = b && b.pipe   > 0 ? fmtM(b.pipe)   : '—';
       const cqtdStr = b && b.closedQTD > 0 ? fmtM(b.closedQTD) : '—';
       const fcstPlaceholder = b && b.forecast > 0 ? fmtM(b.forecast) : '—';
-      const bcoStr  = isLt100 && b && b.bco > 0 ? fmtK(b.bco) : '—';
+      const bcoStr     = isLt100 && b && b.bco > 0 ? fmtK(b.bco) : '—';
+      const bcoCellId  = _bandCellId(ouKey, bk);
+      const bcoExcl    = BCO_EXCLUDED[S.tf + '_' + ouKey + '_' + bk] || [];
+      const bcoCellHtml = bcoExcl.length
+        ? bcoExcl.map(d => `<div style="white-space:nowrap;font-size:10px;font-weight:600;color:var(--sf-danger)">${d.name}</div>`).join('')
+        : bcoStr;
       return `<tr>
         <td>${BAND_DISPLAY_LABELS[bk]}</td>
         <td>${acvStr}</td>
@@ -1640,7 +1676,7 @@ function _renderRDTable(liveAll, q) {
         <td class="${yoyPipeCls}">${b ? b.yoyPipe : '—'}</td>
         <td>${b ? b.histCov : '—'}</td>
         <td>${b && b.deals > 0 ? b.deals : '—'}</td>
-        <td>${bcoStr}</td>
+        <td id="${bcoCellId}" data-default="${bcoStr}">${bcoCellHtml}</td>
         <td>${cqtdStr}</td>
         <td class="${yoyClosedCls}">${b ? b.yoyClosed : '—'}</td>
       </tr>`;
@@ -1808,9 +1844,13 @@ function renderOppLists() {
 
     const rows = band.open27.map(d => {
       const mfj = d.in_ > 0 ? `<span class="rd-in-dot"></span>IN` : '—';
+      const exclKey = S.tf + '_' + S.ou + '_' + bk;
+      const isExcl  = (BCO_EXCLUDED[exclKey] || []).some(x => x.name === d.name);
       const chkCell = isLt100
         ? '<td></td>'
-        : `<td style="text-align:center"><input type="checkbox" class="rd-chk" /></td>`;
+        : `<td style="text-align:center"><input type="checkbox" class="rd-chk" ${isExcl ? '' : 'checked'}
+            data-ou="${S.ou}" data-band="${bk}" data-name="${d.name.replace(/"/g,'&quot;')}" data-pipe="${d.pipe}"
+            onchange="toggleExcluded(this)" /></td>`;
       return `<tr>
         <td>${d.name}</td>
         <td>${fmtM(d.pipe)}</td>
