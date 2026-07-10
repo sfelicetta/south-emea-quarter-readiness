@@ -1535,6 +1535,24 @@ function _updateFcstTotal(ouKey) {
     var k = S.tf + '_' + S.lv + '_' + ouKey + '_Total';
     BAND_FORECAST_OVERRIDES[k] = formatted;
     _fcstSave(BAND_FORECAST_OVERRIDES);
+    // Update Total Y/Y
+    var acvTotal = parseFloat(totalEl.dataset.acv) || 0;
+    if (acvTotal > 0) {
+      var pct = ((sum - acvTotal) / acvTotal * 100);
+      var yoyEl = document.getElementById(totalEl.dataset.yoyId);
+      if (yoyEl) {
+        yoyEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(0) + '%';
+        yoyEl.className = pct >= 0 ? 'rd-col-pos' : 'rd-col-neg';
+      }
+    }
+    // Update Total Pipe Coverage
+    var pipeTotal = parseFloat(totalEl.dataset.pipe) || 0;
+    var histCovTotal = totalEl.dataset.histCov || '—';
+    if (pipeTotal > 0 && sum > 0) {
+      var cov = (pipeTotal / sum).toFixed(1) + 'x';
+      var covEl = document.getElementById(totalEl.dataset.covId);
+      if (covEl) covEl.textContent = histCovTotal !== '—' ? cov + ' (' + histCovTotal + ')' : cov;
+    }
   }
 }
 
@@ -1548,6 +1566,18 @@ function _updateBandYoy(inp) {
     var sign = pct >= 0 ? '+' : '';
     el.textContent = sign + pct.toFixed(0) + '%';
     el.className = pct >= 0 ? 'rd-col-pos' : 'rd-col-neg';
+  }
+}
+
+function _updateBandCov(inp) {
+  var pipe    = parseFloat(inp.dataset.pipe) || 0;
+  var histCov = inp.dataset.histCov || '—';
+  var fcst    = _parseFcstVal(inp.value);
+  var el      = document.getElementById(inp.dataset.covId);
+  if (!el) return;
+  if (fcst !== null && fcst > 0 && pipe > 0) {
+    var cov = (pipe / fcst).toFixed(1) + 'x';
+    el.textContent = histCov !== '—' ? cov + ' (' + histCov + ')' : cov;
   }
 }
 
@@ -1715,16 +1745,25 @@ function _renderRDTable(liveAll, q) {
       const yoyFcstCls2 = _pctCls(yoyFcstVal);
       const bandSafeKey = bk.replace(/[^a-zA-Z0-9]/g,'_');
       const yoyCellId = 'rd-yoy-' + ouKey + '-' + bandSafeKey;
+      const covCellId = 'rd-cov-' + ouKey + '-' + bandSafeKey;
+      const histCovVal = b ? (b.histCov || '—') : '—';
+      const pipeVal    = b ? (b.pipe || 0) : 0;
+      // Pipe Coverage: compute from current forecast override if available
+      const fcstForCov = fcstOverride !== null ? fcstOverride : (b && b.forecast > 0 ? b.forecast : 0);
+      const covDisplay = (fcstForCov > 0 && pipeVal > 0)
+        ? ((pipeVal / fcstForCov).toFixed(1) + 'x' + (histCovVal !== '—' ? ' (' + histCovVal + ')' : ''))
+        : (histCovVal !== '—' ? histCovVal : '—');
       return `<tr>
         <td>${BAND_DISPLAY_LABELS[bk]}</td>
         <td>${acvStr}</td>
         <td><input class="rd-fcst-input" type="text" value="${savedFcst}" placeholder="${fcstPlaceholder}"
           data-fcst-ou="${ouKey}" data-acv="${acvPY}" data-yoy-id="${yoyCellId}"
-          onchange="BAND_FORECAST_OVERRIDES['${S.tf}_${S.lv}_${ouKey}_${bk}']=this.value;_fcstSave(BAND_FORECAST_OVERRIDES);_updateFcstTotal('${ouKey}');_updateBandYoy(this)" /></td>
+          data-pipe="${pipeVal}" data-hist-cov="${histCovVal}" data-cov-id="${covCellId}"
+          onchange="BAND_FORECAST_OVERRIDES['${S.tf}_${S.lv}_${ouKey}_${bk}']=this.value;_fcstSave(BAND_FORECAST_OVERRIDES);_updateFcstTotal('${ouKey}');_updateBandYoy(this);_updateBandCov(this)" /></td>
         <td id="${yoyCellId}" class="${yoyFcstCls2}">${yoyFcstVal}</td>
         <td>${pipeStr}</td>
         <td class="${yoyPipeCls}">${b ? b.yoyPipe : '—'}</td>
-        <td>${b ? b.histCov : '—'}</td>
+        <td id="${covCellId}">${covDisplay}</td>
         <td>${b && b.deals > 0 ? b.deals : '—'}</td>
         <td id="${bcoCellId}" data-default="${bcoStr}">${bcoCellHtml}</td>
         <td>${cqtdStr}</td>
@@ -1735,15 +1774,32 @@ function _renderRDTable(liveAll, q) {
     // Total row
     const totalFcstSaved = BAND_FORECAST_OVERRIDES[S.tf + '_' + S.lv + '_' + ouKey + '_Total'] || '';
     const totalFcstPlaceholder = k.forecast ? fmtMStr(k.forecast.val) : '—';
+    const totalAcvPY = k.acv_py ? (parseFloat(String(k.acv_py.val).replace(/[$M\s]/g,'')) || 0) : 0;
+    const totalPipe  = k.pipeline ? (parseFloat(String(k.pipeline.val).replace(/[$M\s]/g,'')) || 0) : 0;
+    const totalHistCov = k.hist_pipe_cov ? k.hist_pipe_cov.val : '—';
+    const totalYoyId = 'rd-yoy-' + ouKey + '-Total';
+    const totalCovId = 'rd-cov-' + ouKey + '-Total';
+    // Pre-compute Total Y/Y and Pipe Coverage if override exists
+    const totalOverride = totalFcstSaved ? _parseFcstVal(totalFcstSaved) : null;
+    const totalFcstNum  = totalOverride !== null ? totalOverride : (k.forecast ? (_parseFcstVal(totalFcstPlaceholder) || 0) : 0);
+    const totalYoyVal   = (totalOverride !== null && totalAcvPY > 0)
+      ? ((totalOverride - totalAcvPY) / totalAcvPY * 100).toFixed(0) + '%'
+      : (k.yoy ? k.yoy.val : '—');
+    const totalYoyCls   = (function(v){ if(!v||v==='—') return ''; var n=parseFloat(v); return isNaN(n)?'':(n>=0?'rd-col-pos':'rd-col-neg'); })(totalYoyVal);
+    const totalCovDisplay = (totalFcstNum > 0 && totalPipe > 0)
+      ? ((totalPipe / totalFcstNum).toFixed(1) + 'x' + (totalHistCov !== '—' ? ' (' + totalHistCov + ')' : ''))
+      : totalHistCov;
     const totalRow = `<tr class="rd-total">
       <td>Total</td>
       <td>${k.acv_py ? fmtMStr(k.acv_py.val) : '—'}</td>
       <td><input class="rd-fcst-input" id="rd-fcst-total-${ouKey}" type="text" value="${totalFcstSaved}" placeholder="${totalFcstPlaceholder}"
-        onchange="BAND_FORECAST_OVERRIDES['${S.tf}_${S.lv}_${ouKey}_Total']=this.value;_fcstSave(BAND_FORECAST_OVERRIDES)" /></td>
-      <td>${k.yoy ? k.yoy.val : '—'}</td>
+        data-fcst-ou-total="${ouKey}" data-acv="${totalAcvPY}" data-yoy-id="${totalYoyId}"
+        data-pipe="${totalPipe}" data-hist-cov="${totalHistCov}" data-cov-id="${totalCovId}"
+        onchange="BAND_FORECAST_OVERRIDES['${S.tf}_${S.lv}_${ouKey}_Total']=this.value;_fcstSave(BAND_FORECAST_OVERRIDES);_updateBandYoy(this);_updateBandCov(this)" /></td>
+      <td id="${totalYoyId}" class="${totalYoyCls}">${totalYoyVal}</td>
       <td>${k.pipeline ? fmtMStr(k.pipeline.val) : '—'}</td>
       <td>${k.pipe_growth ? k.pipe_growth.val : '—'}</td>
-      <td>${k.hist_pipe_cov ? k.hist_pipe_cov.val : '—'}</td>
+      <td id="${totalCovId}">${totalCovDisplay}</td>
       <td>${k.deals_cmt ? k.deals_cmt.val : '—'}</td>
       <td>—</td>
       <td>${k.closed_qtd ? fmtMStr(k.closed_qtd.val) : '—'}</td>
