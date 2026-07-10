@@ -1441,6 +1441,16 @@ function _tdbRender(payload, band) {
 // ── UTILS ────────────────────────────────────────────────────────────────────
 function r1(n)     { return Math.round(Math.abs(n) * 10) / 10 * Math.sign(n); }
 function fmtM(n)   { return '$' + r1(n / 1e6) + 'M'; }
+function fmtMStr(s) { // normalizza stringa "$61.3M" o "$61264414.1M" → "$61.3M"
+  if (!s || s === '—') return '—';
+  var neg = String(s).charAt(0) === '-';
+  var m = String(s).match(/([\d,.]+)/);
+  if (!m) return s;
+  var n = parseFloat(m[1].replace(/,/g,''));
+  if (isNaN(n)) return s;
+  var raw = Math.abs(n) >= 1000 ? n : n * 1e6; // < 1000 = già milioni, moltiplica per passare a raw
+  return (neg ? '-' : '') + fmtM(raw);
+}
 function fmtK(n)   { if (n >= 1e6) return '$' + r1(n/1e6) + 'M'; if (n >= 1000) return '$' + r1(n/1000) + 'K'; return '$' + Math.round(n); }
 function fmtVal(n) { if (n === 0 || n === null || n === undefined) return '—'; return fmtM(n); }
 
@@ -1650,19 +1660,19 @@ function _renderRDTable(liveAll, q) {
 
     // Total row
     const totalFcstSaved = BAND_FORECAST_OVERRIDES[S.tf + '_' + S.lv + '_' + ouKey + '_Total'] || '';
-    const totalFcstPlaceholder = k.forecast ? k.forecast.val : '—';
+    const totalFcstPlaceholder = k.forecast ? fmtMStr(k.forecast.val) : '—';
     const totalRow = `<tr class="rd-total">
       <td>Total</td>
-      <td>${k.acv_py ? k.acv_py.val : '—'}</td>
+      <td>${k.acv_py ? fmtMStr(k.acv_py.val) : '—'}</td>
       <td><input class="rd-fcst-input" type="text" value="${totalFcstSaved}" placeholder="${totalFcstPlaceholder}"
         onchange="BAND_FORECAST_OVERRIDES['${S.tf}_${S.lv}_${ouKey}_Total']=this.value" /></td>
       <td>${k.yoy ? k.yoy.val : '—'}</td>
-      <td>${k.pipeline ? k.pipeline.val : '—'}</td>
+      <td>${k.pipeline ? fmtMStr(k.pipeline.val) : '—'}</td>
       <td>${k.pipe_growth ? k.pipe_growth.val : '—'}</td>
       <td>${k.hist_pipe_cov ? k.hist_pipe_cov.val : '—'}</td>
       <td>${k.deals_cmt ? k.deals_cmt.val : '—'}</td>
       <td>—</td>
-      <td>${k.closed_qtd ? k.closed_qtd.val : '—'}</td>
+      <td>${k.closed_qtd ? fmtMStr(k.closed_qtd.val) : '—'}</td>
       <td>${k.yoy_closed ? k.yoy_closed.val : (k.closed_qtd ? k.closed_qtd.delta || '—' : '—')}</td>
     </tr>`;
 
