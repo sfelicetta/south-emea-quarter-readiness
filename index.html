@@ -374,19 +374,6 @@
     .cov-neg { color: var(--sf-danger); }
     .cov-warn { color: var(--sf-warning); }
 
-    /* ── COMMENTS ── */
-    .comment-compose { border-top:1px solid var(--sf-border); padding-top:12px; margin-top:8px; }
-    .cmt-btn { padding:5px 14px; border-radius:4px; font-size:11px; font-weight:700; cursor:pointer; border:1.5px solid; transition:all .15s; }
-    .cmt-btn.ai  { border-color:var(--sf-blue); color:var(--sf-blue); background:var(--sf-blue-light); }
-    .cmt-btn.ai:hover { background:var(--sf-blue); color:#fff; }
-    .cmt-btn.submit { border-color:var(--sf-success); color:var(--sf-success); background:var(--sf-success-bg); }
-    .cmt-btn.submit:hover { background:var(--sf-success); color:#fff; }
-    .cmt-item { padding:10px 0; border-bottom:1px solid var(--sf-border); }
-    .cmt-item:last-child { border-bottom:none; }
-    .cmt-meta { font-size:10px;color:var(--sf-meta);margin-bottom:3px; }
-    .cmt-text { font-size:12px;line-height:1.5; }
-    .cmt-badge { display:inline-block;padding:1px 7px;border-radius:8px;font-size:9px;font-weight:700;margin-left:6px; }
-    .cmt-badge.ai { background:var(--sf-blue-light);color:var(--sf-blue); }
 
     /* ── LOADING ── */
     .loading { position: fixed; inset: 0; background: rgba(1,68,134,.88); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; gap: 14px; z-index: 999; transition: opacity .3s; }
@@ -503,38 +490,6 @@
     <!-- populated by render() -->
   </div>
 
-  <!-- Comments -->
-  <div class="section-lbl">Comments</div>
-  <div class="card mb14" id="comments-card">
-    <div class="card-hdr" style="justify-content:space-between">
-      <h3>Add a Comment</h3>
-      <span class="card-sub">Draft &rarr; AI Polish &rarr; Submit</span>
-    </div>
-    <div class="card-body">
-      <div id="comments-list"></div>
-      <div class="comment-compose">
-        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
-          <input id="cmt-author" placeholder="Your name" style="width:160px;padding:5px 9px;border:1px solid var(--sf-border);border-radius:4px;font-size:12px">
-          <span style="font-size:10px;color:var(--sf-meta)">Commenting on <strong id="cmt-context"></strong></span>
-        </div>
-        <textarea id="cmt-draft" placeholder="Enter your comment — a rough draft is fine." rows="3"
-          style="width:100%;padding:8px 10px;border:1px solid var(--sf-border);border-radius:4px;font-size:12px;resize:vertical;font-family:inherit"></textarea>
-        <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
-          <button class="cmt-btn ai" onclick="polishComment()">✦ Polish with AI</button>
-          <button class="cmt-btn submit" onclick="submitComment()">Submit</button>
-          <span id="cmt-status" style="font-size:10px;color:var(--sf-meta)"></span>
-        </div>
-        <div id="cmt-polished-wrap" style="display:none;margin-top:10px">
-          <div style="font-size:10px;font-weight:700;color:var(--sf-blue);margin-bottom:4px">✦ AI-Polished Version</div>
-          <div id="cmt-polished" style="background:var(--sf-blue-light);border:1px solid var(--sf-blue);border-radius:4px;padding:9px 12px;font-size:12px;line-height:1.5"></div>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <button class="cmt-btn ai" onclick="usePolished()">Use this version</button>
-            <button class="cmt-btn" onclick="document.getElementById('cmt-polished-wrap').style.display='none'">Discard</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
 </div>
 
@@ -1717,7 +1672,6 @@ function render() {
     oppWrap.innerHTML = '';
   }
 
-  renderCommentContext();
 }
 
 function _fetchRDLive() {
@@ -2165,165 +2119,6 @@ function renderDealband(bands) {
         <span class="db-num"><span class="badge ${b.yoy==='—'?'neu':b.dir}">${b.yoy}</span></span>
       </div>`;
   }).join('');
-}
-
-// ── COMMENTS (shared via Google Sheet / Apps Script) ─────────────────────────
-// In-memory cache — refreshed on each renderCommentContext call
-let _COMMENTS_CACHE = null;
-
-function _cmtPost(body) {
-  return fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    body: JSON.stringify(body)
-  }).then(r => r.json()).catch(() => ({ ok: false }));
-}
-
-function _loadCommentsRemote(cb) {
-  if (_COMMENTS_CACHE !== null) { cb(_COMMENTS_CACHE); return; }
-  const cbName = '_cmtGetCb_' + Date.now();
-  const script = document.createElement('script');
-  script.src = APPS_SCRIPT_URL + '?action=getComments&callback=' + cbName;
-  window[cbName] = function(data) {
-    delete window[cbName]; script.remove();
-    _COMMENTS_CACHE = (data && data.comments) ? data.comments : [];
-    cb(_COMMENTS_CACHE);
-  };
-  script.onerror = function() { delete window[cbName]; script.remove(); cb([]); };
-  document.head.appendChild(script);
-}
-
-function renderCommentContext() {
-  const ouLabel = OU_LABELS[S.ou];
-  const q = S.tf === 'NQ' ? 'Q3' : 'Q2';
-  const ctx = `${ouLabel} · ${q} FY27 · ${S.lv === 'COMBO' ? 'Combo' : 'Opportunity'}`;
-  const el = document.getElementById('cmt-context');
-  if (el) el.textContent = ctx;
-  _COMMENTS_CACHE = null; // forza reload dal Sheet
-  renderCommentsList();
-}
-
-function renderCommentsList() {
-  const list = document.getElementById('comments-list');
-  if (!list) return;
-  const ctx = document.getElementById('cmt-context') ? document.getElementById('cmt-context').textContent : '';
-  list.innerHTML = '<div style="font-size:11px;color:var(--sf-meta);padding:4px 0">Loading comments…</div>';
-  _loadCommentsRemote(function(all) {
-    const relevant = all.filter(c => c.context === ctx);
-    if (!relevant.length) {
-      list.innerHTML = '<div style="font-size:11px;color:var(--sf-meta);padding:4px 0 12px">No comments yet for this view.</div>';
-      return;
-    }
-    list.innerHTML = relevant.map(c => `
-      <div class="cmt-item" style="position:relative">
-        <div class="cmt-meta">
-          ${c.author} · ${c.time}
-          ${c.ai ? '<span class="cmt-badge ai">✦ AI polished</span>' : ''}
-          ${c.editedBy ? `<span style="font-size:10px;color:var(--sf-meta);margin-left:6px">· last edited by <strong>${c.editedBy}</strong> at ${c.editedAt}</span>` : ''}
-          <button onclick="_deleteComment('${c.id}')" style="float:right;background:none;border:none;cursor:pointer;color:var(--sf-meta);font-size:11px;padding:0 4px" title="Delete">✕</button>
-        </div>
-        <div class="cmt-text" id="cmttext-${c.id}" contenteditable="false" onclick="_startEditComment('${c.id}')">${c.text}</div>
-        <div id="cmtedit-${c.id}" style="display:none;margin-top:6px">
-          <input id="cmtedit-author-${c.id}" placeholder="Your name" style="width:150px;padding:4px 8px;border:1px solid var(--sf-border);border-radius:4px;font-size:11px;margin-bottom:4px">
-          <div style="display:flex;gap:6px;margin-top:4px">
-            <button class="cmt-btn ai" onclick="_saveEditComment('${c.id}')" style="font-size:10px;padding:3px 10px">Save</button>
-            <button class="cmt-btn" onclick="_cancelEditComment('${c.id}')" style="font-size:10px;padding:3px 10px;border-color:var(--sf-border);color:var(--sf-meta)">Cancel</button>
-          </div>
-        </div>
-      </div>`).join('');
-  });
-}
-
-function _startEditComment(id) {
-  const el = document.getElementById('cmttext-' + id);
-  const editZone = document.getElementById('cmtedit-' + id);
-  if (!el || !editZone) return;
-  el.contentEditable = 'true';
-  el.style.border = '1px solid var(--sf-blue)';
-  el.style.borderRadius = '4px';
-  el.style.padding = '4px';
-  el.focus();
-  editZone.style.display = 'block';
-}
-
-function _cancelEditComment(id) {
-  const el = document.getElementById('cmttext-' + id);
-  const editZone = document.getElementById('cmtedit-' + id);
-  if (!el || !editZone) return;
-  if (_COMMENTS_CACHE) {
-    const c = _COMMENTS_CACHE.find(x => x.id === id);
-    if (c) el.textContent = c.text;
-  }
-  el.contentEditable = 'false';
-  el.style.border = '';
-  el.style.padding = '';
-  editZone.style.display = 'none';
-}
-
-function _saveEditComment(id) {
-  const el = document.getElementById('cmttext-' + id);
-  const authorEl = document.getElementById('cmtedit-author-' + id);
-  const editZone = document.getElementById('cmtedit-' + id);
-  if (!el) return;
-  const newText = el.textContent.trim();
-  if (!newText) return;
-  const editor = (authorEl && authorEl.value.trim()) || 'Anonymous';
-  const now = new Date().toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-  el.contentEditable = 'false';
-  el.style.border = '';
-  el.style.padding = '';
-  if (editZone) editZone.style.display = 'none';
-  _cmtPost({ action: 'editComment', id, text: newText, editedBy: editor, editedAt: now })
-    .then(() => { _COMMENTS_CACHE = null; renderCommentsList(); });
-}
-
-function _deleteComment(id) {
-  if (!confirm('Delete this comment?')) return;
-  _cmtPost({ action: 'deleteComment', id })
-    .then(() => { _COMMENTS_CACHE = null; renderCommentsList(); });
-}
-
-function polishComment() {
-  const draft = document.getElementById('cmt-draft').value.trim();
-  if (!draft) { document.getElementById('cmt-status').textContent = 'Write something first.'; return; }
-  const ctx = document.getElementById('cmt-context').textContent;
-  document.getElementById('cmt-status').textContent = '✦ Polishing…';
-  const polished = localPolish(draft, ctx);
-  document.getElementById('cmt-polished').textContent = polished;
-  document.getElementById('cmt-polished-wrap').style.display = 'block';
-  document.getElementById('cmt-status').textContent = '';
-}
-
-function localPolish(draft, ctx) {
-  var s = draft.trim();
-  s = s.charAt(0).toUpperCase() + s.slice(1);
-  if (!s.endsWith('.') && !s.endsWith(':')) s += '.';
-  return s + ' This commentary refers to ' + ctx + '.';
-}
-
-function usePolished() {
-  const polished = document.getElementById('cmt-polished').textContent;
-  document.getElementById('cmt-draft').value = polished;
-  document.getElementById('cmt-polished-wrap').style.display = 'none';
-}
-
-function submitComment() {
-  const author = document.getElementById('cmt-author').value.trim() || 'Anonymous';
-  const text   = document.getElementById('cmt-draft').value.trim();
-  if (!text) { document.getElementById('cmt-status').textContent = 'Nothing to submit.'; return; }
-  const ctx = document.getElementById('cmt-context').textContent;
-  const now = new Date().toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-  const id = 'c' + Date.now();
-  document.getElementById('cmt-status').textContent = 'Saving…';
-  _cmtPost({ action: 'saveComment', id, author, text, context: ctx, time: now })
-    .then(() => {
-      _COMMENTS_CACHE = null;
-      document.getElementById('cmt-author').value = author;
-      document.getElementById('cmt-draft').value = '';
-      document.getElementById('cmt-polished-wrap').style.display = 'none';
-      document.getElementById('cmt-status').textContent = 'Saved.';
-      setTimeout(() => { document.getElementById('cmt-status').textContent = ''; }, 2000);
-      renderCommentsList();
-    });
 }
 
 // stub — kept for compatibility
