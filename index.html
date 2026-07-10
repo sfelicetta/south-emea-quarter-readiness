@@ -30,8 +30,15 @@
     .hdr { background: var(--sf-blue-dark); color: #fff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
     .hdr h1 { font-size: 17px; font-weight: 700; }
     .hdr .meta { font-size: 10px; opacity: .72; margin-top: 2px; }
-    .refresh-btn { background: rgba(255,255,255,.15); border: none; color: #fff; border-radius: 20px; padding: 5px 14px; font-size: 11px; cursor: pointer; }
-    .refresh-btn:hover { background: rgba(255,255,255,.25); }
+    .refresh-btn { background: rgba(255,255,255,.15); border: none; color: #fff; border-radius: 20px; padding: 5px 14px; font-size: 11px; cursor: pointer; transition: background .15s, opacity .15s; }
+    .refresh-btn:hover:not(:disabled) { background: rgba(255,255,255,.25); }
+    .refresh-btn:disabled { opacity: .55; cursor: default; }
+    .refresh-btn.spinning .refresh-icon { display:inline-block; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .rd-live-badge { display:inline-flex; align-items:center; gap:5px; font-size:10px; color:var(--sf-meta); margin-left:10px; vertical-align:middle; }
+    .rd-live-dot { width:7px; height:7px; border-radius:50%; background:#2e844a; display:inline-block; }
+    .rd-live-dot.loading { background:#e8a600; animation: pulse .8s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
 
     /* ── PAGE TABS ── */
     .page-tabs { display: flex; background: #fff; border-bottom: 2px solid var(--sf-border); padding: 0 24px; gap: 0; }
@@ -399,7 +406,7 @@
     <h1>South EMEA &mdash; Quarter Readiness</h1>
     <div class="meta">FY27 &middot; Sales Strategy South &middot; Real-time View</div>
   </div>
-  <button class="refresh-btn" onclick="refreshData()">&#8635; Refreshed: <span id="refresh-ts">—</span></button>
+  <button class="refresh-btn" id="refresh-btn" onclick="refreshData()"><span class="refresh-icon">&#8635;</span> <span id="refresh-ts">Loading…</span></button>
 </header>
 
 <!-- PAGE TABS -->
@@ -484,7 +491,7 @@
 <div class="page active" id="page-readiness">
 
   <!-- Main dealband table -->
-  <div class="section-lbl" id="rd-table-lbl">Quarter Readiness — by Deal Band</div>
+  <div class="section-lbl" id="rd-table-lbl">Quarter Readiness — by Deal Band<span class="rd-live-badge" id="rd-live-badge"><span class="rd-live-dot loading" id="rd-live-dot"></span><span id="rd-live-txt">Loading…</span></span></div>
   <div class="rd-table-wrap" id="rd-table-wrap">
     <!-- populated by render() -->
   </div>
@@ -1529,7 +1536,8 @@ function render() {
   // Usa sempre _renderRDTable (RD_CACHE è inizializzato da _initRdCacheFromData)
   const livePayload = RD_CACHE[S.tf] && RD_CACHE[S.tf][S.lv];
   _renderRDTable(livePayload || _dataToRdCache(S.tf, S.lv), q);
-  _fetchRDLive();
+  // Non ri-fetchare se refreshData() è già in corso
+  if (!_isRefreshing) _fetchRDLive();
 
   // ── Opportunity lists per band — only on OPP view ────────────────────────────
   const oppWrap = document.getElementById('rd-opplists-wrap');
@@ -2468,22 +2476,51 @@ async function loadLiveData() {
   });
 }
 
+let _isRefreshing = false;
+
+function _setLiveBadge(state, ts) {
+  const dot = document.getElementById('rd-live-dot');
+  const txt = document.getElementById('rd-live-txt');
+  const btn = document.getElementById('refresh-btn');
+  if (!dot || !txt) return;
+  if (state === 'loading') {
+    dot.className = 'rd-live-dot loading';
+    txt.textContent = 'Refreshing…';
+    if (btn) { btn.disabled = true; btn.classList.add('spinning'); }
+  } else if (state === 'live') {
+    dot.className = 'rd-live-dot';
+    txt.textContent = ts || 'Live';
+    if (btn) { btn.disabled = false; btn.classList.remove('spinning'); }
+  } else {
+    dot.className = 'rd-live-dot';
+    dot.style.background = 'var(--sf-danger)';
+    txt.textContent = 'Offline — showing cached data';
+    if (btn) { btn.disabled = false; btn.classList.remove('spinning'); }
+  }
+}
+
 async function refreshData() {
+  if (_isRefreshing) return;
+  _isRefreshing = true;
+  _setLiveBadge('loading');
   document.getElementById('loading').classList.remove('hidden');
   try {
-    await loadLiveData();
+    const ok = await loadLiveData();
     const now = new Date();
-    document.getElementById('refresh-ts').textContent =
-      now.toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
-      + ' ✓ live';
+    const ts = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    const tsLong = now.toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+    document.getElementById('refresh-ts').textContent = tsLong + (ok ? ' ✓' : ' (cached)');
     document.getElementById('ts-snow').textContent    = TIMESTAMPS.snowflake || '—';
     document.getElementById('ts-org62').textContent   = TIMESTAMPS.org62    || '—';
     document.getElementById('ts-finplan').textContent = TIMESTAMPS.finplan  || '—';
     document.getElementById('ts-hc').textContent      = TIMESTAMPS.hc       || '—';
+    _setLiveBadge(ok ? 'live' : 'offline', ok ? 'Live · ' + ts : null);
     render();
   } catch(e) {
     console.error('refreshData error:', e);
+    _setLiveBadge('offline');
   } finally {
+    _isRefreshing = false;
     document.getElementById('loading').classList.add('hidden');
   }
 }
@@ -2492,7 +2529,7 @@ async function refreshData() {
 let remaining = 5 * 60 * 1000;
 setInterval(() => {
   remaining -= 1000;
-  if (remaining <= 0) { remaining = 5 * 60 * 1000; refreshData(); }
+  if (remaining <= 0) { remaining = 5 * 60 * 1000; if (!_isRefreshing) refreshData(); }
   const m = Math.floor(remaining / 60000);
   const s = Math.floor((remaining % 60000) / 1000);
   document.getElementById('countdown').textContent = `${m}:${s.toString().padStart(2,'0')}`;
