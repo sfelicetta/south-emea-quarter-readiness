@@ -1432,6 +1432,8 @@ function _tdbRender(payload, band) {
 // ── UTILS ────────────────────────────────────────────────────────────────────
 function r1(n)     { return Math.round(Math.abs(n) * 10) / 10 * Math.sign(n); }
 function fmtM(n)   { return '$' + r1(n) + 'M'; }
+function fmtK(n)   { if (n >= 1e6) return '$' + r1(n/1e6) + 'M'; if (n >= 1000) return '$' + r1(n/1000) + 'K'; return '$' + Math.round(n); }
+function fmtVal(n) { if (n === 0 || n === null || n === undefined) return '—'; return fmtM(n); }
 
 // ── STATE ────────────────────────────────────────────────────────────────────
 const S = { tf:'CQ', lv:'OPP', ou:'SOUTH' };
@@ -1611,26 +1613,27 @@ function _renderRDTable(liveAll, q) {
       const b = bands.find(x => x.band === bk);
       const isLt100 = (bk === '$0–$100K');
       const savedFcst = BAND_FORECAST_OVERRIDES[S.tf + '_' + S.lv + '_' + ouKey + '_' + bk] || '';
-      const bcoVal = isLt100 && b && b.bco > 0
-        ? (b.bco >= 1000 ? '$' + Math.round(b.bco/1000) + 'K' : '$' + Math.round(b.bco))
-        : '—';
       function _pctCls(v) { if (!v || v==='—') return ''; var n=parseFloat(String(v).replace('%','')); return isNaN(n)?'':(n>=0?'rd-col-pos':'rd-col-neg'); }
       const yoyFcstCls   = _pctCls(b && b.yoyFcst);
       const yoyPipeCls   = _pctCls(b && b.yoyPipe);
       const yoyClosedCls = _pctCls(b && b.yoyClosed);
-      const fcstPlaceholder = b && b.forecast > 0 ? '$' + b.forecast + 'M' : '—';
+      const acvStr  = b && b.acvPY  > 0 ? fmtM(b.acvPY)  : '—';
+      const pipeStr = b && b.pipe   > 0 ? fmtM(b.pipe)   : '—';
+      const cqtdStr = b && b.closedQTD > 0 ? fmtM(b.closedQTD) : '—';
+      const fcstPlaceholder = b && b.forecast > 0 ? fmtM(b.forecast) : '—';
+      const bcoStr  = isLt100 && b && b.bco > 0 ? fmtK(b.bco) : '—';
       return `<tr>
         <td>${BAND_DISPLAY_LABELS[bk]}</td>
-        <td>${b && b.acvPY > 0 ? '$' + b.acvPY + 'M' : '—'}</td>
+        <td>${acvStr}</td>
         <td><input class="rd-fcst-input" type="text" value="${savedFcst}" placeholder="${fcstPlaceholder}"
           onchange="BAND_FORECAST_OVERRIDES['${S.tf}_${S.lv}_${ouKey}_${bk}']=this.value" /></td>
         <td class="${yoyFcstCls}">${b ? b.yoyFcst : '—'}</td>
-        <td>${b && b.pipe > 0 ? '$' + b.pipe + 'M' : '—'}</td>
+        <td>${pipeStr}</td>
         <td class="${yoyPipeCls}">${b ? b.yoyPipe : '—'}</td>
         <td>${b ? b.histCov : '—'}</td>
         <td>${b && b.deals > 0 ? b.deals : '—'}</td>
-        <td>${bcoVal}</td>
-        <td>${b && b.closedQTD > 0 ? '$' + b.closedQTD + 'M' : '—'}</td>
+        <td>${bcoStr}</td>
+        <td>${cqtdStr}</td>
         <td class="${yoyClosedCls}">${b ? b.yoyClosed : '—'}</td>
       </tr>`;
     }).join('');
