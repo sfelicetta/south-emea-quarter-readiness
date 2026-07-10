@@ -1004,9 +1004,13 @@ function _td2Render(payload) {
     : [S.ou];
 
   el.innerHTML = ouKeys.map(ouKey => {
-    const ou = (payload.ous && payload.ous[ouKey]) || {};
-    const fy27commit = ou.fy27commit || [];
-    const fy27pipe   = ou.fy27pipe   || [];
+    const ouRaw = (payload.ous && payload.ous[ouKey]) || {};
+    // Retrocompatibilità: vecchio Apps Script ritorna array diretto invece di { fy27commit, ... }
+    const isLegacy = Array.isArray(ouRaw);
+    const legacyList = isLegacy ? ouRaw : [];
+    const ou = isLegacy ? {} : ouRaw;
+    const fy27commit = ou.fy27commit || legacyList;
+    const fy27pipe   = ou.fy27pipe   || legacyList;
     const fy26commit = ou.fy26commit || [];
     const fy26closed = ou.fy26closed || [];
     if (!fy27commit.length && !fy27pipe.length) return '';
