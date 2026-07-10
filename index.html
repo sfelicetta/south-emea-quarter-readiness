@@ -1739,10 +1739,10 @@ function _renderRDFallback(q) {
     const yoyClass = b.dir === 'neg' ? 'rd-col-neg' : b.dir === 'pos' ? 'rd-col-pos' : '';
     return `<tr>
       <td>${BAND_LABELS[bk]}</td>
-      <td>$${b.fcst}M</td>
+      <td>${fmtM(b.fcst)}</td>
       <td><input class="rd-fcst-input" type="text" value="${savedFcst}" placeholder="—" onchange="saveBandFcst('${bk}',this.value)" /></td>
       <td class="${yoyClass}">${b.yoy}</td>
-      <td>$${b.pipe}M</td>
+      <td>${fmtM(b.pipe)}</td>
       <td class="${yoyClass}">${b.yoy}</td>
       <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
     </tr>`;
@@ -1752,15 +1752,15 @@ function _renderRDFallback(q) {
   const totalFcstSaved = BAND_FORECAST_OVERRIDES[bandFcstKey('Total')] || '';
   const totalRow = `<tr class="rd-total">
     <td>Total</td>
-    <td>${k.acv_py.val}</td>
-    <td><input class="rd-fcst-input" type="text" value="${totalFcstSaved}" placeholder="${k.forecast.val}" onchange="saveBandFcst('Total',this.value)" /></td>
+    <td>${fmtMStr(k.acv_py.val)}</td>
+    <td><input class="rd-fcst-input" type="text" value="${totalFcstSaved}" placeholder="${fmtMStr(k.forecast.val)}" onchange="saveBandFcst('Total',this.value)" /></td>
     <td>${k.yoy.val}</td>
-    <td>${k.pipeline.val}</td>
+    <td>${fmtMStr(k.pipeline.val)}</td>
     <td>${k.pipe_growth.val}</td>
     <td>${covRaw}</td>
     <td>${k.deals_cmt.val}</td>
     <td>—</td>
-    <td>${k.closed_qtd.val}</td>
+    <td>${fmtMStr(k.closed_qtd.val)}</td>
     <td>${k.closed_qtd.delta || '—'}</td>
   </tr>`;
 
@@ -1936,8 +1936,8 @@ function renderDealband(bands) {
       <div class="db-row">
         <span class="db-band">${b.band}</span>
         <div class="bar-wrap"><div class="bar-fill ${barClass}" style="width:${pct}%"></div></div>
-        <span class="db-num">$${b.pipe}M</span>
-        <span class="db-num" style="color:var(--sf-meta)">$${b.fcst}M</span>
+        <span class="db-num">${fmtM(b.pipe)}</span>
+        <span class="db-num" style="color:var(--sf-meta)">${fmtM(b.fcst)}</span>
         <span class="db-num"><span class="badge ${b.yoy==='—'?'neu':b.dir}">${b.yoy}</span></span>
       </div>`;
   }).join('');
