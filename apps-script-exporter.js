@@ -180,22 +180,27 @@ function parseTab(ss, tabName) {
   OU_KEYS.forEach(function(k) { ouData[k] = { total: null, bands: {}, qbrFcst: null, delta: null }; });
 
   var inSection = false;
-  // NQ OPP ha una colonna extra (Forecast Bottom Up / Top Down) → tutte le colonne shiftano di +1
-  // shiftDetected=true dopo il primo header, così tutte le sezioni sub-OU ereditano lo stesso offset
   var shifted = false;
   var shiftDetected = false;
+  var currentOU = null; // OU corrente tracciato dall'intestazione sezione
 
   rows.forEach(function(row) {
-    // IMPORTANTE: i dati iniziano dalla colonna 1 (col 0 sempre vuota)
-    const cell = String(row[1] || '').trim();
+    const cell   = String(row[1] || '').trim();
     const cellLo = cell.toLowerCase();
 
-    // Rileva riga header di ogni sezione — e auto-rileva colonna extra (solo prima volta)
+    // Intestazioni sezione OU (es. 'SOUTH', 'IBERIA', 'ITALY', 'EGM', 'MIDDLE EAST')
+    var secOU = mapOU(cell);
+    if (secOU && cellLo !== 'deal band' && cellLo !== 'total') {
+      currentOU = secOU;
+      return;
+    }
+
+    // Header colonne — rileva shift una volta sola
     if (cellLo === 'deal band') {
       inSection = true;
       if (!shiftDetected) {
         var h3 = String(row[3] || '').toLowerCase();
-        if (h3.indexOf('bottom') >= 0 || h3.indexOf('top') >= 0 || h3.indexOf('down') >= 0) {
+        if (h3.indexOf('bottom') >= 0 || h3.indexOf('top') >= 0) {
           shifted = true;
         }
         shiftDetected = true;
@@ -204,17 +209,20 @@ function parseTab(ss, tabName) {
     }
     if (!inSection) return;
 
-    // OU: per tab shiftati col 15 è vuota, nome OU è in col 14 o meno
-    var ouRaw = String(row[15] || row[14] || '').trim();
-    const ou = mapOU(ouRaw);
+    // Priorità OU: colonna 15/14 se presente, altrimenti currentOU
+    var ouFromCol = mapOU(String(row[15] || row[14] || '').trim());
+    var ou = ouFromCol || currentOU;
     if (!ou) return;
 
-    // Offset colonne: shiftato → forecast=col4, yoy=col5, pipe=col6, ...
+    // Aggiorna currentOU se ricavato dalla colonna (più affidabile)
+    if (ouFromCol) currentOU = ouFromCol;
+
+    // Offset colonne
     var C = shifted
       ? { fcst:4, yoy:5, pipe:6, pg:7, cov:8, deals:9, bco:10, cqtd:11, ycl:12 }
       : { fcst:3, yoy:4, pipe:5, pg:6,  cov:7, deals:8, bco:9,  cqtd:10, ycl:11 };
 
-    // Riga Total → KPI aggregati
+    // Riga Total
     if (cellLo === 'total') {
       const cov = parseCov(row[C.cov]);
       ouData[ou].total = {
@@ -233,18 +241,23 @@ function parseTab(ss, tabName) {
       return;
     }
 
-    // Righe speciali: QBR Frcst e DELTA
+    // QBR Frcst — valore in col C.fcst (già in milioni come "$66.5")
     if (cellLo.indexOf('qbr') === 0) {
       if (ouData[ou].qbrFcst === null) {
-        ouData[ou].qbrFcst = nM(row[C.fcst]) !== 0 ? nM(row[C.fcst]) : nM(row[3]);
+        var qv = nM(row[C.fcst]);
+        if (qv === 0) qv = nM(row[3]);
+        if (qv === 0) qv = nM(row[2]);
+        ouData[ou].qbrFcst = qv;
       }
       return;
     }
+
+    // DELTA — può essere "-$9.3M" (già in milioni) o "-$6,500,396" (in dollari)
     if (cellLo === 'delta') {
       if (ouData[ou].delta === null) {
-        var dv = nM(row[C.fcst]);
-        if (dv === 0) dv = nM(row[3]);
-        if (dv === 0) dv = nM(row[2]);
+        var dv = parseDelta(row[C.fcst]);
+        if (dv === 0) dv = parseDelta(row[3]);
+        if (dv === 0) dv = parseDelta(row[2]);
         ouData[ou].delta = dv;
       }
       return;
@@ -396,6 +409,30 @@ function parseBCO(raw) {
   var mM = s.match(/\$(\d+\.?\d*)[Mm]/);
   if (kM) return parseFloat(kM[1]) * 1000;
   if (mM) return parseFloat(mM[1]) * 1e6;
+  return 0;
+}
+
+// parseDelta: "-$9.3M" → -9.3 | "-$6,500,396" → -6.5 | "$0" → 0
+// Distingue M (già milioni) da numeri raw (dollari → dividi per 1e6)
+function parseDelta(raw) {
+  var s = String(raw || '').trim();
+  if (!s || s === '-' || s === '—') return 0;
+  var neg = s.charAt(0) === '-' || s.indexOf('-$') >= 0;
+  // Formato M: es. "-$9.3M" o "$66.5M"
+  var mM = s.match(/\$\s*([\d,.]+)\s*[Mm]/);
+  if (mM) {
+    var v = parseFloat(mM[1].replace(/,/g,''));
+    return isNaN(v) ? 0 : (neg ? -v : v);
+  }
+  // Formato raw dollar: es. "-$6,500,396"
+  var dM = s.match(/\$\s*([\d,.]+)/);
+  if (dM) {
+    var v2 = parseFloat(dM[1].replace(/,/g,''));
+    if (isNaN(v2)) return 0;
+    // Se valore > 10000 → è in dollari, converti in milioni
+    var inM = Math.abs(v2) > 10000 ? v2 / 1e6 : v2;
+    return neg ? -Math.abs(inM) : Math.abs(inM);
+  }
   return 0;
 }
 
