@@ -333,6 +333,12 @@
     .td2-commit-input { width:90px; border:none; border-bottom:1.5px dashed #aab4d0; outline:none; background:transparent; font-size:11px; font-family:inherit; color:var(--sf-blue); font-weight:700; text-align:right; padding:1px 3px; cursor:text; font-variant-numeric:tabular-nums; }
     .td2-commit-input:focus { border-bottom-color:var(--sf-blue); background:#f0f7ff; border-radius:2px; }
     .td2-loading { text-align:center; padding:40px; color:var(--sf-meta); font-size:12px; }
+    .td2-4col { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; align-items:start; }
+    @media(max-width:1100px) { .td2-4col { grid-template-columns:repeat(2,1fr); } }
+    .td2-col { min-width:0; }
+    .td2-col-head { font-size:10px; font-weight:700; color:var(--sf-meta); text-transform:uppercase; letter-spacing:.04em; padding:4px 10px 4px 10px; background:var(--sf-bg); border-bottom:1px solid var(--sf-border); border-radius:4px 4px 0 0; }
+    .td2-rank { text-align:center !important; color:var(--sf-meta); font-size:10px; }
+    .td2-empty { padding:20px; text-align:center; color:var(--sf-meta); font-size:11px; }
 
     .rd-ou-section { margin-bottom:18px; }
     .rd-ou-header { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.7px; color:var(--sf-blue); padding:5px 2px 3px; border-bottom:2px solid var(--sf-blue); margin-bottom:6px; }
@@ -952,64 +958,67 @@ function renderTopDeals2() {
   document.head.appendChild(script);
 }
 
+function _td2PipeRows(list, ouKey) {
+  return list.map(d => {
+    const inVal  = d.in_ > 0  ? `<span class="td-commit-dot"></span>${fmtM(d.in_)}`  : '<span style="color:var(--sf-meta)">—</span>';
+    const uppVal = d.upp > 0 ? fmtM(d.upp) : '<span style="color:var(--sf-meta)">—</span>';
+    const upmVal = d.upm > 0 ? fmtM(d.upm) : '<span style="color:var(--sf-meta)">—</span>';
+    return `<tr><td>${d.name}</td><td>${fmtM(d.pipe)}</td><td>${inVal}</td><td>${uppVal}</td><td>${upmVal}</td></tr>`;
+  }).join('') + (() => {
+    const t = list.reduce((a,d) => { a.pipe+=d.pipe; a.in_+=d.in_; a.upp+=d.upp; a.upm+=d.upm; return a; }, {pipe:0,in_:0,upp:0,upm:0});
+    return `<tr class="td2-total"><td>Total (${list.length})</td><td>${fmtM(t.pipe)}</td><td>${fmtM(t.in_)}</td><td>${t.upp>0?fmtM(t.upp):'—'}</td><td>${t.upm>0?fmtM(t.upm):'—'}</td></tr>`;
+  })();
+}
+
+function _td2PipeTable(list, ouKey, subtitle) {
+  if (!list || !list.length) return `<div class="td2-empty">No data</div>`;
+  const hdr = `<tr><th style="text-align:left">Account</th><th>Pipe</th><th class="td2-in-hdr">IN</th><th>UP+</th><th>UP−</th></tr>`;
+  return `<div class="td2-col-head">${subtitle}</div>
+    <div class="td2-table-wrap">
+      <table class="td2-table"><thead>${hdr}</thead><tbody>${_td2PipeRows(list, ouKey)}</tbody></table>
+    </div>`;
+}
+
+function _td2ClosedTable(list, quarter26) {
+  if (!list || !list.length) return `<div class="td2-empty">No data</div>`;
+  const rows = list.map((d,i) => `<tr><td class="td2-rank">${i+1}</td><td>${d.name}</td><td>${fmtM(d.acv)}</td></tr>`).join('');
+  const total = list.reduce((s,d) => s+d.acv, 0);
+  const totalRow = `<tr class="td2-total"><td></td><td>Total (${list.length})</td><td>${fmtM(total)}</td></tr>`;
+  return `<div class="td2-col-head">${quarter26} — Top 10 Closed</div>
+    <div class="td2-table-wrap">
+      <table class="td2-table">
+        <thead><tr><th style="text-align:center;width:24px">#</th><th style="text-align:left">Account</th><th>ACV</th></tr></thead>
+        <tbody>${rows}${totalRow}</tbody>
+      </table>
+    </div>`;
+}
+
 function _td2Render(payload) {
   const el = document.getElementById('td2-content');
   if (!el) return;
-  const quarter = payload.quarter || '';
+  const quarter   = payload.quarter   || '';
+  const quarter26 = payload.quarter26 || quarter.replace('FY27','FY26');
 
   const ouKeys = S.ou === 'SOUTH'
     ? ['SOUTH', 'IBERIA', 'ITALY', 'EGM', 'MIDEAST']
     : [S.ou];
 
   el.innerHTML = ouKeys.map(ouKey => {
-    const list = (payload.ous && payload.ous[ouKey]) || [];
-    if (!list.length) return '';
+    const ou = (payload.ous && payload.ous[ouKey]) || {};
+    const fy27commit = ou.fy27commit || [];
+    const fy27pipe   = ou.fy27pipe   || [];
+    const fy26commit = ou.fy26commit || [];
+    const fy26closed = ou.fy26closed || [];
+    if (!fy27commit.length && !fy27pipe.length) return '';
     const ouLabel = OU_LABELS[ouKey] || ouKey;
 
-    const rows = list.map(d => {
-      const savedCommit = TD2_COMMIT_OVERRIDES[td2CommitKey(S.tf, ouKey, d.name)] || '';
-      const inVal  = d.in_ > 0  ? `<span class="td-commit-dot"></span>${fmtM(d.in_)}`  : '<span style="color:var(--sf-meta)">—</span>';
-      const uppVal = d.upp > 0 ? fmtM(d.upp) : '<span style="color:var(--sf-meta)">—</span>';
-      const upmVal = d.upm > 0 ? fmtM(d.upm) : '<span style="color:var(--sf-meta)">—</span>';
-      return `<tr>
-        <td>${d.name}</td>
-        <td>${fmtM(d.pipe)}</td>
-        <td>${inVal}</td>
-        <td>${uppVal}</td>
-        <td>${upmVal}</td>
-        <td><input class="td2-commit-input" type="text" value="${savedCommit}" placeholder="—"
-          onchange="TD2_COMMIT_OVERRIDES[td2CommitKey('${S.tf}','${ouKey}',${JSON.stringify(d.name)})]=this.value" /></td>
-      </tr>`;
-    }).join('');
-
-    const totals = list.reduce((acc, d) => {
-      acc.pipe += d.pipe; acc.in_ += d.in_; acc.upp += d.upp; acc.upm += d.upm;
-      return acc;
-    }, { pipe:0, in_:0, upp:0, upm:0 });
-
-    const totalRow = `<tr class="td2-total">
-      <td>Total (top ${list.length})</td>
-      <td>${fmtM(totals.pipe)}</td>
-      <td>${fmtM(totals.in_)}</td>
-      <td>${totals.upp > 0 ? fmtM(totals.upp) : '—'}</td>
-      <td>${totals.upm > 0 ? fmtM(totals.upm) : '—'}</td>
-      <td></td>
-    </tr>`;
-
     return `<div class="td-ou-section">
-      <div class="td-ou-title">${ouLabel}<span class="td-ou-sub">${quarter} — sorted by Commit</span></div>
-      <div class="td2-table-wrap">
-        <table class="td2-table">
-          <thead><tr>
-            <th style="text-align:left">Account Name</th>
-            <th>Open Pipe</th>
-            <th class="td2-in-hdr">IN (Commit)</th>
-            <th>UP+</th>
-            <th>UP−</th>
-            <th class="rd-editable-hdr">Commit Finale</th>
-          </tr></thead>
-          <tbody>${rows}${totalRow}</tbody>
-        </table>
+      <div class="td-ou-title">${ouLabel}</div>
+      <div class="td2-4col">
+        <div class="td2-col">${_td2ClosedTable(fy26closed, quarter26)}</div>
+        <div class="td2-col">${_td2PipeTable(fy27commit, ouKey, quarter + ' — IN/Commit')}</div>
+        <div class="td2-col">${_td2PipeTable(fy26commit, ouKey, quarter26 + ' — IN/Commit')}</div>
+        <div class="td2-col">${_td2PipeTable(fy27pipe, ouKey, quarter + ' — by Pipeline')}</div>
       </div>
     </div>`;
   }).join('');

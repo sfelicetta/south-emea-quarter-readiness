@@ -401,8 +401,12 @@ function parseCov(raw) {
 // parseDeals: "#Q2 Open Opps: 1,073" → 1073
 function parseDeals(raw) {
   var s = String(raw || '');
-  var m = s.match(/(\d[\d,]*)/);
-  return m ? parseInt(m[1].replace(/,/g, ''), 10) : 0;
+  // Match the number after the colon to avoid matching "2" in "Q2"
+  var m = s.match(/:\s*([\d,]+)/);
+  if (m) return parseInt(m[1].replace(/,/g, ''), 10);
+  // Fallback: last number in string
+  var all = s.match(/\d[\d,]*/g);
+  return all ? parseInt(all[all.length - 1].replace(/,/g, ''), 10) : 0;
 }
 
 // parseBCO: "BCO per AE $57K, -18% Y/Y" → 57000
@@ -604,6 +608,11 @@ function buildTDB(qtr, logic) {
       .sort(function(a,b){ return b.val - a.val; }).slice(0,10);
   }
 
+  function topAll(map) {
+    return Object.keys(map).map(function(n){ return { name:n, val: Math.round(map[n])/1000000 }; })
+      .sort(function(a,b){ return b.val - a.val; });
+  }
+
   // ── 1. Open FY27 (da Openpipe) ───────────────────────────────────────────
   var accOpen27 = makeAcc();
   var opRows = ss.getSheetByName('Openpipe').getDataRange().getValues();
@@ -678,11 +687,12 @@ function buildTDB(qtr, logic) {
   var ous = OU_KEYS_LIST.map(function(ouKey) {
     var bands = {};
     BANDS.forEach(function(b) {
-      var open27  = top10(accOpen27[ouKey][b]);
-      var open26  = top10(accOpen26[ouKey][b]);
+      var fn      = (b === 'lt100') ? top10 : topAll;
+      var open27  = fn(accOpen27[ouKey][b]);
+      var open26  = fn(accOpen26[ouKey][b]);
       var close26 = accClose26[ouKey][b];
-      var acv26   = top10(accACV26[ouKey][b]);
-      var acv27   = top10(accACV27[ouKey][b]);
+      var acv26   = fn(accACV26[ouKey][b]);
+      var acv27   = fn(accACV27[ouKey][b]);
 
       // Arricchisci open26 con closed
       var open26WithClosed = open26.map(function(d) {
@@ -710,15 +720,13 @@ function buildTDB(qtr, logic) {
 // Reads Openpipe tab, groups by COMBO_GLOBAL_COMPANY_NAME, sums by MFJ category
 // Returns per-OU list sorted by IN desc, then by pipe desc
 function buildTopDeals2(qtr, ou) {
-  var fiscalYear = 'FY 2027';
-  var fiscalQtr  = qtr === 'NQ' ? 'FQ 3' : 'FQ 2';
-  var quarter    = qtr === 'NQ' ? 'Q3 FY27' : 'Q2 FY27';
+  var fiscalYear26 = 'FY 2026';
+  var fiscalYear27 = 'FY 2027';
+  var fiscalQtr    = qtr === 'NQ' ? 'FQ 3' : 'FQ 2';
+  var quarter      = qtr === 'NQ' ? 'Q3 FY27' : 'Q2 FY27';
+  var quarter26    = qtr === 'NQ' ? 'Q3 FY26' : 'Q2 FY26';
 
-  var OU_LVL3 = {
-    ITALY:   ['vanessa fortarezza'],
-    EGM:     ['ana alonso muñumer'],
-    MIDEAST: ['mohammed alkhotani'],
-  };
+  var OU_KEYS_LIST = ['SOUTH', 'IBERIA', 'ITALY', 'EGM', 'MIDEAST'];
   var IB_PATTERN = /emea\s*-\s*south\s*-\s*ib/i;
 
   function matchOU(lvl3) {
@@ -730,72 +738,104 @@ function buildTopDeals2(qtr, ou) {
     return null;
   }
 
+  function makeMap() {
+    var a = {};
+    OU_KEYS_LIST.forEach(function(k) { a[k] = {}; });
+    return a;
+  }
+
   var ss     = SpreadsheetApp.openById(SHEET_ID);
   var opRows = ss.getSheetByName('Openpipe').getDataRange().getValues();
 
-  // pipeMap[ou][name] = { pipe, in_, upp, upm }
-  var pipeMap = {};
-  var OU_KEYS_LIST = ['SOUTH', 'IBERIA', 'ITALY', 'EGM', 'MIDEAST'];
-  OU_KEYS_LIST.forEach(function(k) { pipeMap[k] = {}; });
+  // ── FY27: pipe/IN/UP+/UP- ────────────────────────────────────────────────
+  var pipe27Map = makeMap();
+  // ── FY26: pipe/IN/UP+/UP- (open pipe, same Openpipe tab) ─────────────────
+  var pipe26Map = makeMap();
 
   for (var i = 1; i < opRows.length; i++) {
     var row = opRows[i];
-    if (String(row[4]||'').trim() !== fiscalYear) continue;
-    if (String(row[5]||'').trim() !== fiscalQtr)  continue;
+    var yr  = String(row[4]||'').trim();
+    if (String(row[5]||'').trim() !== fiscalQtr) continue;
+    if (yr !== fiscalYear27 && yr !== fiscalYear26) continue;
 
     var rowOU = matchOU(row[1]);
     if (!rowOU) continue;
-
-    // Filter: if specific OU requested (not SOUTH), only that OU
     if (ou !== 'SOUTH' && rowOU !== ou) continue;
 
-    var name = String(row[7] || '').trim(); // COMBO_GLOBAL_COMPANY_NAME col H=7
+    var name = String(row[7] || '').trim();
     if (!name) continue;
 
     var pipe = parseFloat(String(row[13]||'0').replace(/,/g,'')) || 0;
-    var mgr  = String(row[11]||'').trim().toUpperCase(); // MGR_FORCST_JUDG_TXT
+    var mgr  = String(row[11]||'').trim().toUpperCase();
 
-    // Accumulate for OU
-    if (!pipeMap[rowOU][name]) pipeMap[rowOU][name] = { pipe:0, in_:0, upp:0, upm:0 };
-    pipeMap[rowOU][name].pipe += pipe;
-    if (mgr === 'IN')  pipeMap[rowOU][name].in_  += pipe;
-    if (mgr === 'UP+') pipeMap[rowOU][name].upp  += pipe;
-    if (mgr === 'UP-') pipeMap[rowOU][name].upm  += pipe;
+    var target = yr === fiscalYear27 ? pipe27Map : pipe26Map;
+    if (!target[rowOU][name]) target[rowOU][name] = { pipe:0, in_:0, upp:0, upm:0 };
+    target[rowOU][name].pipe += pipe;
+    if (mgr === 'IN')  target[rowOU][name].in_  += pipe;
+    if (mgr === 'UP+') target[rowOU][name].upp  += pipe;
+    if (mgr === 'UP-') target[rowOU][name].upm  += pipe;
 
-    // Accumulate for SOUTH aggregate (all sub-OUs)
-    if (ou === 'SOUTH') {
-      if (!pipeMap['SOUTH'][name]) pipeMap['SOUTH'][name] = { pipe:0, in_:0, upp:0, upm:0 };
-      pipeMap['SOUTH'][name].pipe += pipe;
-      if (mgr === 'IN')  pipeMap['SOUTH'][name].in_  += pipe;
-      if (mgr === 'UP+') pipeMap['SOUTH'][name].upp  += pipe;
-      if (mgr === 'UP-') pipeMap['SOUTH'][name].upm  += pipe;
-    }
+    if (!target['SOUTH'][name]) target['SOUTH'][name] = { pipe:0, in_:0, upp:0, upm:0 };
+    target['SOUTH'][name].pipe += pipe;
+    if (mgr === 'IN')  target['SOUTH'][name].in_  += pipe;
+    if (mgr === 'UP+') target['SOUTH'][name].upp  += pipe;
+    if (mgr === 'UP-') target['SOUTH'][name].upm  += pipe;
   }
 
-  function buildList(map) {
+  // ── FY26 Closed (ACV tab) ─────────────────────────────────────────────────
+  // ACV cols: A=0 year, B=1 fqtr, D=3 lvl3, H=7 global_name, N=13 ACV
+  var acv26Map = makeMap();
+  var acvRows = ss.getSheetByName('ACV').getDataRange().getValues();
+  for (var i = 1; i < acvRows.length; i++) {
+    var row = acvRows[i];
+    if (String(row[0]||'').trim() !== fiscalYear26) continue;
+    if (String(row[1]||'').trim() !== fiscalQtr)    continue;
+    var rowOU = matchOU(row[3]);
+    if (!rowOU) continue;
+    if (ou !== 'SOUTH' && rowOU !== ou) continue;
+    var name = String(row[7]||'').trim();
+    if (!name) continue;
+    var acv = parseFloat(String(row[13]||'0').replace(/,/g,'')) || 0;
+    acv26Map[rowOU][name] = (acv26Map[rowOU][name] || 0) + acv;
+    acv26Map['SOUTH'][name] = (acv26Map['SOUTH'][name] || 0) + acv;
+  }
+
+  function buildCommitList(map) {
     return Object.keys(map).map(function(n) {
       var d = map[n];
-      return {
-        name:   n,
-        pipe:   Math.round(d.pipe) / 1000000,
-        in_:    Math.round(d.in_)  / 1000000,
-        upp:    Math.round(d.upp)  / 1000000,
-        upm:    Math.round(d.upm)  / 1000000,
-      };
-    })
-    .filter(function(d) { return d.pipe > 0; })
-    .sort(function(a, b) { return b.in_ !== a.in_ ? b.in_ - a.in_ : b.pipe - a.pipe; })
-    .slice(0, 20);
+      return { name:n, pipe:Math.round(d.pipe)/1e6, in_:Math.round(d.in_)/1e6, upp:Math.round(d.upp)/1e6, upm:Math.round(d.upm)/1e6 };
+    }).filter(function(d){ return d.pipe > 0; })
+      .sort(function(a,b){ return b.in_ !== a.in_ ? b.in_ - a.in_ : b.pipe - a.pipe; })
+      .slice(0, 20);
   }
 
-  var result = { quarter: quarter, ous: {} };
-  if (ou === 'SOUTH') {
-    OU_KEYS_LIST.forEach(function(k) {
-      result.ous[k] = buildList(pipeMap[k]);
-    });
-  } else {
-    result.ous[ou] = buildList(pipeMap[ou]);
+  function buildPipeList(map) {
+    return Object.keys(map).map(function(n) {
+      var d = map[n];
+      return { name:n, pipe:Math.round(d.pipe)/1e6, in_:Math.round(d.in_)/1e6, upp:Math.round(d.upp)/1e6, upm:Math.round(d.upm)/1e6 };
+    }).filter(function(d){ return d.pipe > 0; })
+      .sort(function(a,b){ return b.pipe - a.pipe; })
+      .slice(0, 20);
   }
+
+  function buildAcvList(map) {
+    return Object.keys(map).map(function(n) {
+      return { name:n, acv:Math.round(map[n])/1e6 };
+    }).filter(function(d){ return d.acv > 0; })
+      .sort(function(a,b){ return b.acv - a.acv; })
+      .slice(0, 10);
+  }
+
+  var result = { quarter: quarter, quarter26: quarter26, ous: {} };
+  var keys = ou === 'SOUTH' ? OU_KEYS_LIST : [ou];
+  keys.forEach(function(k) {
+    result.ous[k] = {
+      fy27commit:  buildCommitList(pipe27Map[k]),
+      fy27pipe:    buildPipeList(pipe27Map[k]),
+      fy26commit:  buildCommitList(pipe26Map[k]),
+      fy26closed:  buildAcvList(acv26Map[k]),
+    };
+  });
 
   return result;
 }
