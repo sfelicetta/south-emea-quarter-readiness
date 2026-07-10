@@ -617,14 +617,14 @@ function mkOU(acv,fcst,yoy,pipe,pg,cv,hcv,dl,bc,cq,yc,bands,q,qbrFcst,delta) {
     },
     bands:   bands,
     aes:     [],
-    qbrFcst: (qbrFcst !== undefined && qbrFcst !== null) ? qbrFcst : null,
-    delta:   (delta   !== undefined && delta   !== null) ? delta   : null,
+    qbrFcst: (qbrFcst !== undefined && qbrFcst !== null) ? qbrFcst*1e6 : null,
+    delta:   (delta   !== undefined && delta   !== null) ? delta*1e6   : null,
   };
 }
 function bd(nm,pipe,acv,yoy) {
   var y = (yoy==='-'||yoy==='')?'—':yoy;
   var dir = y==='—' ? 'neu' : (y.charAt(0)==='-' ? 'neg' : 'pos');
-  return {band:nm, pipe:pipe, fcst:acv, yoy:y, dir:dir};
+  return {band:nm, pipe:pipe*1e6, fcst:acv*1e6, yoy:y, dir:dir};
 }
 
 // Coverage per OU dal Sheet — aggiornato 09 Jul 2026
@@ -1440,7 +1440,7 @@ function _tdbRender(payload, band) {
 
 // ── UTILS ────────────────────────────────────────────────────────────────────
 function r1(n)     { return Math.round(Math.abs(n) * 10) / 10 * Math.sign(n); }
-function fmtM(n)   { var v = Math.abs(n) >= 1000 ? n / 1e6 : n; return '$' + r1(v) + 'M'; }
+function fmtM(n)   { return '$' + r1(n / 1e6) + 'M'; }
 function fmtK(n)   { if (n >= 1e6) return '$' + r1(n/1e6) + 'M'; if (n >= 1000) return '$' + r1(n/1000) + 'K'; return '$' + Math.round(n); }
 function fmtVal(n) { if (n === 0 || n === null || n === undefined) return '—'; return fmtM(n); }
 
