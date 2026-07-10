@@ -359,11 +359,15 @@ function parseTab(ss, tabName) {
 
 // ── Value parsers ─────────────────────────────────────────────────────────────
 
-// nM: "$33.3" → 33.3  oppure  numero diretto → passthrough
+// nM: "$33.3" → 33.3 | "$33.3M" → 33.3 | 33358084.2 (raw $) → 33.358... | 33.3 (già milioni) → 33.3
 function nM(v) {
   if (v === '' || v === null || v === undefined) return 0;
-  if (typeof v === 'number') return v;
-  var s = String(v).replace(/[$,\s]/g, '');  // togli $ , spazi (ma NON M/K per evitare strip su "EGM")
+  if (typeof v === 'number') {
+    // Celle numeriche del Sheet: valori >= 1000 sono in dollari raw → converti in milioni
+    return Math.abs(v) >= 1000 ? v / 1e6 : v;
+  }
+  var s = String(v).replace(/[$,\s]/g, '').replace(/[Mm]$/i, '');
+  if (!s || s === '-' || s === '—') return 0;
   return parseFloat(s) || 0;
 }
 
@@ -412,25 +416,28 @@ function parseBCO(raw) {
   return 0;
 }
 
-// parseDelta: "-$9.3M" → -9.3 | "-$6,500,396" → -6.5 | "$0" → 0
-// Distingue M (già milioni) da numeri raw (dollari → dividi per 1e6)
+// parseDelta: numero nativo -6500396 → -6.5 | "-$9.3M" → -9.3 | "-$6,500,396" → -6.5
 function parseDelta(raw) {
-  var s = String(raw || '').trim();
+  if (raw === '' || raw === null || raw === undefined) return 0;
+  // Numero nativo da Sheets → stessa logica di nM
+  if (typeof raw === 'number') {
+    return Math.abs(raw) >= 1000 ? raw / 1e6 : raw;
+  }
+  var s = String(raw).trim();
   if (!s || s === '-' || s === '—') return 0;
   var neg = s.charAt(0) === '-' || s.indexOf('-$') >= 0;
-  // Formato M: es. "-$9.3M" o "$66.5M"
-  var mM = s.match(/\$\s*([\d,.]+)\s*[Mm]/);
+  // Formato M: es. "-$9.3M"
+  var mM = s.match(/\$?\s*([\d,.]+)\s*[Mm]/);
   if (mM) {
     var v = parseFloat(mM[1].replace(/,/g,''));
     return isNaN(v) ? 0 : (neg ? -v : v);
   }
-  // Formato raw dollar: es. "-$6,500,396"
-  var dM = s.match(/\$\s*([\d,.]+)/);
+  // Formato raw dollar: es. "-$6,500,396" o bare "-6500396"
+  var dM = s.match(/\$?\s*([\d,.]+)/);
   if (dM) {
     var v2 = parseFloat(dM[1].replace(/,/g,''));
     if (isNaN(v2)) return 0;
-    // Se valore > 10000 → è in dollari, converti in milioni
-    var inM = Math.abs(v2) > 10000 ? v2 / 1e6 : v2;
+    var inM = Math.abs(v2) >= 1000 ? v2 / 1e6 : v2;
     return neg ? -Math.abs(inM) : Math.abs(inM);
   }
   return 0;
