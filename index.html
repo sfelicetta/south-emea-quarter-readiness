@@ -1592,7 +1592,7 @@ const RD_OU_ORDER = ['SOUTH', 'IBERIA', 'ITALY', 'EGM', 'MIDEAST'];
 const RD_OU_LABELS = { SOUTH:'EMEA South', IBERIA:'Iberia', ITALY:'Italy', EGM:'EGM', MIDEAST:'Middle East' };
 
 function _rdOuList() {
-  if (S.ou === 'SOUTH') return RD_OU_ORDER;
+  if (S.ou === 'SOUTH') return ['SOUTH'];
   return ['SOUTH', S.ou];
 }
 
