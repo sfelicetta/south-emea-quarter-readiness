@@ -1483,7 +1483,7 @@ function toggleExcluded(chk) {
   const pipe = parseFloat(chk.dataset.pipe) || 0;
   const key  = S.tf + '_' + ou + '_' + band;
   if (!BCO_EXCLUDED[key]) BCO_EXCLUDED[key] = [];
-  if (!chk.checked) {
+  if (chk.checked) {
     if (!BCO_EXCLUDED[key].find(d => d.name === name))
       BCO_EXCLUDED[key].push({name, pipe});
   } else {
@@ -1848,7 +1848,7 @@ function renderOppLists() {
       const isExcl  = (BCO_EXCLUDED[exclKey] || []).some(x => x.name === d.name);
       const chkCell = isLt100
         ? '<td></td>'
-        : `<td style="text-align:center"><input type="checkbox" class="rd-chk" ${isExcl ? '' : 'checked'}
+        : `<td style="text-align:center"><input type="checkbox" class="rd-chk" ${isExcl ? 'checked' : ''}
             data-ou="${S.ou}" data-band="${bk}" data-name="${d.name.replace(/"/g,'&quot;')}" data-pipe="${d.pipe}"
             onchange="toggleExcluded(this)" /></td>`;
       return `<tr>
