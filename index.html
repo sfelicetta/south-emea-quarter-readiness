@@ -1846,10 +1846,11 @@ function renderOppLists() {
       const exclKey = S.tf + '_' + S.ou + '_' + bk;
       const isExcl  = (BCO_EXCLUDED[exclKey] || []).some(x => x.name === d.name);
       const chkCell = isLt100
-        ? '<td></td>'
+        ? '<td></td><td></td>'
         : `<td style="text-align:center"><input type="checkbox" class="rd-chk" ${isExcl ? 'checked' : ''}
             data-ou="${S.ou}" data-band="${bk}" data-name="${d.name.replace(/"/g,'&quot;')}" data-pipe="${d.pipe}"
-            onchange="toggleExcluded(this)" /></td>`;
+            onchange="toggleExcluded(this)" /></td>
+           <td style="text-align:center"><input type="checkbox" class="rd-chk" /></td>`;
       return `<tr>
         <td>${d.name}</td>
         <td>${fmtM(d.pipe)}</td>
@@ -1857,7 +1858,7 @@ function renderOppLists() {
       </tr>`;
     }).join('');
 
-    const chkHeader = isLt100 ? '' : '<th style="text-align:center">Include in Forecast?</th>';
+    const chkHeader = isLt100 ? '' : '<th style="text-align:center">Include in Forecast?</th><th style="text-align:center">BP Confirmed Commit</th>';
 
     return `<div class="rd-band-section">
       <div class="rd-band-title">${BAND_LABELS[bk]}</div>
