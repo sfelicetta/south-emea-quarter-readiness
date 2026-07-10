@@ -1014,12 +1014,12 @@ function _td2Render(payload) {
 
     const rows = list.map(d => {
       const savedCommit = TD2_COMMIT_OVERRIDES[td2CommitKey(S.tf, ouKey, d.name)] || '';
-      const inVal  = d.in_ > 0  ? `<span class="td-commit-dot"></span>$${d.in_.toFixed(2)}M`  : '<span style="color:var(--sf-meta)">—</span>';
-      const uppVal = d.upp > 0 ? `$${d.upp.toFixed(2)}M` : '<span style="color:var(--sf-meta)">—</span>';
-      const upmVal = d.upm > 0 ? `$${d.upm.toFixed(2)}M` : '<span style="color:var(--sf-meta)">—</span>';
+      const inVal  = d.in_ > 0  ? `<span class="td-commit-dot"></span>${fmtM(d.in_)}`  : '<span style="color:var(--sf-meta)">—</span>';
+      const uppVal = d.upp > 0 ? fmtM(d.upp) : '<span style="color:var(--sf-meta)">—</span>';
+      const upmVal = d.upm > 0 ? fmtM(d.upm) : '<span style="color:var(--sf-meta)">—</span>';
       return `<tr>
         <td>${d.name}</td>
-        <td>$${d.pipe.toFixed(2)}M</td>
+        <td>${fmtM(d.pipe)}</td>
         <td>${inVal}</td>
         <td>${uppVal}</td>
         <td>${upmVal}</td>
@@ -1035,10 +1035,10 @@ function _td2Render(payload) {
 
     const totalRow = `<tr class="td2-total">
       <td>Total (top ${list.length})</td>
-      <td>$${totals.pipe.toFixed(2)}M</td>
-      <td>$${totals.in_.toFixed(2)}M</td>
-      <td>${totals.upp > 0 ? '$'+totals.upp.toFixed(2)+'M' : '—'}</td>
-      <td>${totals.upm > 0 ? '$'+totals.upm.toFixed(2)+'M' : '—'}</td>
+      <td>${fmtM(totals.pipe)}</td>
+      <td>${fmtM(totals.in_)}</td>
+      <td>${totals.upp > 0 ? fmtM(totals.upp) : '—'}</td>
+      <td>${totals.upm > 0 ? fmtM(totals.upm) : '—'}</td>
       <td></td>
     </tr>`;
 
@@ -1221,9 +1221,9 @@ function tdLookupSelectItem(id, idx, ouKey, tf) {
   if (!a) return;
   document.getElementById(id + '-inp').value = a.name;
   dd.style.display = 'none';
-  document.getElementById(id + '-pipe').textContent = '$' + a.pipe.toFixed(2) + 'M';
+  document.getElementById(id + '-pipe').textContent = fmtM(a.pipe);
   document.getElementById(id + '-commit').innerHTML = a.commit > 0
-    ? `<span class="td-commit-dot"></span>$${a.commit.toFixed(2)}M`
+    ? `<span class="td-commit-dot"></span>${fmtM(a.commit)}`
     : '<span style="color:var(--sf-meta)">—</span>';
 }
 
@@ -1235,9 +1235,9 @@ function tdLookupSelect(id, ouKey, tf, idx) {
   if (!a) return;
   document.getElementById(id + '-inp').value = a.name;
   dd.style.display = 'none';
-  document.getElementById(id + '-pipe').textContent = '$' + a.pipe.toFixed(2) + 'M';
+  document.getElementById(id + '-pipe').textContent = fmtM(a.pipe);
   document.getElementById(id + '-commit').innerHTML = a.commit > 0
-    ? `<span class="td-commit-dot"></span>$${a.commit.toFixed(2)}M`
+    ? `<span class="td-commit-dot"></span>${fmtM(a.commit)}`
     : '<span style="color:var(--sf-meta)">—</span>';
 }
 
@@ -1346,13 +1346,13 @@ function _tdbRender(payload, band) {
     return arr.map(d => {
       const val = d[key] || 0;
       const barW = maxVal > 0 ? Math.round((val / maxVal) * 80) : 0;
-      return `<tr><td>${d.name}</td><td><div class="td-bar-wrap"><div class="td-bar" style="width:${barW}px"></div><span>$${val.toFixed(2)}M</span></div></td></tr>`;
+      return `<tr><td>${d.name}</td><td><div class="td-bar-wrap"><div class="td-bar" style="width:${barW}px"></div><span>${fmtM(val)}</span></div></td></tr>`;
     }).join('');
   }
 
   function simpleRows(arr, key) {
     if (!arr || !arr.length) return '<tr><td colspan="2" style="color:var(--sf-meta);font-style:italic;text-align:center;padding:8px">No data</td></tr>';
-    return arr.map(d => `<tr><td>${d.name}</td><td style="text-align:right">$${(d[key]||0).toFixed(2)}M</td></tr>`).join('');
+    return arr.map(d => `<tr><td>${d.name}</td><td style="text-align:right">${fmtM(d[key]||0)}</td></tr>`).join('');
   }
 
   el.innerHTML = `
@@ -1374,8 +1374,8 @@ function _tdbRender(payload, band) {
             const barW = maxOpen26 > 0 ? Math.round(((d.pipe||0) / maxOpen26) * 60) : 0;
             return `<tr>
               <td>${d.name}</td>
-              <td><div class="td-bar-wrap"><div class="td-bar" style="width:${barW}px"></div><span>$${(d.pipe||0).toFixed(2)}M</span></div></td>
-              <td style="text-align:right;color:var(--sf-green)">${d.closed > 0 ? '$'+d.closed.toFixed(2)+'M' : '—'}</td>
+              <td><div class="td-bar-wrap"><div class="td-bar" style="width:${barW}px"></div><span>${fmtM(d.pipe||0)}</span></div></td>
+              <td style="text-align:right;color:var(--sf-green)">${d.closed > 0 ? fmtM(d.closed) : '—'}</td>
             </tr>`;
           }).join('');
 
@@ -1391,7 +1391,7 @@ function _tdbRender(payload, band) {
               <thead><tr><th>Account</th><th>Open Pipe</th></tr></thead>
               <tbody>
                 ${pipeRows(b.open27, 'pipe', maxOpen27)}
-                <tr class="td-total"><td>Total</td><td style="text-align:right">$${(b.totalOpen27||0).toFixed(2)}M</td></tr>
+                <tr class="td-total"><td>Total</td><td style="text-align:right">${fmtM(b.totalOpen27||0)}</td></tr>
               </tbody>
             </table>
           </div>
@@ -1401,7 +1401,7 @@ function _tdbRender(payload, band) {
               <thead><tr><th>Account</th><th>Open Pipe</th><th style="color:var(--sf-green)">Closed</th></tr></thead>
               <tbody>
                 ${open26Rows}
-                <tr class="td-total"><td>Total</td><td style="text-align:right">$${(b.totalOpen26||0).toFixed(2)}M</td><td></td></tr>
+                <tr class="td-total"><td>Total</td><td style="text-align:right">${fmtM(b.totalOpen26||0)}</td><td></td></tr>
               </tbody>
             </table>
           </div>
@@ -1411,7 +1411,7 @@ function _tdbRender(payload, band) {
               <thead><tr><th>Account</th><th>ACV</th></tr></thead>
               <tbody>
                 ${simpleRows(b.acv26, 'acv')}
-                <tr class="td-total"><td>Total</td><td style="text-align:right">$${(b.totalACV26||0).toFixed(2)}M</td></tr>
+                <tr class="td-total"><td>Total</td><td style="text-align:right">${fmtM(b.totalACV26||0)}</td></tr>
               </tbody>
             </table>
           </div>
@@ -1421,7 +1421,7 @@ function _tdbRender(payload, band) {
               <thead><tr><th>Account</th><th>ACV</th></tr></thead>
               <tbody>
                 ${simpleRows(b.acv27, 'acv')}
-                <tr class="td-total"><td>Total</td><td style="text-align:right">$${(b.totalACV27||0).toFixed(2)}M</td></tr>
+                <tr class="td-total"><td>Total</td><td style="text-align:right">${fmtM(b.totalACV27||0)}</td></tr>
               </tbody>
             </table>
           </div>
@@ -1807,7 +1807,7 @@ function renderOppLists() {
         : `<td style="text-align:center"><input type="checkbox" class="rd-chk" /></td>`;
       return `<tr>
         <td>${d.name}</td>
-        <td>$${d.pipe.toFixed(2)}M</td>
+        <td>${fmtM(d.pipe)}</td>
         <td>${mfj}</td>
         ${chkCell}
       </tr>`;
