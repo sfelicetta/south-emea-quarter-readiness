@@ -1474,7 +1474,10 @@ const _LS_FCST_KEY = 'rd_fcst_overrides_v1';
 function _fcstLoad() { try { return JSON.parse(localStorage.getItem(_LS_FCST_KEY) || '{}'); } catch(e) { return {}; } }
 function _fcstSave(obj) { try { localStorage.setItem(_LS_FCST_KEY, JSON.stringify(obj)); } catch(e) {} }
 const BAND_FORECAST_OVERRIDES = _fcstLoad(); // key: tf_lv_ou_band → value string; persisted to localStorage
-const BCO_EXCLUDED = {};             // key: tf_ou_band → [{name, pipe}]
+const _LS_BCO_KEY = 'rd_bco_excluded_v1';
+function _bcoExclLoad() { try { return JSON.parse(localStorage.getItem(_LS_BCO_KEY) || '{}'); } catch(e) { return {}; } }
+function _bcoExclSave(obj) { try { localStorage.setItem(_LS_BCO_KEY, JSON.stringify(obj)); } catch(e) {} }
+const BCO_EXCLUDED = _bcoExclLoad(); // key: tf_ou_band → [{name, pipe}]
 
 // BP Confirmed Commit totals — key: tf_ou_band → {name → value in M}
 const _LS_BP_KEY = 'rd_bp_commits_v1';
@@ -1550,6 +1553,7 @@ function toggleExcluded(chk) {
   } else {
     BCO_EXCLUDED[key] = BCO_EXCLUDED[key].filter(d => d.name !== name);
   }
+  _bcoExclSave(BCO_EXCLUDED);
   _refreshBcoCell(ou, band);
 }
 
