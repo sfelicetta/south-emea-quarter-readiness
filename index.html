@@ -1850,7 +1850,8 @@ function renderOppLists() {
         : `<td style="text-align:center"><input type="checkbox" class="rd-chk" ${isExcl ? 'checked' : ''}
             data-ou="${S.ou}" data-band="${bk}" data-name="${d.name.replace(/"/g,'&quot;')}" data-pipe="${d.pipe}"
             onchange="toggleExcluded(this)" /></td>
-           <td style="text-align:center"><input type="checkbox" class="rd-chk" /></td>`;
+           <td style="text-align:right"><input type="number" step="0.1" min="0" placeholder="—"
+            style="width:80px;padding:3px 6px;border:1px solid var(--sf-border);border-radius:4px;font-size:11px;text-align:right;font-family:inherit" /></td>`;
       return `<tr>
         <td>${d.name}</td>
         <td>${fmtM(d.pipe)}</td>
