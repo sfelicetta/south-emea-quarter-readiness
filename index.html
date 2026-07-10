@@ -1470,7 +1470,10 @@ function setFilter(dim, val, btn) {
 const OU_LABELS = { SOUTH:'EMEA South', IBERIA:'Iberia', ITALY:'Italy', EGM:'EGM', MIDEAST:'Middle East' };
 
 // ── FORECAST OVERRIDES (per-band, per session) ────────────────────────────────
-const BAND_FORECAST_OVERRIDES = {}; // key: tf_lv_ou_band → value string
+const _LS_FCST_KEY = 'rd_fcst_overrides_v1';
+function _fcstLoad() { try { return JSON.parse(localStorage.getItem(_LS_FCST_KEY) || '{}'); } catch(e) { return {}; } }
+function _fcstSave(obj) { try { localStorage.setItem(_LS_FCST_KEY, JSON.stringify(obj)); } catch(e) {} }
+const BAND_FORECAST_OVERRIDES = _fcstLoad(); // key: tf_lv_ou_band → value string; persisted to localStorage
 const BCO_EXCLUDED = {};             // key: tf_ou_band → [{name, pipe}]
 
 function _bcoKey(ou, band) { return S.tf + '_' + ou + '_' + band; }
@@ -1509,6 +1512,7 @@ function bandFcstKey(band) {
 
 function saveBandFcst(band, val) {
   BAND_FORECAST_OVERRIDES[bandFcstKey(band)] = val;
+  _fcstSave(BAND_FORECAST_OVERRIDES);
 }
 
 // Cache dati live da action=readiness
@@ -1670,7 +1674,7 @@ function _renderRDTable(liveAll, q) {
         <td>${BAND_DISPLAY_LABELS[bk]}</td>
         <td>${acvStr}</td>
         <td><input class="rd-fcst-input" type="text" value="${savedFcst}" placeholder="${fcstPlaceholder}"
-          onchange="BAND_FORECAST_OVERRIDES['${S.tf}_${S.lv}_${ouKey}_${bk}']=this.value" /></td>
+          onchange="BAND_FORECAST_OVERRIDES['${S.tf}_${S.lv}_${ouKey}_${bk}']=this.value;_fcstSave(BAND_FORECAST_OVERRIDES)" /></td>
         <td class="${yoyFcstCls}">${b ? b.yoyFcst : '—'}</td>
         <td>${pipeStr}</td>
         <td class="${yoyPipeCls}">${b ? b.yoyPipe : '—'}</td>
@@ -1689,7 +1693,7 @@ function _renderRDTable(liveAll, q) {
       <td>Total</td>
       <td>${k.acv_py ? fmtMStr(k.acv_py.val) : '—'}</td>
       <td><input class="rd-fcst-input" type="text" value="${totalFcstSaved}" placeholder="${totalFcstPlaceholder}"
-        onchange="BAND_FORECAST_OVERRIDES['${S.tf}_${S.lv}_${ouKey}_Total']=this.value" /></td>
+        onchange="BAND_FORECAST_OVERRIDES['${S.tf}_${S.lv}_${ouKey}_Total']=this.value;_fcstSave(BAND_FORECAST_OVERRIDES)" /></td>
       <td>${k.yoy ? k.yoy.val : '—'}</td>
       <td>${k.pipeline ? fmtMStr(k.pipeline.val) : '—'}</td>
       <td>${k.pipe_growth ? k.pipe_growth.val : '—'}</td>
