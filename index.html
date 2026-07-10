@@ -1852,7 +1852,7 @@ function renderOppLists() {
             onchange="toggleExcluded(this)" /></td>
            <td style="text-align:right"><input type="text" placeholder="—"
             style="width:80px;padding:3px 6px;border:1px solid var(--sf-border);border-radius:4px;font-size:11px;text-align:right;font-family:inherit"
-            onblur="var n=parseFloat(this.value.replace(/[^0-9.-]/g,'')); if(!isNaN(n))this.value=fmtM(n);" /></td>`;
+            onblur="var n=parseFloat(this.value.replace(/[^0-9.-]/g,'')); if(!isNaN(n)){var m=n>=1000?n/1e6:n;this.value='$'+Math.abs(Math.round(m*10)/10).toFixed(1)+'M';}" /></td>`;
       return `<tr>
         <td>${d.name}</td>
         <td>${fmtM(d.pipe)}</td>
