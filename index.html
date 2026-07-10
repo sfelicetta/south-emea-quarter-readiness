@@ -1441,14 +1441,17 @@ function _tdbRender(payload, band) {
 // ── UTILS ────────────────────────────────────────────────────────────────────
 function r1(n)     { return Math.round(Math.abs(n) * 10) / 10 * Math.sign(n); }
 function fmtM(n)   { return '$' + r1(n / 1e6) + 'M'; }
-function fmtMStr(s) { // normalizza stringa "$61.3M" o "$61264414.1M" → "$61.3M"
+function fmtMStr(s) { // "$61264414.1M" o "$61.3M" → "$61.3M" (divide sempre per 1e6 il numero estratto * 1e6 se era già milioni)
   if (!s || s === '—') return '—';
-  var neg = String(s).charAt(0) === '-';
-  var m = String(s).match(/([\d,.]+)/);
+  var str = String(s);
+  var neg = str.indexOf('-') >= 0;
+  var isAlreadyM = /[Mm]$/.test(str.trim());
+  var m = str.match(/([\d,.]+)/);
   if (!m) return s;
   var n = parseFloat(m[1].replace(/,/g,''));
   if (isNaN(n)) return s;
-  var raw = Math.abs(n) >= 1000 ? n : n * 1e6; // < 1000 = già milioni, moltiplica per passare a raw
+  // se la stringa finisce con M, il numero è già in milioni → moltiplica per 1e6 prima di passarlo a fmtM che divide
+  var raw = isAlreadyM ? n * 1e6 : n;
   return (neg ? '-' : '') + fmtM(raw);
 }
 function fmtK(n)   { if (n >= 1e6) return '$' + r1(n/1e6) + 'M'; if (n >= 1000) return '$' + r1(n/1000) + 'K'; return '$' + Math.round(n); }
