@@ -1440,7 +1440,7 @@ function _tdbRender(payload, band) {
 
 // ── UTILS ────────────────────────────────────────────────────────────────────
 function r1(n)     { return Math.round(Math.abs(n) * 10) / 10 * Math.sign(n); }
-function fmtM(n)   { return '$' + r1(n) + 'M'; }
+function fmtM(n)   { var v = Math.round(n * 10) / 10; return (v < 0 ? '-$' : '$') + Math.abs(v).toFixed(1) + 'M'; }
 function fmtMStr(s) { // "$61264414.1M" → "$61.3M" | "$61.3M" → "$61.3M"
   if (!s || s === '—') return '—';
   var str = String(s);
@@ -1450,7 +1450,7 @@ function fmtMStr(s) { // "$61264414.1M" → "$61.3M" | "$61.3M" → "$61.3M"
   var n = parseFloat(m[1].replace(/,/g,''));
   if (isNaN(n)) return s;
   var millions = n >= 1000 ? n / 1e6 : n;
-  return (neg ? '-$' : '$') + r1(millions) + 'M';
+  return (neg ? '-$' : '$') + Math.abs(Math.round(millions * 10) / 10).toFixed(1) + 'M';
 }
 function fmtK(n)   { if (n >= 1e6) return '$' + r1(n/1e6) + 'M'; if (n >= 1000) return '$' + r1(n/1000) + 'K'; return '$' + Math.round(n); }
 function fmtVal(n) { if (n === 0 || n === null || n === undefined) return '—'; return fmtM(n); }
