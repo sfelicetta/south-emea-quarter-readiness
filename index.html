@@ -234,7 +234,10 @@
     .td-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
     @media(max-width:1200px) { .td-grid-4 { grid-template-columns: 1fr 1fr; } }
     @media(max-width:900px) { .td-grid { grid-template-columns: 1fr; } .td-grid-4 { grid-template-columns: 1fr; } }
-    .td-card { background: var(--sf-card); border: 1px solid var(--sf-border); border-radius: var(--r); box-shadow: var(--sh); }
+    .td-card { background: var(--sf-card); border: 1px solid var(--sf-border); border-radius: var(--r); box-shadow: var(--sh); display:flex; flex-direction:column; }
+    .td-card .td-table { flex:1; }
+    .td-card tfoot.td-total-foot td { font-weight:700; color:var(--sf-blue); border-top:1.5px solid var(--sf-border); background:#f8f9fb; padding:5px 10px; text-align:right; }
+    .td-card tfoot.td-total-foot td:first-child { text-align:left; }
     .td-card-hdr { padding: 8px 14px; border-bottom: 1px solid var(--sf-border); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; }
     .td-card-hdr .td-card-sub { font-size: 10px; font-weight: 400; color: var(--sf-meta); }
     .td-table { width: 100%; border-collapse: collapse; font-size: 11px; }
@@ -1396,40 +1399,32 @@ function _tdbRender(payload, band) {
             <div class="td-card-hdr">Top Open <span class="td-card-sub">${payload.quarter} · ${bandLabel}</span></div>
             <table class="td-table">
               <thead><tr><th>Account</th><th>Open Pipe</th></tr></thead>
-              <tbody>
-                ${pipeRows(b.open27, 'pipe', maxOpen27)}
-                <tr class="td-total"><td>Total</td><td style="text-align:right">${fmtM(b.totalOpen27||0)}</td></tr>
-              </tbody>
+              <tbody>${pipeRows(b.open27, 'pipe', maxOpen27)}</tbody>
+              <tfoot class="td-total-foot"><tr><td>Total</td><td>${fmtM(b.totalOpen27||0)}</td></tr></tfoot>
             </table>
           </div>
           <div class="td-card">
             <div class="td-card-hdr">Top Open <span class="td-card-sub">${priorYrLabel} · ${bandLabel}</span></div>
             <table class="td-table">
               <thead><tr><th>Account</th><th>Open Pipe</th><th style="color:var(--sf-green)">Closed</th></tr></thead>
-              <tbody>
-                ${open26Rows}
-                <tr class="td-total"><td>Total</td><td style="text-align:right">${fmtM(b.totalOpen26||0)}</td><td></td></tr>
-              </tbody>
+              <tbody>${open26Rows}</tbody>
+              <tfoot class="td-total-foot"><tr><td>Total</td><td>${fmtM(b.totalOpen26||0)}</td><td></td></tr></tfoot>
             </table>
           </div>
           <div class="td-card">
             <div class="td-card-hdr">Top ACV <span class="td-card-sub">${priorYrLabel} · ${bandLabel}</span></div>
             <table class="td-table">
               <thead><tr><th>Account</th><th>ACV</th></tr></thead>
-              <tbody>
-                ${simpleRows(b.acv26, 'acv')}
-                <tr class="td-total"><td>Total</td><td style="text-align:right">${fmtM(b.totalACV26||0)}</td></tr>
-              </tbody>
+              <tbody>${simpleRows(b.acv26, 'acv')}</tbody>
+              <tfoot class="td-total-foot"><tr><td>Total</td><td>${fmtM(b.totalACV26||0)}</td></tr></tfoot>
             </table>
           </div>
           <div class="td-card">
             <div class="td-card-hdr">Top ACV <span class="td-card-sub">${payload.quarter} · ${bandLabel}</span></div>
             <table class="td-table">
               <thead><tr><th>Account</th><th>ACV</th></tr></thead>
-              <tbody>
-                ${simpleRows(b.acv27, 'acv')}
-                <tr class="td-total"><td>Total</td><td style="text-align:right">${fmtM(b.totalACV27||0)}</td></tr>
-              </tbody>
+              <tbody>${simpleRows(b.acv27, 'acv')}</tbody>
+              <tfoot class="td-total-foot"><tr><td>Total</td><td>${fmtM(b.totalACV27||0)}</td></tr></tfoot>
             </table>
           </div>
         </div>
