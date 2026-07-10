@@ -1670,7 +1670,7 @@ function _renderRDTable(liveAll, q) {
         <td>${BAND_DISPLAY_LABELS[bk]}</td>
         <td>${acvStr}</td>
         <td><input class="rd-fcst-input" type="text" value="${savedFcst}" placeholder="${fcstPlaceholder}"
-          onchange="var k='${S.tf}_${S.lv}_${ouKey}_${bk}';BAND_FORECAST_OVERRIDES[k]=this.value;_saveForecastToSheet(k,this.value)" /></td>
+          onchange="BAND_FORECAST_OVERRIDES['${S.tf}_${S.lv}_${ouKey}_${bk}']=this.value" /></td>
         <td class="${yoyFcstCls}">${b ? b.yoyFcst : '—'}</td>
         <td>${pipeStr}</td>
         <td class="${yoyPipeCls}">${b ? b.yoyPipe : '—'}</td>
@@ -1689,7 +1689,7 @@ function _renderRDTable(liveAll, q) {
       <td>Total</td>
       <td>${k.acv_py ? fmtMStr(k.acv_py.val) : '—'}</td>
       <td><input class="rd-fcst-input" type="text" value="${totalFcstSaved}" placeholder="${totalFcstPlaceholder}"
-        onchange="var k='${S.tf}_${S.lv}_${ouKey}_Total';BAND_FORECAST_OVERRIDES[k]=this.value;_saveForecastToSheet(k,this.value)" /></td>
+        onchange="BAND_FORECAST_OVERRIDES['${S.tf}_${S.lv}_${ouKey}_Total']=this.value" /></td>
       <td>${k.yoy ? k.yoy.val : '—'}</td>
       <td>${k.pipeline ? fmtMStr(k.pipeline.val) : '—'}</td>
       <td>${k.pipe_growth ? k.pipe_growth.val : '—'}</td>
@@ -1761,7 +1761,7 @@ function _renderRDFallback(q) {
     return `<tr>
       <td>${BAND_LABELS[bk]}</td>
       <td>${fmtM(b.fcst)}</td>
-      <td><input class="rd-fcst-input" type="text" value="${savedFcst}" placeholder="—" onchange="saveBandFcst('${bk}',this.value);_saveForecastToSheet(bandFcstKey('${bk}'),this.value)" /></td>
+      <td><input class="rd-fcst-input" type="text" value="${savedFcst}" placeholder="—" onchange="saveBandFcst('${bk}',this.value)" /></td>
       <td class="${yoyClass}">${b.yoy}</td>
       <td>${fmtM(b.pipe)}</td>
       <td class="${yoyClass}">${b.yoy}</td>
@@ -1774,7 +1774,7 @@ function _renderRDFallback(q) {
   const totalRow = `<tr class="rd-total">
     <td>Total</td>
     <td>${fmtMStr(k.acv_py.val)}</td>
-    <td><input class="rd-fcst-input" type="text" value="${totalFcstSaved}" placeholder="${fmtMStr(k.forecast.val)}" onchange="saveBandFcst('Total',this.value);_saveForecastToSheet(bandFcstKey('Total'),this.value)" /></td>
+    <td><input class="rd-fcst-input" type="text" value="${totalFcstSaved}" placeholder="${fmtMStr(k.forecast.val)}" onchange="saveBandFcst('Total',this.value)" /></td>
     <td>${k.yoy.val}</td>
     <td>${fmtMStr(k.pipeline.val)}</td>
     <td>${k.pipe_growth.val}</td>
@@ -2481,13 +2481,6 @@ function renderQBR() {
 // Incolla qui l'URL del tuo Google Apps Script deployment dopo averlo configurato.
 // Finché è vuoto, la dashboard usa i dati mock definiti sopra.
 const APPS_SCRIPT_URL = 'https://script.google.com/a/macros/salesforce.com/s/AKfycbyXpycJN_etEUcIejBps7QLJEx40wlDkVDu4gG7iVD1H_CwmSK6vN-emF4O9gfgTfSEXw/exec';
-
-function _saveForecastToSheet(key, value) {
-  fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    body: JSON.stringify({ action: 'writeForecast', key: key, value: value }),
-  }).catch(function() {});
-}
 
 // ── REFRESH ───────────────────────────────────────────────────────────────────
 let TIMESTAMPS = {
