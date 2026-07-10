@@ -1526,16 +1526,6 @@ function _dataToRdCache(tf, lv) {
   return result;
 }
 
-// Inizializza RD_CACHE con i dati hardcoded per avere subito un render completo
-function _initRdCacheFromData() {
-  ['CQ','NQ'].forEach(function(tf) {
-    if (!RD_CACHE[tf]) RD_CACHE[tf] = {};
-    ['OPP','COMBO'].forEach(function(lv) {
-      if (!RD_CACHE[tf][lv]) RD_CACHE[tf][lv] = _dataToRdCache(tf, lv);
-    });
-  });
-}
-_initRdCacheFromData();
 
 function render() {
   const ouLabel = OU_LABELS[S.ou];
@@ -1544,9 +1534,12 @@ function render() {
 
   document.getElementById('view-lbl').textContent = `${S.tf === 'CQ' ? 'Current Quarter' : 'Next Quarter'} — ${lvLabel} — ${ouLabel}`;
 
-  // Usa sempre _renderRDTable (RD_CACHE è inizializzato da _initRdCacheFromData)
   const livePayload = RD_CACHE[S.tf] && RD_CACHE[S.tf][S.lv];
-  _renderRDTable(livePayload || _dataToRdCache(S.tf, S.lv), q);
+  if (livePayload) {
+    _renderRDTable(livePayload, q);
+  } else {
+    document.getElementById('rd-table-wrap').innerHTML = '<div style="padding:32px;text-align:center;color:var(--sf-meta);font-size:13px">Loading live data…</div>';
+  }
   // Non ri-fetchare se refreshData() è già in corso
   if (!_isRefreshing) _fetchRDLive();
 
