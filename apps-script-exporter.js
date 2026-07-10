@@ -181,19 +181,25 @@ function parseTab(ss, tabName) {
 
   var inSection = false;
   // NQ OPP ha una colonna extra (Forecast Bottom Up / Top Down) → tutte le colonne shiftano di +1
+  // shiftDetected=true dopo il primo header, così tutte le sezioni sub-OU ereditano lo stesso offset
   var shifted = false;
+  var shiftDetected = false;
 
   rows.forEach(function(row) {
     // IMPORTANTE: i dati iniziano dalla colonna 1 (col 0 sempre vuota)
     const cell = String(row[1] || '').trim();
     const cellLo = cell.toLowerCase();
 
-    // Rileva riga header di ogni sezione — e auto-rileva colonna extra
+    // Rileva riga header di ogni sezione — e auto-rileva colonna extra (solo prima volta)
     if (cellLo === 'deal band') {
       inSection = true;
-      // Se col 3 contiene "Bottom" o "Top Down" → layout shiftato
-      var h3 = String(row[3] || '').toLowerCase();
-      shifted = (h3.indexOf('bottom') >= 0 || h3.indexOf('top down') >= 0);
+      if (!shiftDetected) {
+        var h3 = String(row[3] || '').toLowerCase();
+        if (h3.indexOf('bottom') >= 0 || h3.indexOf('top') >= 0 || h3.indexOf('down') >= 0) {
+          shifted = true;
+        }
+        shiftDetected = true;
+      }
       return;
     }
     if (!inSection) return;

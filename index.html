@@ -1467,6 +1467,54 @@ function saveBandFcst(band, val) {
 // Cache dati live da action=readiness
 const RD_CACHE = {};
 
+// Converte DATA[tf][lv] (formato mkOU/bd) nel formato atteso da _renderRDTable
+function _dataToRdCache(tf, lv) {
+  const src = DATA[tf][lv];
+  const result = {};
+  const BAND_KEYS = ['$0–$100K', '$100–$500K', '$500K–$1M', '$1M+'];
+  const OU_LIST = ['SOUTH','IBERIA','ITALY','EGM','MIDEAST'];
+  OU_LIST.forEach(function(ou) {
+    const d = src[ou];
+    if (!d) return;
+    const k = d.kpis;
+    // Per-band: arricchisci bd() con tutti i campi necessari a _renderRDTable
+    // bd() ha: {band, pipe(=Q2pipe), fcst(=acvPY), yoy(=yoyPipe), dir}
+    // I valori di forecast per-banda nei dati hardcoded non ci sono → usa placeholder da kpis
+    var richBands = BAND_KEYS.map(function(bk) {
+      var b = (d.bands || []).find(function(x){return x.band===bk;});
+      if (!b) return null;
+      return {
+        band:      bk,
+        acvPY:     b.fcst,                        // fcst in bd() = ACV PY dal Sheet
+        forecast:  0,                              // non disponibile per-banda in hardcoded
+        yoyFcst:   '—',
+        pipe:      b.pipe,
+        yoyPipe:   b.yoy,
+        histCov:   '—',
+        pipeCov:   '—',
+        deals:     0,
+        bco:       0,
+        closedQTD: 0,
+        yoyClosed: '—',
+        dir:       b.dir,
+      };
+    }).filter(Boolean);
+    result[ou] = { kpis: k, bands: richBands, qbrFcst: null, delta: null };
+  });
+  return result;
+}
+
+// Inizializza RD_CACHE con i dati hardcoded per avere subito un render completo
+function _initRdCacheFromData() {
+  ['CQ','NQ'].forEach(function(tf) {
+    if (!RD_CACHE[tf]) RD_CACHE[tf] = {};
+    ['OPP','COMBO'].forEach(function(lv) {
+      if (!RD_CACHE[tf][lv]) RD_CACHE[tf][lv] = _dataToRdCache(tf, lv);
+    });
+  });
+}
+_initRdCacheFromData();
+
 function render() {
   const ouLabel = OU_LABELS[S.ou];
   const lvLabel = S.lv === 'COMBO' ? 'Combo' : 'Opportunity';
@@ -1474,14 +1522,10 @@ function render() {
 
   document.getElementById('view-lbl').textContent = `${S.tf === 'CQ' ? 'Current Quarter' : 'Next Quarter'} — ${lvLabel} — ${ouLabel}`;
 
-  // Se dati live disponibili, usa quelli; altrimenti usa DATA hardcoded
+  // Usa sempre _renderRDTable (RD_CACHE è inizializzato da _initRdCacheFromData)
   const livePayload = RD_CACHE[S.tf] && RD_CACHE[S.tf][S.lv];
-  if (livePayload) {
-    _renderRDTable(livePayload, q);
-  } else {
-    _renderRDFallback(q);
-    _fetchRDLive();
-  }
+  _renderRDTable(livePayload || _dataToRdCache(S.tf, S.lv), q);
+  _fetchRDLive();
 
   // ── Opportunity lists per band — only on OPP view ────────────────────────────
   const oppWrap = document.getElementById('rd-opplists-wrap');
@@ -1570,9 +1614,10 @@ function _renderRDTable(liveAll, q) {
       const bcoVal = isLt100 && b && b.bco > 0
         ? (b.bco >= 1000 ? '$' + Math.round(b.bco/1000) + 'K' : '$' + Math.round(b.bco))
         : '—';
-      const yoyFcstCls = !b ? '' : (parseFloat(b.yoyFcst) >= 0 ? 'rd-col-pos' : 'rd-col-neg');
-      const yoyPipeCls = !b ? '' : (parseFloat(b.yoyPipe) >= 0 ? 'rd-col-pos' : 'rd-col-neg');
-      const yoyClosedCls = !b ? '' : (parseFloat(b.yoyClosed) >= 0 ? 'rd-col-pos' : 'rd-col-neg');
+      function _pctCls(v) { if (!v || v==='—') return ''; var n=parseFloat(String(v).replace('%','')); return isNaN(n)?'':(n>=0?'rd-col-pos':'rd-col-neg'); }
+      const yoyFcstCls   = _pctCls(b && b.yoyFcst);
+      const yoyPipeCls   = _pctCls(b && b.yoyPipe);
+      const yoyClosedCls = _pctCls(b && b.yoyClosed);
       const fcstPlaceholder = b && b.forecast > 0 ? '$' + b.forecast + 'M' : '—';
       return `<tr>
         <td>${BAND_DISPLAY_LABELS[bk]}</td>
