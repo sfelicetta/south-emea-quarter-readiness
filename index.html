@@ -1013,6 +1013,20 @@ function _td2PipeTable(list, ouKey, subtitle) {
     </div>`;
 }
 
+function _td2SimplePipeTable(list, subtitle) {
+  if (!list || !list.length) return `<div class="td2-empty">No data</div>`;
+  const rows = list.map(d => `<tr><td>${d.name}</td><td>${fmtM(d.pipe)}</td></tr>`).join('');
+  const total = list.reduce((s,d) => s+d.pipe, 0);
+  const totalRow = `<tr class="td2-total"><td>Total (${list.length})</td><td>${fmtM(total)}</td></tr>`;
+  return `<div class="td2-col-head">${subtitle}</div>
+    <div class="td2-table-wrap">
+      <table class="td2-table">
+        <thead><tr><th style="text-align:left">Account</th><th>Open Pipe</th></tr></thead>
+        <tbody>${rows}${totalRow}</tbody>
+      </table>
+    </div>`;
+}
+
 function _td2ClosedTable(list, quarter26) {
   if (!list || !list.length) return `<div class="td2-empty">No data</div>`;
   const rows = list.map(d => `<tr><td>${d.name}</td><td>${fmtM(d.acv)}</td></tr>`).join('');
@@ -1095,7 +1109,10 @@ function _td2Render(payload) {
     const ou = isLegacy ? {} : ouRaw;
     const fy27closed = ou.fy27closed && ou.fy27closed.length ? ou.fy27closed : _buildFy27ClosedFromTDB(ouKey);
     const fy27commit = ou.fy27commit || legacyList;
-    const fy27pipe   = ou.fy27pipe   || legacyList;
+    // fy27pipe: top 20 per Open Pipe FY27 da TDB (open27), fallback su payload AS
+    const fy27pipeRaw = ou.fy27pipe && ou.fy27pipe.length ? ou.fy27pipe : null;
+    const fy27pipeFromTDB = _tdbAgg(ouKey, 'open27', 'pipe').map(d => ({ name: d.name, pipe: d.val, in_: 0, upp: 0, upm: 0 }));
+    const fy27pipe = fy27pipeRaw || fy27pipeFromTDB;
     const fy26commit = ou.fy26commit || [];
     const fy26closed = ou.fy26closed || [];
     if (!fy27commit.length && !fy27pipe.length && !fy27closed.length) return '';
@@ -1107,7 +1124,7 @@ function _td2Render(payload) {
         <div class="td2-col">${_td2ClosedTable(fy27closed, quarter + ' — Top 20 ACV Closed')}</div>
         <div class="td2-col">${_td2PipeTable(fy27commit, ouKey, quarter + ' — IN/Commit')}</div>
         <div class="td2-col">${_buildFy26Col(ouKey)}</div>
-        <div class="td2-col">${_td2PipeTable(fy27pipe, ouKey, quarter + ' — by Pipeline')}</div>
+        <div class="td2-col">${_td2SimplePipeTable(fy27pipe, quarter + ' — by Pipeline')}</div>
       </div>
     </div>`;
   }).join('');
