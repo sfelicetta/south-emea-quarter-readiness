@@ -1020,7 +1020,7 @@ function _td2ClosedTable(list, quarter26) {
   const rows = list.map((d,i) => `<tr><td class="td2-rank">${i+1}</td><td>${d.name}</td><td>${fmtM(d.acv)}</td></tr>`).join('');
   const total = list.reduce((s,d) => s+d.acv, 0);
   const totalRow = `<tr class="td2-total"><td></td><td>Total (${list.length})</td><td>${fmtM(total)}</td></tr>`;
-  return `<div class="td2-col-head">${quarter26} — Top 10 Closed</div>
+  return `<div class="td2-col-head">${quarter26} — Top 20 Closed</div>
     <div class="td2-table-wrap">
       <table class="td2-table">
         <thead><tr><th style="text-align:center;width:24px">#</th><th style="text-align:left">Account</th><th>ACV</th></tr></thead>
@@ -1058,7 +1058,7 @@ function _td2Render(payload) {
       .map(n => ({ name: n, acv: acvMap[n] }))
       .filter(d => d.acv > 0)
       .sort((a, b) => b.acv - a.acv)
-      .slice(0, 10);
+      .slice(0, 20);
   }
 
   el.innerHTML = ouKeys.map(ouKey => {
@@ -1077,7 +1077,7 @@ function _td2Render(payload) {
 
     // Blocco Top Closed FY27 (sempre visibile)
     const closedBlock = `<div class="td2-closed-block">
-      ${_td2ClosedTable(fy27closed, quarter + ' — Top 10 ACV Closed')}
+      ${_td2ClosedTable(fy27closed, quarter + ' — Top 20 ACV Closed')}
     </div>`;
 
     return `<div class="td-ou-section">

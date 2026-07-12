@@ -899,7 +899,7 @@ function buildTopDeals2(qtr, ou) {
       return { name:n, acv:Math.round(map[n])/1e6 };
     }).filter(function(d){ return d.acv > 0; })
       .sort(function(a,b){ return b.acv - a.acv; })
-      .slice(0, 10);
+      .slice(0, 20);
   }
 
   var result = { quarter: quarter, quarter26: quarter26, ous: {} };
