@@ -971,7 +971,21 @@ function renderTopDeals2() {
       return;
     }
     TD2_CACHE[S.tf] = data;
-    _td2Render(data);
+    // Se TDB non ancora pronto, aspetta e ri-renderizza quando arriva
+    if (!TDB_CACHE[S.tf] || !TDB_CACHE[S.tf]['Opportunity']) {
+      _td2Render(data); // render subito senza closed
+      const waitTf = S.tf;
+      const waitData = data;
+      const checkTDB = setInterval(function() {
+        if (TDB_CACHE[waitTf] && TDB_CACHE[waitTf]['Opportunity']) {
+          clearInterval(checkTDB);
+          _td2Render(waitData); // ri-renderizza con closed
+        }
+      }, 500);
+      setTimeout(function() { clearInterval(checkTDB); }, 15000); // stop dopo 15s
+    } else {
+      _td2Render(data);
+    }
   };
   script.onerror = function() {
     script.remove();
