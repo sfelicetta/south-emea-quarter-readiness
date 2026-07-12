@@ -117,21 +117,89 @@ function doPost(e) {
   }
 }
 
+// ── # Deals in Commit — logica identica al Sheet ─────────────────────────────
+// Formula Sheet (es. SOUTH <$100K):
+//   SUMIFS(O:O, E:E, year, F:F, qtr, A:A, lvl2, K:K, "up to 100")
+//   + SUMIFS(O:O, E:E, year, F:F, qtr, A:A, lvl2, K:K, "<$0")
+// - Col A=0 LVL2 usato per SOUTH ("Marco Hernansanz")
+// - Col B=1 LVL3 usato per sub-OU (Iberia, Italy, EGM, Mideast)
+// - Col E=4 year, Col F=5 qtr, Col K=10 dealband
+// - <$100K somma due bande Openpipe: "up to 100" + "<$0"
+function buildDealsMap(ss) {
+  var opRows = ss.getSheetByName('Openpipe').getDataRange().getValues();
+
+  // Openpipe col K (dealband) → display band
+  // <$100K bucket comprende sia "up to 100" che "<$0" (negative deals)
+  var K_TO_BAND = {
+    '<$0':       '$0–$100K',
+    'up to 100': '$0–$100K',
+    '100-500':   '$100–$500K',
+    '500-1m':    '$500K–$1M',
+    '1m+':       '$1M+',
+  };
+
+  // deals[tf][ouKey][displayBand] = count
+  var deals = { CQ: {}, NQ: {} };
+  OU_KEYS.forEach(function(k) {
+    deals.CQ[k] = {}; deals.NQ[k] = {};
+    BAND_ORDER.forEach(function(b) { deals.CQ[k][b] = 0; deals.NQ[k][b] = 0; });
+  });
+
+  var IB_PAT = /emea\s*-\s*south\s*-\s*ib/i;
+
+  for (var i = 1; i < opRows.length; i++) {
+    var row = opRows[i];
+    var yr  = String(row[4] || '').trim();
+    var qtr = String(row[5] || '').trim();
+
+    var tf;
+    if      (yr === 'FY 2027' && qtr === 'FQ 2') tf = 'CQ';
+    else if (yr === 'FY 2027' && qtr === 'FQ 3') tf = 'NQ';
+    else continue;
+
+    var kBand = String(row[10] || '').trim().toLowerCase();
+    var dispBand = K_TO_BAND[kBand];
+    if (!dispBand) continue;
+
+    var lvl2 = String(row[0] || '').trim().toLowerCase(); // col A
+    var lvl3 = String(row[1] || '').trim().toLowerCase(); // col B
+
+    // SOUTH: col A = "marco hernansanz" (LVL2)
+    if (lvl2 === 'marco hernansanz') {
+      deals[tf]['SOUTH'][dispBand]++;
+    } else {
+      continue; // non è un record South
+    }
+
+    // Sub-OU: col B (LVL3)
+    var subOU;
+    if      (IB_PAT.test(lvl3))                  subOU = 'IBERIA';
+    else if (lvl3 === 'vanessa fortarezza')        subOU = 'ITALY';
+    else if (lvl3 === 'ana alonso muñumer')        subOU = 'EGM';
+    else if (lvl3 === 'mohammed alkhotani')        subOU = 'MIDEAST';
+
+    if (subOU) deals[tf][subOU][dispBand]++;
+  }
+
+  return deals;
+}
+
 // ── Payload principale ────────────────────────────────────────────────────────
 function buildPayload() {
   const ss   = SpreadsheetApp.openById(SHEET_ID);
   const meta = readMeta(ss);
+  const dealsMap = buildDealsMap(ss);
   return {
     generated_at:       new Date().toISOString(),
     timestamps:         meta.timestamps,
     forecast_overrides: meta.forecasts,
     CQ: {
-      OPP:   parseTab(ss, TABS.CQ_OPP),
-      COMBO: parseTab(ss, TABS.CQ_COMBO),
+      OPP:   parseTab(ss, TABS.CQ_OPP,   dealsMap.CQ),
+      COMBO: parseTab(ss, TABS.CQ_COMBO, dealsMap.CQ),
     },
     NQ: {
-      OPP:   parseTab(ss, TABS.NQ_OPP),
-      COMBO: parseTab(ss, TABS.NQ_COMBO),
+      OPP:   parseTab(ss, TABS.NQ_OPP,   dealsMap.NQ),
+      COMBO: parseTab(ss, TABS.NQ_COMBO, dealsMap.NQ),
     },
   };
 }
@@ -169,7 +237,7 @@ function writeForecast(key, value) {
 }
 
 // ── Parser principale ─────────────────────────────────────────────────────────
-function parseTab(ss, tabName) {
+function parseTab(ss, tabName, dealsMap) {
   const sheet = ss.getSheetByName(tabName);
   if (!sheet) { Logger.log('Tab not found: ' + tabName); return emptyResult(); }
 
@@ -225,6 +293,11 @@ function parseTab(ss, tabName) {
     // Riga Total
     if (cellLo === 'total') {
       const cov = parseCov(row[C.cov]);
+      // Somma deals da tutti i band per questo OU
+      var totalDeals = 0;
+      if (dealsMap && dealsMap[ou]) {
+        BAND_ORDER.forEach(function(b) { totalDeals += (dealsMap[ou][b] || 0); });
+      }
       ouData[ou].total = {
         acvPY:      nM(row[2]),
         forecast:   nM(row[C.fcst]),
@@ -233,7 +306,7 @@ function parseTab(ss, tabName) {
         pipeGrowth: nPct(row[C.pg]),
         pipeCov:    cov.current,
         histCov:    cov.hist,
-        deals:      parseDeals(row[C.deals]),
+        deals:      totalDeals,
         bco:        parseBCO(row[C.bco]),
         closedQTD:  nM(row[C.cqtd]),
         yoyClosed:  nPct(row[C.ycl]),
@@ -276,7 +349,7 @@ function parseTab(ss, tabName) {
       yoyPipe:   nPct(row[C.pg]),
       pipeCov:   cov.current,
       histCov:   cov.hist,
-      deals:     parseDeals(row[C.deals]),
+      deals:     (dealsMap && dealsMap[ou] && dealsMap[ou][canonBand]) || 0,
       bco:       parseBCO(row[C.bco]),
       closedQTD: nM(row[C.cqtd]),
       yoyClosed: nPct(row[C.ycl]),
@@ -782,22 +855,25 @@ function buildTopDeals2(qtr, ou) {
     if (mgr === 'UP-') target['SOUTH'][name].upm  += pipe;
   }
 
-  // ── FY26 Closed (ACV tab) ─────────────────────────────────────────────────
+  // ── FY26 + FY27 Closed (ACV tab) ─────────────────────────────────────────
   // ACV cols: A=0 year, B=1 fqtr, D=3 lvl3, H=7 global_name, N=13 ACV
   var acv26Map = makeMap();
+  var acv27Map = makeMap();
   var acvRows = ss.getSheetByName('ACV').getDataRange().getValues();
   for (var i = 1; i < acvRows.length; i++) {
     var row = acvRows[i];
-    if (String(row[0]||'').trim() !== fiscalYear26) continue;
-    if (String(row[1]||'').trim() !== fiscalQtr)    continue;
+    var acvYr = String(row[0]||'').trim();
+    if (String(row[1]||'').trim() !== fiscalQtr) continue;
+    if (acvYr !== fiscalYear26 && acvYr !== fiscalYear27) continue;
     var rowOU = matchOU(row[3]);
     if (!rowOU) continue;
     if (ou !== 'SOUTH' && rowOU !== ou) continue;
     var name = String(row[7]||'').trim();
     if (!name) continue;
     var acv = parseFloat(String(row[13]||'0').replace(/,/g,'')) || 0;
-    acv26Map[rowOU][name] = (acv26Map[rowOU][name] || 0) + acv;
-    acv26Map['SOUTH'][name] = (acv26Map['SOUTH'][name] || 0) + acv;
+    var acvTarget = acvYr === fiscalYear27 ? acv27Map : acv26Map;
+    acvTarget[rowOU][name] = (acvTarget[rowOU][name] || 0) + acv;
+    acvTarget['SOUTH'][name] = (acvTarget['SOUTH'][name] || 0) + acv;
   }
 
   function buildCommitList(map) {
@@ -830,6 +906,7 @@ function buildTopDeals2(qtr, ou) {
   var keys = ou === 'SOUTH' ? OU_KEYS_LIST : [ou];
   keys.forEach(function(k) {
     result.ous[k] = {
+      fy27closed:  buildAcvList(acv27Map[k]),
       fy27commit:  buildCommitList(pipe27Map[k]),
       fy27pipe:    buildPipeList(pipe27Map[k]),
       fy26commit:  buildCommitList(pipe26Map[k]),

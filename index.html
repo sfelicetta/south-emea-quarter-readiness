@@ -333,6 +333,8 @@
     .td2-commit-input { width:90px; border:none; border-bottom:1.5px dashed #aab4d0; outline:none; background:transparent; font-size:11px; font-family:inherit; color:var(--sf-blue); font-weight:700; text-align:right; padding:1px 3px; cursor:text; font-variant-numeric:tabular-nums; }
     .td2-commit-input:focus { border-bottom-color:var(--sf-blue); background:#f0f7ff; border-radius:2px; }
     .td2-loading { text-align:center; padding:40px; color:var(--sf-meta); font-size:12px; }
+    .td2-closed-block { margin-bottom:12px; }
+    .td2-closed-block .td2-col-head { background:var(--sf-blue); color:#fff; border-radius:4px 4px 0 0; }
     .td2-4col { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; align-items:start; }
     @media(max-width:1100px) { .td2-4col { grid-template-columns:repeat(2,1fr); } }
     .td2-col { min-width:0; }
@@ -1009,17 +1011,25 @@ function _td2Render(payload) {
     const isLegacy = Array.isArray(ouRaw);
     const legacyList = isLegacy ? ouRaw : [];
     const ou = isLegacy ? {} : ouRaw;
+    const fy27closed = ou.fy27closed || [];
     const fy27commit = ou.fy27commit || legacyList;
     const fy27pipe   = ou.fy27pipe   || legacyList;
     const fy26commit = ou.fy26commit || [];
     const fy26closed = ou.fy26closed || [];
-    if (!fy27commit.length && !fy27pipe.length) return '';
+    if (!fy27commit.length && !fy27pipe.length && !fy27closed.length) return '';
     const ouLabel = OU_LABELS[ouKey] || ouKey;
+
+    // Blocco Top Closed FY27 (riga bianca sopra)
+    const closedBlock = fy27closed.length ? `
+      <div class="td2-closed-block">
+        ${_td2ClosedTable(fy27closed, quarter + ' — Top 10 ACV Closed')}
+      </div>` : '';
 
     return `<div class="td-ou-section">
       <div class="td-ou-title">${ouLabel}</div>
+      ${closedBlock}
       <div class="td2-4col">
-        <div class="td2-col">${_td2ClosedTable(fy26closed, quarter26)}</div>
+        <div class="td2-col">${_td2ClosedTable(fy26closed, quarter26 + ' — Top 10 Closed')}</div>
         <div class="td2-col">${_td2PipeTable(fy27commit, ouKey, quarter + ' — IN/Commit')}</div>
         <div class="td2-col">${_td2PipeTable(fy26commit, ouKey, quarter26 + ' — IN/Commit')}</div>
         <div class="td2-col">${_td2PipeTable(fy27pipe, ouKey, quarter + ' — by Pipeline')}</div>
