@@ -1037,26 +1037,60 @@ function _td2Render(payload) {
     ? ['SOUTH', 'IBERIA', 'ITALY', 'EGM', 'MIDEAST']
     : [S.ou];
 
-  // Aggrega acv27 da TDB_CACHE se disponibile (già deployato, non richiede nuovo AS)
-  function _buildFy27ClosedFromTDB(ouKey) {
+  // Aggrega da TDB_CACHE per ouKey — fieldKey = 'acv27' | 'acv26' | 'open26' | 'open27'
+  function _tdbAgg(ouKey, fieldKey, valueKey) {
     const tdb = TDB_CACHE[S.tf] && TDB_CACHE[S.tf]['Opportunity'];
     if (!tdb) return [];
     const allBands = ['lt100', '100to500', '500to1m', 'gt1m'];
-    const acvMap = {};
+    const map = {};
     const ouData = (tdb.ous || []).find(o => o.key === ouKey);
     if (!ouData) return [];
     allBands.forEach(bk => {
       const b = ouData.bands && ouData.bands[bk];
-      if (!b || !b.acv27) return;
-      b.acv27.forEach(d => {
-        acvMap[d.name] = (acvMap[d.name] || 0) + (d.acv || 0);
+      if (!b || !b[fieldKey]) return;
+      b[fieldKey].forEach(d => {
+        map[d.name] = (map[d.name] || 0) + (d[valueKey] || 0);
       });
     });
-    return Object.keys(acvMap)
-      .map(n => ({ name: n, acv: acvMap[n] }))
-      .filter(d => d.acv > 0)
-      .sort((a, b) => b.acv - a.acv)
+    return Object.keys(map)
+      .map(n => ({ name: n, val: map[n] }))
+      .filter(d => d.val > 0)
+      .sort((a, b) => b.val - a.val)
       .slice(0, 20);
+  }
+
+  function _buildFy27ClosedFromTDB(ouKey) {
+    return _tdbAgg(ouKey, 'acv27', 'acv').map(d => ({ name: d.name, acv: d.val }));
+  }
+
+  function _buildFy26Col(ouKey) {
+    const pipe26 = _tdbAgg(ouKey, 'open26', 'pipe');
+    const acv26  = _tdbAgg(ouKey, 'acv26',  'acv');
+    if (!pipe26.length && !acv26.length) return `<div class="td2-empty">No data</div>`;
+
+    const pipeRows = pipe26.map(d => `<tr><td>${d.name}</td><td>${fmtM(d.val)}</td></tr>`).join('');
+    const pipeTotal = pipe26.reduce((s,d) => s+d.val, 0);
+    const pipeTotalRow = `<tr class="td2-total"><td>Total (${pipe26.length})</td><td>${fmtM(pipeTotal)}</td></tr>`;
+
+    const acvRows = acv26.map(d => `<tr><td>${d.name}</td><td>${fmtM(d.val)}</td></tr>`).join('');
+    const acvTotal = acv26.reduce((s,d) => s+d.val, 0);
+    const acvTotalRow = `<tr class="td2-total"><td>Total (${acv26.length})</td><td>${fmtM(acvTotal)}</td></tr>`;
+
+    return `
+      <div class="td2-col-head">${quarter26} — Open Pipe</div>
+      <div class="td2-table-wrap" style="margin-bottom:12px">
+        <table class="td2-table">
+          <thead><tr><th style="text-align:left">Account</th><th>Pipe</th></tr></thead>
+          <tbody>${pipeRows}${pipeTotalRow}</tbody>
+        </table>
+      </div>
+      <div class="td2-col-head">${quarter26} — Closed</div>
+      <div class="td2-table-wrap">
+        <table class="td2-table">
+          <thead><tr><th style="text-align:left">Account</th><th>ACV</th></tr></thead>
+          <tbody>${acvRows}${acvTotalRow}</tbody>
+        </table>
+      </div>`;
   }
 
   el.innerHTML = ouKeys.map(ouKey => {
@@ -1078,7 +1112,7 @@ function _td2Render(payload) {
       <div class="td2-4col">
         <div class="td2-col">${_td2ClosedTable(fy27closed, quarter + ' — Top 20 ACV Closed')}</div>
         <div class="td2-col">${_td2PipeTable(fy27commit, ouKey, quarter + ' — IN/Commit')}</div>
-        <div class="td2-col"><div class="td2-col-head">— Coming Soon —</div><div class="td2-empty" style="padding:40px;text-align:center;color:var(--sf-meta);font-size:11px">Placeholder</div></div>
+        <div class="td2-col">${_buildFy26Col(ouKey)}</div>
         <div class="td2-col">${_td2PipeTable(fy27pipe, ouKey, quarter + ' — by Pipeline')}</div>
       </div>
     </div>`;
