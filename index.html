@@ -1065,30 +1065,24 @@ function _td2Render(payload) {
 
   function _buildFy26Col(ouKey) {
     const pipe26 = _tdbAgg(ouKey, 'open26', 'pipe');
-    const acv26  = _tdbAgg(ouKey, 'acv26',  'acv');
-    if (!pipe26.length && !acv26.length) return `<div class="td2-empty">No data</div>`;
+    if (!pipe26.length) return `<div class="td2-empty">No data</div>`;
+    // Mappa ACV26 per nome account (per lookup veloce)
+    const acv26map = {};
+    _tdbAgg(ouKey, 'acv26', 'acv').forEach(d => { acv26map[d.name] = d.val; });
 
-    const pipeRows = pipe26.map(d => `<tr><td>${d.name}</td><td>${fmtM(d.val)}</td></tr>`).join('');
-    const pipeTotal = pipe26.reduce((s,d) => s+d.val, 0);
-    const pipeTotalRow = `<tr class="td2-total"><td>Total (${pipe26.length})</td><td>${fmtM(pipeTotal)}</td></tr>`;
+    const rows = pipe26.map(d => {
+      const closed = acv26map[d.name] > 0 ? fmtM(acv26map[d.name]) : '<span style="color:var(--sf-meta)">—</span>';
+      return `<tr><td>${d.name}</td><td>${fmtM(d.val)}</td><td>${closed}</td></tr>`;
+    }).join('');
+    const totPipe = pipe26.reduce((s,d) => s+d.val, 0);
+    const totAcv  = pipe26.reduce((s,d) => s+(acv26map[d.name]||0), 0);
+    const totalRow = `<tr class="td2-total"><td>Total (${pipe26.length})</td><td>${fmtM(totPipe)}</td><td>${totAcv>0?fmtM(totAcv):'—'}</td></tr>`;
 
-    const acvRows = acv26.map(d => `<tr><td>${d.name}</td><td>${fmtM(d.val)}</td></tr>`).join('');
-    const acvTotal = acv26.reduce((s,d) => s+d.val, 0);
-    const acvTotalRow = `<tr class="td2-total"><td>Total (${acv26.length})</td><td>${fmtM(acvTotal)}</td></tr>`;
-
-    return `
-      <div class="td2-col-head">${quarter26} — Open Pipe</div>
-      <div class="td2-table-wrap" style="margin-bottom:12px">
-        <table class="td2-table">
-          <thead><tr><th style="text-align:left">Account</th><th>Pipe</th></tr></thead>
-          <tbody>${pipeRows}${pipeTotalRow}</tbody>
-        </table>
-      </div>
-      <div class="td2-col-head">${quarter26} — Closed</div>
+    return `<div class="td2-col-head">${quarter26} — Open Pipe &amp; Closed</div>
       <div class="td2-table-wrap">
         <table class="td2-table">
-          <thead><tr><th style="text-align:left">Account</th><th>ACV</th></tr></thead>
-          <tbody>${acvRows}${acvTotalRow}</tbody>
+          <thead><tr><th style="text-align:left">Account</th><th>Open Pipe</th><th>ACV Closed</th></tr></thead>
+          <tbody>${rows}${totalRow}</tbody>
         </table>
       </div>`;
   }
