@@ -930,6 +930,26 @@ function renderTopDeals2() {
   const el = document.getElementById('td2-content');
   if (!el) return;
 
+  // Pre-carica TDB (Opportunity) se non in cache — serve per il blocco Top ACV Closed
+  if (!TDB_CACHE[S.tf] || !TDB_CACHE[S.tf]['Opportunity']) {
+    const tf = S.tf;
+    const cbName = '_tdbPreCb_' + tf;
+    if (!window[cbName]) {
+      const script = document.createElement('script');
+      script.src = APPS_SCRIPT_URL + '?action=tdb&qtr=' + tf + '&logic=Opportunity&callback=' + cbName;
+      window[cbName] = function(data) {
+        delete window[cbName]; script.remove();
+        if (data && !data.error) {
+          if (!TDB_CACHE[tf]) TDB_CACHE[tf] = {};
+          TDB_CACHE[tf]['Opportunity'] = data;
+          // Ri-renderizza se siamo ancora sul tab topdeals con il payload in cache
+          if (TD2_CACHE[tf]) _td2Render(TD2_CACHE[tf]);
+        }
+      };
+      document.head.appendChild(script);
+    }
+  }
+
   const cached = TD2_CACHE[S.tf];
   if (cached) {
     _td2Render(cached);
@@ -1005,13 +1025,35 @@ function _td2Render(payload) {
     ? ['SOUTH', 'IBERIA', 'ITALY', 'EGM', 'MIDEAST']
     : [S.ou];
 
+  // Aggrega acv27 da TDB_CACHE se disponibile (già deployato, non richiede nuovo AS)
+  function _buildFy27ClosedFromTDB(ouKey) {
+    const tdb = TDB_CACHE[S.tf] && TDB_CACHE[S.tf]['Opportunity'];
+    if (!tdb) return [];
+    const allBands = ['lt100', '100to500', '500to1m', 'gt1m'];
+    const acvMap = {};
+    const ouData = (tdb.ous || []).find(o => o.key === ouKey);
+    if (!ouData) return [];
+    allBands.forEach(bk => {
+      const b = ouData.bands && ouData.bands[bk];
+      if (!b || !b.acv27) return;
+      b.acv27.forEach(d => {
+        acvMap[d.name] = (acvMap[d.name] || 0) + (d.acv || 0);
+      });
+    });
+    return Object.keys(acvMap)
+      .map(n => ({ name: n, acv: acvMap[n] }))
+      .filter(d => d.acv > 0)
+      .sort((a, b) => b.acv - a.acv)
+      .slice(0, 10);
+  }
+
   el.innerHTML = ouKeys.map(ouKey => {
     const ouRaw = (payload.ous && payload.ous[ouKey]) || {};
     // Retrocompatibilità: vecchio Apps Script ritorna array diretto invece di { fy27commit, ... }
     const isLegacy = Array.isArray(ouRaw);
     const legacyList = isLegacy ? ouRaw : [];
     const ou = isLegacy ? {} : ouRaw;
-    const fy27closed = ou.fy27closed || [];
+    const fy27closed = ou.fy27closed && ou.fy27closed.length ? ou.fy27closed : _buildFy27ClosedFromTDB(ouKey);
     const fy27commit = ou.fy27commit || legacyList;
     const fy27pipe   = ou.fy27pipe   || legacyList;
     const fy26commit = ou.fy26commit || [];
