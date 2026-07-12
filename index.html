@@ -1015,13 +1015,13 @@ function _td2PipeTable(list, ouKey, subtitle) {
 
 function _td2ClosedTable(list, quarter26) {
   if (!list || !list.length) return `<div class="td2-empty">No data</div>`;
-  const rows = list.map((d,i) => `<tr><td class="td2-rank">${i+1}</td><td>${d.name}</td><td>${fmtM(d.acv)}</td></tr>`).join('');
+  const rows = list.map(d => `<tr><td>${d.name}</td><td>${fmtM(d.acv)}</td></tr>`).join('');
   const total = list.reduce((s,d) => s+d.acv, 0);
-  const totalRow = `<tr class="td2-total"><td></td><td>Total (${list.length})</td><td>${fmtM(total)}</td></tr>`;
+  const totalRow = `<tr class="td2-total"><td>Total (${list.length})</td><td>${fmtM(total)}</td></tr>`;
   return `<div class="td2-col-head">${quarter26}</div>
     <div class="td2-table-wrap">
       <table class="td2-table">
-        <thead><tr><th style="text-align:center;width:24px">#</th><th style="text-align:left">Account</th><th>ACV</th></tr></thead>
+        <thead><tr><th style="text-align:left">Account</th><th>ACV</th></tr></thead>
         <tbody>${rows}${totalRow}</tbody>
       </table>
     </div>`;
