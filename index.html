@@ -1019,11 +1019,10 @@ function _td2Render(payload) {
     if (!fy27commit.length && !fy27pipe.length && !fy27closed.length) return '';
     const ouLabel = OU_LABELS[ouKey] || ouKey;
 
-    // Blocco Top Closed FY27 (riga bianca sopra)
-    const closedBlock = fy27closed.length ? `
-      <div class="td2-closed-block">
-        ${_td2ClosedTable(fy27closed, quarter + ' — Top 10 ACV Closed')}
-      </div>` : '';
+    // Blocco Top Closed FY27 (sempre visibile)
+    const closedBlock = `<div class="td2-closed-block">
+      ${_td2ClosedTable(fy27closed, quarter + ' — Top 10 ACV Closed')}
+    </div>`;
 
     return `<div class="td-ou-section">
       <div class="td-ou-title">${ouLabel}</div>
