@@ -1732,7 +1732,6 @@ function _renderRDTable(liveAll, q) {
     <th>${q} FY27 Pipe</th>
     <th>Pipe Growth Y/Y</th>
     <th>Pipe Coverage (Hist)</th>
-    <th># Deals in Commit</th>
     <th>BCO per AE</th>
     <th>FY27 Closed QTD</th>
     <th>Closed Y/Y</th>
@@ -1803,7 +1802,6 @@ function _renderRDTable(liveAll, q) {
         <td>${pipeStr}</td>
         <td class="${yoyPipeCls}">${b ? b.yoyPipe : '—'}</td>
         <td id="${covCellId}">${covDisplay}</td>
-        <td>${b && b.deals > 0 ? b.deals : '—'}</td>
         <td id="${bcoCellId}" data-default="${bcoStr}">${bcoCellHtml}</td>
         <td>${cqtdStr}</td>
         <td class="${yoyClosedCls}">${b ? b.yoyClosed : '—'}</td>
@@ -1845,7 +1843,6 @@ function _renderRDTable(liveAll, q) {
       <td>${k.pipeline ? fmtMStr(k.pipeline.val) : '—'}</td>
       <td>${k.pipe_growth ? k.pipe_growth.val : '—'}</td>
       <td id="${totalCovId}">${totalCovDisplay}</td>
-      <td>${k.deals_cmt ? k.deals_cmt.val : '—'}</td>
       <td>—</td>
       <td>${k.closed_qtd ? fmtMStr(k.closed_qtd.val) : '—'}</td>
       <td>${k.yoy_closed ? k.yoy_closed.val : (k.closed_qtd ? k.closed_qtd.delta || '—' : '—')}</td>
@@ -1899,7 +1896,6 @@ function _renderRDFallback(q) {
     <th>${q} FY27 Pipe</th>
     <th>Pipe Growth Y/Y</th>
     <th>Pipe Coverage (Hist)</th>
-    <th># Deals in Commit</th>
     <th>BCO per AE</th>
     <th>FY27 Closed QTD</th>
     <th>Closed Y/Y</th>
@@ -1931,7 +1927,6 @@ function _renderRDFallback(q) {
     <td>${fmtMStr(k.pipeline.val)}</td>
     <td>${k.pipe_growth.val}</td>
     <td>${covRaw}</td>
-    <td>${k.deals_cmt.val}</td>
     <td>—</td>
     <td>${fmtMStr(k.closed_qtd.val)}</td>
     <td>${k.closed_qtd.delta || '—'}</td>
