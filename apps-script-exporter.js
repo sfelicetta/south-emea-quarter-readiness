@@ -117,91 +117,64 @@ function doPost(e) {
   }
 }
 
-// ── # Deals in Commit — logica identica al Sheet ─────────────────────────────
-// Formula Sheet (es. SOUTH <$100K):
-//   SUMIFS(O:O, E:E, year, F:F, qtr, A:A, lvl2, K:K, "up to 100")
-//   + SUMIFS(O:O, E:E, year, F:F, qtr, A:A, lvl2, K:K, "<$0")
-// - Col A=0 LVL2 usato per SOUTH ("Marco Hernansanz")
-// - Col B=1 LVL3 usato per sub-OU (Iberia, Italy, EGM, Mideast)
-// - Col E=4 year, Col F=5 qtr, Col K=10 dealband
-// - <$100K somma due bande Openpipe: "up to 100" + "<$0"
-function buildDealsMap(ss) {
-  var opRows = ss.getSheetByName('Openpipe').getDataRange().getValues();
+// ── Legge colonna I (# Deals in Commit) direttamente per OU+band ─────────────
+// Scorre il tab riga per riga, trova la cella col I per ogni OU+band e Total
+// Restituisce { SOUTH: { '$0–$100K': 777, ..., Total: 899 }, IBERIA: {...}, ... }
+function readDealsColFromTab(ss, tabName) {
+  var sheet = ss.getSheetByName(tabName);
+  if (!sheet) return {};
+  var rows = sheet.getDataRange().getValues();
+  var result = {};
+  OU_KEYS.forEach(function(k) { result[k] = {}; });
 
-  // Openpipe col K (dealband) → display band
-  // <$100K bucket comprende sia "up to 100" che "<$0" (negative deals)
-  var K_TO_BAND = {
-    '<$0':       '$0–$100K',
-    'up to 100': '$0–$100K',
-    '100-500':   '$100–$500K',
-    '500-1m':    '$500K–$1M',
-    '1m+':       '$1M+',
-  };
+  var currentOU = null;
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    var cell = String(row[1] || '').trim();
+    var cellLo = cell.toLowerCase();
 
-  // deals[tf][ouKey][displayBand] = count
-  var deals = { CQ: {}, NQ: {} };
-  OU_KEYS.forEach(function(k) {
-    deals.CQ[k] = {}; deals.NQ[k] = {};
-    BAND_ORDER.forEach(function(b) { deals.CQ[k][b] = 0; deals.NQ[k][b] = 0; });
-  });
-
-  var IB_PAT = /emea\s*-\s*south\s*-\s*ib/i;
-
-  for (var i = 1; i < opRows.length; i++) {
-    var row = opRows[i];
-    var yr  = String(row[4] || '').trim();
-    var qtr = String(row[5] || '').trim();
-
-    var tf;
-    if      (yr === 'FY 2027' && qtr === 'FQ 2') tf = 'CQ';
-    else if (yr === 'FY 2027' && qtr === 'FQ 3') tf = 'NQ';
-    else continue;
-
-    var kBand = String(row[10] || '').trim().toLowerCase();
-    var dispBand = K_TO_BAND[kBand];
-    if (!dispBand) continue;
-
-    var lvl2 = String(row[0] || '').trim().toLowerCase(); // col A
-    var lvl3 = String(row[1] || '').trim().toLowerCase(); // col B
-
-    var optyCount = parseInt(row[14]) || 1; // col O = OPTY_COUNT
-
-    // SOUTH: col A = "marco hernansanz" (LVL2)
-    if (lvl2 === 'marco hernansanz') {
-      deals[tf]['SOUTH'][dispBand] += optyCount;
-    } else {
-      continue; // non è un record South
+    var secOU = mapOU(cell);
+    if (secOU && cellLo !== 'deal band' && cellLo !== 'total') {
+      currentOU = secOU; continue;
     }
+    if (!currentOU) continue;
 
-    // Sub-OU: col B (LVL3)
-    var subOU;
-    if      (IB_PAT.test(lvl3))                  subOU = 'IBERIA';
-    else if (lvl3 === 'vanessa fortarezza')        subOU = 'ITALY';
-    else if (lvl3 === 'ana alonso muñumer')        subOU = 'EGM';
-    else if (lvl3 === 'mohammed alkhotani')        subOU = 'MIDEAST';
+    var ouFromCol = mapOU(String(row[15] || row[14] || '').trim());
+    var ou = ouFromCol || currentOU;
+    if (!ou) continue;
+    if (ouFromCol) currentOU = ouFromCol;
 
-    if (subOU) deals[tf][subOU][dispBand] += optyCount;
+    // col I = index 8 (0-based)
+    var val = row[8];
+    var n = parseDeals(val);
+
+    if (cellLo === 'total') {
+      result[ou]['Total'] = n;
+    } else {
+      var canonBand = BAND_NORM[cellLo];
+      if (canonBand) result[ou][canonBand] = n;
+    }
   }
-
-  return deals;
+  return result;
 }
 
 // ── Payload principale ────────────────────────────────────────────────────────
 function buildPayload() {
   const ss   = SpreadsheetApp.openById(SHEET_ID);
   const meta = readMeta(ss);
-  const dealsMap = buildDealsMap(ss);
+  const dealsCQ = readDealsColFromTab(ss, TABS.CQ_OPP);
+  const dealsNQ = readDealsColFromTab(ss, TABS.NQ_OPP);
   return {
     generated_at:       new Date().toISOString(),
     timestamps:         meta.timestamps,
     forecast_overrides: meta.forecasts,
     CQ: {
-      OPP:   parseTab(ss, TABS.CQ_OPP,   dealsMap.CQ),
-      COMBO: parseTab(ss, TABS.CQ_COMBO, dealsMap.CQ),
+      OPP:   parseTab(ss, TABS.CQ_OPP,   dealsCQ),
+      COMBO: parseTab(ss, TABS.CQ_COMBO, dealsCQ),
     },
     NQ: {
-      OPP:   parseTab(ss, TABS.NQ_OPP,   dealsMap.NQ),
-      COMBO: parseTab(ss, TABS.NQ_COMBO, dealsMap.NQ),
+      OPP:   parseTab(ss, TABS.NQ_OPP,   dealsNQ),
+      COMBO: parseTab(ss, TABS.NQ_COMBO, dealsNQ),
     },
   };
 }
@@ -295,11 +268,6 @@ function parseTab(ss, tabName, dealsMap) {
     // Riga Total
     if (cellLo === 'total') {
       const cov = parseCov(row[C.cov]);
-      // Somma deals da tutti i band per questo OU
-      var totalDeals = 0;
-      if (dealsMap && dealsMap[ou]) {
-        BAND_ORDER.forEach(function(b) { totalDeals += (dealsMap[ou][b] || 0); });
-      }
       ouData[ou].total = {
         acvPY:      nM(row[2]),
         forecast:   nM(row[C.fcst]),
@@ -308,7 +276,7 @@ function parseTab(ss, tabName, dealsMap) {
         pipeGrowth: nPct(row[C.pg]),
         pipeCov:    cov.current,
         histCov:    cov.hist,
-        deals:      totalDeals,
+        deals:      (dealsMap && dealsMap[ou] && dealsMap[ou]['Total']) || parseDeals(row[C.deals]),
         bco:        parseBCO(row[C.bco]),
         closedQTD:  nM(row[C.cqtd]),
         yoyClosed:  nPct(row[C.ycl]),
@@ -351,7 +319,7 @@ function parseTab(ss, tabName, dealsMap) {
       yoyPipe:   nPct(row[C.pg]),
       pipeCov:   cov.current,
       histCov:   cov.hist,
-      deals:     (dealsMap && dealsMap[ou] && dealsMap[ou][canonBand]) || 0,
+      deals:     (dealsMap && dealsMap[ou] && dealsMap[ou][canonBand]) || parseDeals(row[C.deals]),
       bco:       parseBCO(row[C.bco]),
       closedQTD: nM(row[C.cqtd]),
       yoyClosed: nPct(row[C.ycl]),
