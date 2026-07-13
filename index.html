@@ -1347,22 +1347,12 @@ function setTDBFilter(dim, val, btn) {
   const cls = dim === 'tf' ? '.tdb-tf' : dim === 'logic' ? '.tdb-logic' : '.tdb-band';
   document.querySelectorAll(cls).forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  // NQ + GlobalCompany non esiste nel Sheet — nessun altro snap necessario
   renderTopDealsDB();
 }
 
 function renderTopDealsDB() {
   const { tf, logic, band } = TDB_STATE;
   const el = document.getElementById('tdb-content');
-
-  // NQ + GlobalCompany non esiste nel Sheet
-  if (tf === 'NQ' && logic === 'GlobalCompany') {
-    el.innerHTML = `<div class="tdb-notice">
-      <strong>Global Company data is not available for NQ (Q3 FY27).</strong><br>
-      Switch to <strong>Current Quarter</strong> to see Global Company pipeline.
-    </div>`;
-    return;
-  }
 
   // Controlla cache
   const cached = TDB_CACHE[tf] && TDB_CACHE[tf][logic];
