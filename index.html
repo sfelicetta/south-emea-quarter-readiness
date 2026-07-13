@@ -2590,6 +2590,8 @@ async function loadLiveData() {
         RD_CACHE[tf]['COMBO'] = data[tf]['COMBO'];
       });
       if (data.timestamps) TIMESTAMPS = data.timestamps;
+      var _dbg = data['CQ'] && data['CQ']['OPP'] && data['CQ']['OPP']['SOUTH'];
+      if (_dbg) console.log('[RD DEBUG] SOUTH deals_cmt:', _dbg.kpis && _dbg.kpis.deals_cmt, '| $0-100K deals:', _dbg.bands && _dbg.bands[1] && _dbg.bands[1].deals);
       resolve(true);
     };
     script.onerror = function() { clearTimeout(timeout); delete window[cbName]; script.remove(); resolve(false); };
