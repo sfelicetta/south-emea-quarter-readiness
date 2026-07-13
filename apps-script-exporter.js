@@ -164,9 +164,11 @@ function buildDealsMap(ss) {
     var lvl2 = String(row[0] || '').trim().toLowerCase(); // col A
     var lvl3 = String(row[1] || '').trim().toLowerCase(); // col B
 
+    var optyCount = parseInt(row[14]) || 1; // col O = OPTY_COUNT
+
     // SOUTH: col A = "marco hernansanz" (LVL2)
     if (lvl2 === 'marco hernansanz') {
-      deals[tf]['SOUTH'][dispBand]++;
+      deals[tf]['SOUTH'][dispBand] += optyCount;
     } else {
       continue; // non è un record South
     }
@@ -178,7 +180,7 @@ function buildDealsMap(ss) {
     else if (lvl3 === 'ana alonso muñumer')        subOU = 'EGM';
     else if (lvl3 === 'mohammed alkhotani')        subOU = 'MIDEAST';
 
-    if (subOU) deals[tf][subOU][dispBand]++;
+    if (subOU) deals[tf][subOU][dispBand] += optyCount;
   }
 
   return deals;
@@ -629,10 +631,6 @@ function lookupAccounts(q, qtr, ou) {
 function buildTDB(qtr, logic) {
   var fiscalQtr  = qtr === 'NQ' ? 'FQ 3' : 'FQ 2';
   var quarter    = qtr === 'NQ' ? 'Q3 FY27' : 'Q2 FY27';
-
-  if (qtr === 'NQ' && logic === 'GlobalCompany') {
-    return { quarter: quarter, logic: logic, ous: [], notAvailable: true };
-  }
 
   var ss = SpreadsheetApp.openById(SHEET_ID);
 
