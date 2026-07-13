@@ -1748,8 +1748,6 @@ function render() {
   }
   // Non ri-fetchare se refreshData() è già in corso
   if (!_isRefreshing) _fetchRDLive();
-  // Pre-load deals in background (no re-render here, sarà fatto dentro _fetchRDLive callback)
-  loadDeals(null);
 
   // ── Opportunity lists per band — only on OPP view ────────────────────────────
   const oppWrap = document.getElementById('rd-opplists-wrap');
@@ -1783,14 +1781,10 @@ function _fetchRDLive() {
       document.getElementById('ts-hc').textContent      = data.timestamps.hc       || '—';
     }
     const lv = S.lv;
-    const _reRenderIfActive = function() {
-      if (S.tf === tf && (document.getElementById('page-readiness') || {}).classList && document.getElementById('page-readiness').classList.contains('active')) {
-        const livePayload = RD_CACHE[tf] && RD_CACHE[tf][lv];
-        if (livePayload) _renderRDTable(livePayload, tf === 'NQ' ? 'Q3' : 'Q2');
-      }
-    };
-    _reRenderIfActive();
-    loadDeals(_reRenderIfActive);
+    if (S.tf === tf && (document.getElementById('page-readiness') || {}).classList && document.getElementById('page-readiness').classList.contains('active')) {
+      const livePayload = RD_CACHE[tf] && RD_CACHE[tf][lv];
+      if (livePayload) _renderRDTable(livePayload, tf === 'NQ' ? 'Q3' : 'Q2');
+    }
   };
   script.onerror = function() { delete window[cbName]; script.remove(); };
   document.head.appendChild(script);
@@ -1893,7 +1887,7 @@ function _renderRDTable(liveAll, q) {
         <td>${pipeStr}</td>
         <td class="${yoyPipeCls}">${b ? b.yoyPipe : '—'}</td>
         <td id="${covCellId}">${covDisplay}</td>
-        <td>${_dealsVal(S.tf, ouKey, bk)}</td>
+        <td>${b && b.deals > 0 ? b.deals.toLocaleString() : '—'}</td>
         <td id="${bcoCellId}" data-default="${bcoStr}">${bcoCellHtml}</td>
         <td>${cqtdStr}</td>
         <td class="${yoyClosedCls}">${b ? b.yoyClosed : '—'}</td>
@@ -1935,7 +1929,7 @@ function _renderRDTable(liveAll, q) {
       <td>${k.pipeline ? fmtMStr(k.pipeline.val) : '—'}</td>
       <td>${k.pipe_growth ? k.pipe_growth.val : '—'}</td>
       <td id="${totalCovId}">${totalCovDisplay}</td>
-      <td>${_dealsVal(S.tf, ouKey, 'Total')}</td>
+      <td>${k.deals_cmt && k.deals_cmt.val > 0 ? k.deals_cmt.val.toLocaleString() : '—'}</td>
       <td>—</td>
       <td>${k.closed_qtd ? fmtMStr(k.closed_qtd.val) : '—'}</td>
       <td>${k.yoy_closed ? k.yoy_closed.val : (k.closed_qtd ? k.closed_qtd.delta || '—' : '—')}</td>
@@ -2567,34 +2561,6 @@ function renderQBR() {
 // Incolla qui l'URL del tuo Google Apps Script deployment dopo averlo configurato.
 // Finché è vuoto, la dashboard usa i dati mock definiti sopra.
 const APPS_SCRIPT_URL = 'https://script.google.com/a/macros/salesforce.com/s/AKfycbyXpycJN_etEUcIejBps7QLJEx40wlDkVDu4gG7iVD1H_CwmSK6vN-emF4O9gfgTfSEXw/exec';
-const DEALS_SCRIPT_URL = 'https://script.google.com/a/macros/salesforce.com/s/AKfycbyMVZwZ39Cx-MW2rtxwltoHqyrUuBtHclGFzYjJUWitGc0n-IefU9fvUWB2cMR8fVCe/exec';
-
-// Cache deals: { CQ: { SOUTH: { '$0–$100K': 777, ... , Total: 899 }, ... }, NQ: {...} }
-const DEALS_CACHE = {};
-
-function loadDeals(cb) {
-  if (DEALS_CACHE.loaded) { if (cb) cb(); return; }
-  const script = document.createElement('script');
-  script.src = DEALS_SCRIPT_URL + '?callback=_dealsCb';
-  window['_dealsCb'] = function(data) {
-    delete window['_dealsCb']; script.remove();
-    if (data && data.CQ) {
-      DEALS_CACHE.CQ = data.CQ;
-      DEALS_CACHE.NQ = data.NQ;
-      DEALS_CACHE.loaded = true;
-    }
-    if (cb) cb();
-  };
-  script.onerror = function() { script.remove(); if (cb) cb(); };
-  document.head.appendChild(script);
-}
-
-function _dealsVal(tf, ouKey, band) {
-  var d = DEALS_CACHE[tf] && DEALS_CACHE[tf][ouKey];
-  if (!d) return '—';
-  var n = d[band];
-  return (n !== undefined && n > 0) ? n.toLocaleString() : '—';
-}
 
 // ── REFRESH ───────────────────────────────────────────────────────────────────
 let TIMESTAMPS = {
