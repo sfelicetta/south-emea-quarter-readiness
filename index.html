@@ -1806,7 +1806,7 @@ const RD_OU_LABELS = { SOUTH:'EMEA South', IBERIA:'Iberia', ITALY:'Italy', EGM:'
 
 function _rdOuList() {
   if (S.ou === 'SOUTH') return ['SOUTH'];
-  return ['SOUTH', S.ou];
+  return [S.ou];
 }
 
 function _renderRDTable(liveAll, q) {
