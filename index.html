@@ -1773,6 +1773,8 @@ function _fetchRDLive() {
     if (!RD_CACHE[tf]) RD_CACHE[tf] = {};
     RD_CACHE[tf]['OPP']   = data[tf] && data[tf]['OPP'];
     RD_CACHE[tf]['COMBO'] = data[tf] && data[tf]['COMBO'];
+    var _dbg = data[tf] && data[tf]['OPP'] && data[tf]['OPP']['SOUTH'];
+    if (_dbg) console.log('[RD DEBUG] SOUTH deals_cmt:', _dbg.kpis && _dbg.kpis.deals_cmt, '| band0 deals:', _dbg.bands && _dbg.bands[1] && _dbg.bands[1].deals);
     if (data.timestamps) {
       TIMESTAMPS = data.timestamps;
       document.getElementById('ts-snow').textContent    = data.timestamps.snowflake || '—';
