@@ -1766,7 +1766,7 @@ function _fetchRDLive() {
   const cbName = '_rdCb_' + tf + '_' + S.lv;
   if (window[cbName]) return; // fetch già in corso
   const script = document.createElement('script');
-  script.src = APPS_SCRIPT_URL + '?action=readiness&callback=' + cbName;
+  script.src = APPS_SCRIPT_URL + '?action=readiness&callback=' + cbName + '&_=' + Date.now();
   window[cbName] = function(data) {
     delete window[cbName]; script.remove();
     if (!data || data.error) return;
@@ -2574,7 +2574,7 @@ async function loadLiveData() {
   return new Promise(function(resolve) {
     const cbName = '_rdInitCb';
     const script = document.createElement('script');
-    script.src = APPS_SCRIPT_URL + '?action=readiness&callback=' + cbName;
+    script.src = APPS_SCRIPT_URL + '?action=readiness&callback=' + cbName + '&_=' + Date.now();
     const timeout = setTimeout(function() {
       delete window[cbName]; script.remove(); resolve(false);
     }, 12000);
