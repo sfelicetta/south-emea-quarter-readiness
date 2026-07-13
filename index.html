@@ -1109,7 +1109,10 @@ function _td2Render(payload) {
     const ou = isLegacy ? {} : ouRaw;
     const fy27closed = ou.fy27closed && ou.fy27closed.length ? ou.fy27closed : _buildFy27ClosedFromTDB(ouKey);
     const fy27commit = ou.fy27commit || legacyList;
-    const fy27pipe = ou.fy27pipe || [];
+    // fy27pipe: top 20 per Open Pipe FY27 da TDB (open27), fallback su payload AS
+    const fy27pipeRaw = ou.fy27pipe && ou.fy27pipe.length ? ou.fy27pipe : null;
+    const fy27pipeFromTDB = _tdbAgg(ouKey, 'open27', 'pipe').map(d => ({ name: d.name, pipe: d.val, in_: 0, upp: 0, upm: 0 }));
+    const fy27pipe = fy27pipeRaw || fy27pipeFromTDB;
     const fy26commit = ou.fy26commit || [];
     const fy26closed = ou.fy26closed || [];
     if (!fy27commit.length && !fy27pipe.length && !fy27closed.length) return '';
