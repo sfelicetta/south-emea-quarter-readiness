@@ -1819,6 +1819,7 @@ function _renderRDTable(liveAll, q) {
     <th>BCO per AE</th>
     <th>FY27 Closed QTD</th>
     <th>Closed Y/Y</th>
+    <th>Open Opps</th>
   </tr>`;
 
   const sectionsHtml = _rdOuList().map(ouKey => {
@@ -1889,6 +1890,7 @@ function _renderRDTable(liveAll, q) {
         <td id="${bcoCellId}" data-default="${bcoStr}">${bcoCellHtml}</td>
         <td>${cqtdStr}</td>
         <td class="${yoyClosedCls}">${b ? b.yoyClosed : '—'}</td>
+        <td>${b && b.deals > 0 ? b.deals.toLocaleString() : '—'}</td>
       </tr>`;
     }).join('');
 
@@ -1930,6 +1932,7 @@ function _renderRDTable(liveAll, q) {
       <td>—</td>
       <td>${k.closed_qtd ? fmtMStr(k.closed_qtd.val) : '—'}</td>
       <td>${k.yoy_closed ? k.yoy_closed.val : (k.closed_qtd ? k.closed_qtd.delta || '—' : '—')}</td>
+      <td>${k.deals_cmt && k.deals_cmt.val > 0 ? k.deals_cmt.val.toLocaleString() : '—'}</td>
     </tr>`;
 
     // QBR Frcst row
@@ -1983,6 +1986,7 @@ function _renderRDFallback(q) {
     <th>BCO per AE</th>
     <th>FY27 Closed QTD</th>
     <th>Closed Y/Y</th>
+    <th>Open Opps</th>
   </tr>`;
 
   const bandRows = BAND_KEYS.map(bk => {
@@ -1997,7 +2001,7 @@ function _renderRDFallback(q) {
       <td class="${yoyClass}">${b.yoy}</td>
       <td>${fmtM(b.pipe)}</td>
       <td class="${yoyClass}">${b.yoy}</td>
-      <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
+      <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
     </tr>`;
   }).join('');
 
@@ -2014,6 +2018,7 @@ function _renderRDFallback(q) {
     <td>—</td>
     <td>${fmtMStr(k.closed_qtd.val)}</td>
     <td>${k.closed_qtd.delta || '—'}</td>
+    <td>—</td>
   </tr>`;
 
   document.getElementById('rd-table-wrap').innerHTML = `
