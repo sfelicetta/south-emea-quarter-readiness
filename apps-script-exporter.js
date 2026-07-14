@@ -73,6 +73,8 @@ function doGet(e) {
       const qtr = (e && e.parameter && e.parameter.qtr) || 'CQ';
       const ou  = (e && e.parameter && e.parameter.ou)  || 'SOUTH';
       payload = buildTopDeals2(qtr, ou);
+    } else if (action === 'deals') {
+      payload = buildDeals();
     } else {
       payload = { error: 'unknown action' };
     }
@@ -162,19 +164,17 @@ function readDealsColFromTab(ss, tabName) {
 function buildPayload() {
   const ss   = SpreadsheetApp.openById(SHEET_ID);
   const meta = readMeta(ss);
-  const dealsCQ = readDealsColFromTab(ss, TABS.CQ_OPP);
-  const dealsNQ = readDealsColFromTab(ss, TABS.NQ_OPP);
   return {
     generated_at:       new Date().toISOString(),
     timestamps:         meta.timestamps,
     forecast_overrides: meta.forecasts,
     CQ: {
-      OPP:   parseTab(ss, TABS.CQ_OPP,   dealsCQ),
-      COMBO: parseTab(ss, TABS.CQ_COMBO, dealsCQ),
+      OPP:   parseTab(ss, TABS.CQ_OPP,   null),
+      COMBO: parseTab(ss, TABS.CQ_COMBO, null),
     },
     NQ: {
-      OPP:   parseTab(ss, TABS.NQ_OPP,   dealsNQ),
-      COMBO: parseTab(ss, TABS.NQ_COMBO, dealsNQ),
+      OPP:   parseTab(ss, TABS.NQ_OPP,   null),
+      COMBO: parseTab(ss, TABS.NQ_COMBO, null),
     },
   };
 }
@@ -944,6 +944,66 @@ function deleteComment(id) {
     }
   }
   return { ok: false, error: 'not found' };
+}
+
+// ── Deals-only endpoint (action=deals) — fast, reads only col I ─────────────
+// Returns { CQ: { SOUTH: { bands: {...}, total: N }, ... }, NQ: {...} }
+function buildDeals() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  return {
+    CQ: _readDealsFromTab(ss, TABS.CQ_OPP),
+    NQ: _readDealsFromTab(ss, TABS.NQ_OPP),
+  };
+}
+
+function _readDealsFromTab(ss, tabName) {
+  var sheet = ss.getSheetByName(tabName);
+  if (!sheet) return {};
+  var rows = sheet.getDataRange().getValues();
+
+  // Detect shifted layout (NQ has extra "Top Down" column)
+  var dealsCol = 8; // default col I (0-based)
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i][1] || '').trim().toLowerCase() === 'deal band') {
+      var h3 = String(rows[i][3] || '').toLowerCase();
+      if (h3.indexOf('bottom') >= 0 || h3.indexOf('top') >= 0) {
+        dealsCol = 9;
+      }
+      break;
+    }
+  }
+
+  var result = {};
+  var currentOU = null;
+
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    var cell = String(row[1] || '').trim();
+    var cellLo = cell.toLowerCase();
+
+    // OU header
+    var secOU = mapOU(cell);
+    if (secOU && cellLo !== 'deal band' && cellLo !== 'total') {
+      currentOU = secOU;
+      if (!result[currentOU]) result[currentOU] = { bands: {}, total: 0 };
+      continue;
+    }
+    if (!currentOU) continue;
+    if (!result[currentOU]) result[currentOU] = { bands: {}, total: 0 };
+
+    // Read the deals cell
+    var raw = String(row[dealsCol] || '');
+    var m = raw.match(/:\s*([\d,]+)/);
+    var n = m ? parseInt(m[1].replace(/,/g, ''), 10) : 0;
+
+    if (cellLo === 'total') {
+      result[currentOU].total = n;
+    } else {
+      var band = BAND_NORM[cellLo];
+      if (band) result[currentOU].bands[band] = n;
+    }
+  }
+  return result;
 }
 
 // ── Test ──────────────────────────────────────────────────────────────────────

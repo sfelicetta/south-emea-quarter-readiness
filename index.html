@@ -2619,6 +2619,33 @@ async function loadLiveData() {
   });
 }
 
+function loadLiveDeals() {
+  const cbName = '_rdDealsCb';
+  const script = document.createElement('script');
+  script.src = APPS_SCRIPT_URL + '?action=deals&callback=' + cbName + '&_=' + Date.now();
+  const timeout = setTimeout(function() {
+    delete window[cbName]; script.remove();
+  }, 15000);
+  window[cbName] = function(data) {
+    clearTimeout(timeout); delete window[cbName]; script.remove();
+    if (!data || data.error) return;
+    ['CQ','NQ'].forEach(function(tf) {
+      if (!data[tf]) return;
+      if (!OPEN_OPPS[tf]) OPEN_OPPS[tf] = {};
+      Object.keys(data[tf]).forEach(function(ouKey) {
+        var d = data[tf][ouKey];
+        if (!d) return;
+        OPEN_OPPS[tf][ouKey] = d.bands || {};
+        OPEN_OPPS[tf][ouKey]['Total'] = d.total || 0;
+      });
+    });
+    console.log('[RD] Live deals loaded:', JSON.stringify(OPEN_OPPS.CQ.SOUTH));
+    render();
+  };
+  script.onerror = function() { clearTimeout(timeout); delete window[cbName]; script.remove(); };
+  document.head.appendChild(script);
+}
+
 let _isRefreshing = false;
 
 function _setLiveBadge(state, ts) {
@@ -2659,6 +2686,7 @@ async function refreshData() {
     document.getElementById('ts-hc').textContent      = TIMESTAMPS.hc       || '—';
     _setLiveBadge(ok ? 'live' : 'offline', ok ? 'Live · Updated ' + ts : null);
     render();
+    loadLiveDeals();
   } catch(e) {
     console.error('refreshData error:', e);
     _setLiveBadge('offline');
