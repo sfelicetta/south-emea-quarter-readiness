@@ -2579,7 +2579,7 @@ async function loadLiveData() {
     script.src = APPS_SCRIPT_URL + '?action=readiness&callback=' + cbName + '&_=' + Date.now();
     const timeout = setTimeout(function() {
       delete window[cbName]; script.remove(); resolve(false);
-    }, 12000);
+    }, 30000);
     window[cbName] = function(data) {
       clearTimeout(timeout); delete window[cbName]; script.remove();
       if (!data || data.error) { resolve(false); return; }
