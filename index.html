@@ -584,6 +584,24 @@ const COV = {
   },
 };
 
+// Open Opps per OU per band — valori da col I Sheet, aggiornato 14 Jul 2026
+const OPEN_OPPS = {
+  CQ: {
+    SOUTH:   { '$0–$100K':777, '$100–$500K':109, '$500K–$1M':9,  '$1M+':4,  Total:899  },
+    IBERIA:  { '$0–$100K':208, '$100–$500K':35,  '$500K–$1M':3,  '$1M+':0,  Total:246  },
+    ITALY:   { '$0–$100K':221, '$100–$500K':29,  '$500K–$1M':1,  '$1M+':1,  Total:252  },
+    EGM:     { '$0–$100K':246, '$100–$500K':16,  '$500K–$1M':3,  '$1M+':1,  Total:266  },
+    MIDEAST: { '$0–$100K':91,  '$100–$500K':28,  '$500K–$1M':2,  '$1M+':2,  Total:123  },
+  },
+  NQ: {
+    SOUTH:   { '$0–$100K':1869,'$100–$500K':336, '$500K–$1M':18, '$1M+':5,  Total:2228 },
+    IBERIA:  { '$0–$100K':492, '$100–$500K':54,  '$500K–$1M':3,  '$1M+':1,  Total:550  },
+    ITALY:   { '$0–$100K':401, '$100–$500K':82,  '$500K–$1M':4,  '$1M+':1,  Total:488  },
+    EGM:     { '$0–$100K':677, '$100–$500K':119, '$500K–$1M':6,  '$1M+':3,  Total:805  },
+    MIDEAST: { '$0–$100K':286, '$100–$500K':79,  '$500K–$1M':5,  '$1M+':0,  Total:370  },
+  },
+};
+
 const DATA = {
   CQ: {
     OPP: {
@@ -1892,7 +1910,7 @@ function _renderRDTable(liveAll, q) {
         <td id="${bcoCellId}" data-default="${bcoStr}">${bcoCellHtml}</td>
         <td>${cqtdStr}</td>
         <td class="${yoyClosedCls}">${b ? b.yoyClosed : '—'}</td>
-        <td>${b && b.deals > 0 ? b.deals.toLocaleString() : '—'}</td>
+        <td>${(OPEN_OPPS[S.tf] && OPEN_OPPS[S.tf][ouKey] && OPEN_OPPS[S.tf][ouKey][bk] > 0) ? OPEN_OPPS[S.tf][ouKey][bk].toLocaleString() : (b && b.deals > 0 ? b.deals.toLocaleString() : '—')}</td>
       </tr>`;
     }).join('');
 
@@ -1934,7 +1952,7 @@ function _renderRDTable(liveAll, q) {
       <td>—</td>
       <td>${k.closed_qtd ? fmtMStr(k.closed_qtd.val) : '—'}</td>
       <td>${k.yoy_closed ? k.yoy_closed.val : (k.closed_qtd ? k.closed_qtd.delta || '—' : '—')}</td>
-      <td>${k.deals_cmt && k.deals_cmt.val > 0 ? k.deals_cmt.val.toLocaleString() : '—'}</td>
+      <td>${(OPEN_OPPS[S.tf] && OPEN_OPPS[S.tf][ouKey] && OPEN_OPPS[S.tf][ouKey]['Total'] > 0) ? OPEN_OPPS[S.tf][ouKey]['Total'].toLocaleString() : (k.deals_cmt && k.deals_cmt.val > 0 ? k.deals_cmt.val.toLocaleString() : '—')}</td>
     </tr>`;
 
     // QBR Frcst row
@@ -2003,7 +2021,7 @@ function _renderRDFallback(q) {
       <td class="${yoyClass}">${b.yoy}</td>
       <td>${fmtM(b.pipe)}</td>
       <td class="${yoyClass}">${b.yoy}</td>
-      <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
+      <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>${(OPEN_OPPS[S.tf] && OPEN_OPPS[S.tf][S.ou] && OPEN_OPPS[S.tf][S.ou][bk] > 0) ? OPEN_OPPS[S.tf][S.ou][bk].toLocaleString() : '—'}</td>
     </tr>`;
   }).join('');
 
@@ -2020,7 +2038,7 @@ function _renderRDFallback(q) {
     <td>—</td>
     <td>${fmtMStr(k.closed_qtd.val)}</td>
     <td>${k.closed_qtd.delta || '—'}</td>
-    <td>—</td>
+    <td>${(OPEN_OPPS[S.tf] && OPEN_OPPS[S.tf][S.ou] && OPEN_OPPS[S.tf][S.ou]['Total'] > 0) ? OPEN_OPPS[S.tf][S.ou]['Total'].toLocaleString() : '—'}</td>
   </tr>`;
 
   document.getElementById('rd-table-wrap').innerHTML = `
