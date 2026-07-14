@@ -346,8 +346,9 @@
     .rd-table .rd-delta td { font-weight:700; font-style:italic; }
     .rd-table .rd-delta td.rd-delta-neg { color:var(--sf-danger); }
     .rd-table .rd-delta td.rd-delta-pos { color:var(--sf-success); }
-    .rd-col-pos { color:var(--sf-success); }
-    .rd-col-neg { color:var(--sf-danger); }
+    .rd-col-pos  { color:var(--sf-success); }
+    .rd-col-warn { color:#f4a124; font-weight:600; }
+    .rd-col-neg  { color:var(--sf-danger); }
 
     /* ── FOOTER ── */
     .dash-footer { margin: 4px 24px 16px; padding: 9px 14px; background: #fff; border: 1px solid var(--sf-border); border-radius: var(--r); display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
@@ -1664,7 +1665,7 @@ function _updateFcstTotal(ouKey) {
       var yoyEl = document.getElementById(totalEl.dataset.yoyId);
       if (yoyEl) {
         yoyEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(0) + '%';
-        yoyEl.className = pct >= 0 ? 'rd-col-pos' : 'rd-col-neg';
+        yoyEl.className = pct < 0 ? 'rd-col-neg' : (pct >= 10 ? 'rd-col-pos' : 'rd-col-warn');
       }
     }
     // Update Total Pipe Coverage: pipe / (forecast - closedQTD)
@@ -1689,7 +1690,7 @@ function _updateBandYoy(inp) {
     var pct = ((fcst - acv) / acv * 100);
     var sign = pct >= 0 ? '+' : '';
     el.textContent = sign + pct.toFixed(0) + '%';
-    el.className = pct >= 0 ? 'rd-col-pos' : 'rd-col-neg';
+    el.className = pct < 0 ? 'rd-col-neg' : (pct >= 10 ? 'rd-col-pos' : 'rd-col-warn');
   }
 }
 
@@ -1853,7 +1854,7 @@ function _renderRDTable(liveAll, q) {
       const b = bands.find(x => x.band === bk);
       const isLt100 = (bk === '$0–$100K');
       const savedFcst = BAND_FORECAST_OVERRIDES[S.tf + '_' + S.lv + '_' + ouKey + '_' + bk] || '';
-      function _pctCls(v) { if (!v || v==='—') return ''; var n=parseFloat(String(v).replace('%','')); return isNaN(n)?'':(n>=0?'rd-col-pos':'rd-col-neg'); }
+      function _pctCls(v) { if (!v || v==='—') return ''; var n=parseFloat(String(v).replace('%','')); return isNaN(n)?'':(n<0?'rd-col-neg':(n>=10?'rd-col-pos':'rd-col-warn')); }
       const yoyFcstCls   = _pctCls(b && b.yoyFcst);
       const yoyPipeCls   = _pctCls(b && b.yoyPipe);
       const yoyClosedCls = _pctCls(b && b.yoyClosed);
@@ -1929,7 +1930,7 @@ function _renderRDTable(liveAll, q) {
     const totalYoyVal   = (totalOverride !== null && totalAcvPY > 0)
       ? ((totalOverride - totalAcvPY) / totalAcvPY * 100).toFixed(0) + '%'
       : (k.yoy ? k.yoy.val : '—');
-    const totalYoyCls   = (function(v){ if(!v||v==='—') return ''; var n=parseFloat(v); return isNaN(n)?'':(n>=0?'rd-col-pos':'rd-col-neg'); })(totalYoyVal);
+    const totalYoyCls   = (function(v){ if(!v||v==='—') return ''; var n=parseFloat(v); return isNaN(n)?'':(n<0?'rd-col-neg':(n>=10?'rd-col-pos':'rd-col-warn')); })(totalYoyVal);
     const totalFcstForCov = totalOverride !== null ? totalOverride : (k.forecast ? (_parseFcstVal(fmtMStr(k.forecast.val)) || 0) : 0);
     const _totalCovCalc = (function(f, p, c, hist) {
       if (f > 0 && p > 0) { var rem = f - c; if (rem <= 0) return '—'; var cv = (p/rem).toFixed(1)+'x'; return hist !== '—' ? cv+' ('+hist+')' : cv; }
@@ -2013,7 +2014,8 @@ function _renderRDFallback(q) {
     const b = bands.find(x => x.band === bk);
     if (!b) return '';
     const savedFcst = BAND_FORECAST_OVERRIDES[bandFcstKey(bk)] || '';
-    const yoyClass = b.dir === 'neg' ? 'rd-col-neg' : b.dir === 'pos' ? 'rd-col-pos' : '';
+    const _yoyNum = parseFloat(String(b.yoy).replace('%',''));
+    const yoyClass = isNaN(_yoyNum) ? '' : (_yoyNum < 0 ? 'rd-col-neg' : (_yoyNum >= 10 ? 'rd-col-pos' : 'rd-col-warn'));
     return `<tr>
       <td>${BAND_LABELS[bk]}</td>
       <td>${fmtM(b.fcst)}</td>
