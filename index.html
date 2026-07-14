@@ -585,24 +585,6 @@ const COV = {
   },
 };
 
-// Open Opps per OU per band — valori da col I Sheet, aggiornato 14 Jul 2026
-const OPEN_OPPS = {
-  CQ: {
-    SOUTH:   { '$0–$100K':777, '$100–$500K':109, '$500K–$1M':9,  '$1M+':4,  Total:899  },
-    IBERIA:  { '$0–$100K':208, '$100–$500K':35,  '$500K–$1M':3,  '$1M+':0,  Total:246  },
-    ITALY:   { '$0–$100K':221, '$100–$500K':29,  '$500K–$1M':1,  '$1M+':1,  Total:252  },
-    EGM:     { '$0–$100K':246, '$100–$500K':16,  '$500K–$1M':3,  '$1M+':1,  Total:266  },
-    MIDEAST: { '$0–$100K':91,  '$100–$500K':28,  '$500K–$1M':2,  '$1M+':2,  Total:123  },
-  },
-  NQ: {
-    SOUTH:   { '$0–$100K':1869,'$100–$500K':336, '$500K–$1M':18, '$1M+':5,  Total:2228 },
-    IBERIA:  { '$0–$100K':492, '$100–$500K':54,  '$500K–$1M':3,  '$1M+':1,  Total:550  },
-    ITALY:   { '$0–$100K':401, '$100–$500K':82,  '$500K–$1M':4,  '$1M+':1,  Total:488  },
-    EGM:     { '$0–$100K':677, '$100–$500K':119, '$500K–$1M':6,  '$1M+':3,  Total:805  },
-    MIDEAST: { '$0–$100K':286, '$100–$500K':79,  '$500K–$1M':5,  '$1M+':0,  Total:370  },
-  },
-};
-
 const DATA = {
   CQ: {
     OPP: {
@@ -1792,8 +1774,6 @@ function _fetchRDLive() {
     if (!RD_CACHE[tf]) RD_CACHE[tf] = {};
     RD_CACHE[tf]['OPP']   = data[tf] && data[tf]['OPP'];
     RD_CACHE[tf]['COMBO'] = data[tf] && data[tf]['COMBO'];
-    var _dbg = data[tf] && data[tf]['OPP'] && data[tf]['OPP']['SOUTH'];
-    if (_dbg) console.log('[RD DEBUG] SOUTH deals_cmt:', _dbg.kpis && _dbg.kpis.deals_cmt, '| band0 deals:', _dbg.bands && _dbg.bands[1] && _dbg.bands[1].deals);
     if (data.timestamps) {
       TIMESTAMPS = data.timestamps;
       document.getElementById('ts-snow').textContent    = data.timestamps.snowflake || '—';
@@ -1840,7 +1820,6 @@ function _renderRDTable(liveAll, q) {
     <th>BCO per AE</th>
     <th>FY27 Closed QTD</th>
     <th>Closed Y/Y</th>
-    <th>Open Opps</th>
   </tr>`;
 
   const sectionsHtml = _rdOuList().map(ouKey => {
@@ -1911,7 +1890,6 @@ function _renderRDTable(liveAll, q) {
         <td id="${bcoCellId}" data-default="${bcoStr}">${bcoCellHtml}</td>
         <td>${cqtdStr}</td>
         <td class="${yoyClosedCls}">${b ? b.yoyClosed : '—'}</td>
-        <td>${(OPEN_OPPS[S.tf] && OPEN_OPPS[S.tf][ouKey] && OPEN_OPPS[S.tf][ouKey][bk] > 0) ? OPEN_OPPS[S.tf][ouKey][bk].toLocaleString() : (b && b.deals > 0 ? b.deals.toLocaleString() : '—')}</td>
       </tr>`;
     }).join('');
 
@@ -1953,7 +1931,6 @@ function _renderRDTable(liveAll, q) {
       <td>—</td>
       <td>${k.closed_qtd ? fmtMStr(k.closed_qtd.val) : '—'}</td>
       <td>${k.yoy_closed ? k.yoy_closed.val : (k.closed_qtd ? k.closed_qtd.delta || '—' : '—')}</td>
-      <td>${(OPEN_OPPS[S.tf] && OPEN_OPPS[S.tf][ouKey] && OPEN_OPPS[S.tf][ouKey]['Total'] > 0) ? OPEN_OPPS[S.tf][ouKey]['Total'].toLocaleString() : (k.deals_cmt && k.deals_cmt.val > 0 ? k.deals_cmt.val.toLocaleString() : '—')}</td>
     </tr>`;
 
     // QBR Frcst row
@@ -2007,7 +1984,6 @@ function _renderRDFallback(q) {
     <th>BCO per AE</th>
     <th>FY27 Closed QTD</th>
     <th>Closed Y/Y</th>
-    <th>Open Opps</th>
   </tr>`;
 
   const bandRows = BAND_KEYS.map(bk => {
@@ -2023,7 +1999,7 @@ function _renderRDFallback(q) {
       <td class="${yoyClass}">${b.yoy}</td>
       <td>${fmtM(b.pipe)}</td>
       <td class="${yoyClass}">${b.yoy}</td>
-      <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>${(OPEN_OPPS[S.tf] && OPEN_OPPS[S.tf][S.ou] && OPEN_OPPS[S.tf][S.ou][bk] > 0) ? OPEN_OPPS[S.tf][S.ou][bk].toLocaleString() : '—'}</td>
+      <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
     </tr>`;
   }).join('');
 
@@ -2040,7 +2016,6 @@ function _renderRDFallback(q) {
     <td>—</td>
     <td>${fmtMStr(k.closed_qtd.val)}</td>
     <td>${k.closed_qtd.delta || '—'}</td>
-    <td>${(OPEN_OPPS[S.tf] && OPEN_OPPS[S.tf][S.ou] && OPEN_OPPS[S.tf][S.ou]['Total'] > 0) ? OPEN_OPPS[S.tf][S.ou]['Total'].toLocaleString() : '—'}</td>
   </tr>`;
 
   document.getElementById('rd-table-wrap').innerHTML = `
@@ -2610,40 +2585,11 @@ async function loadLiveData() {
         RD_CACHE[tf]['COMBO'] = data[tf]['COMBO'];
       });
       if (data.timestamps) TIMESTAMPS = data.timestamps;
-      var _dbg = data['CQ'] && data['CQ']['OPP'] && data['CQ']['OPP']['SOUTH'];
-      if (_dbg) console.log('[RD DEBUG] SOUTH deals_cmt:', _dbg.kpis && _dbg.kpis.deals_cmt, '| $0-100K deals:', _dbg.bands && _dbg.bands[1] && _dbg.bands[1].deals);
       resolve(true);
     };
     script.onerror = function() { clearTimeout(timeout); delete window[cbName]; script.remove(); resolve(false); };
     document.head.appendChild(script);
   });
-}
-
-function loadLiveDeals() {
-  const cbName = '_rdDealsCb';
-  const script = document.createElement('script');
-  script.src = APPS_SCRIPT_URL + '?action=deals&callback=' + cbName + '&_=' + Date.now();
-  const timeout = setTimeout(function() {
-    delete window[cbName]; script.remove();
-  }, 15000);
-  window[cbName] = function(data) {
-    clearTimeout(timeout); delete window[cbName]; script.remove();
-    if (!data || data.error) return;
-    ['CQ','NQ'].forEach(function(tf) {
-      if (!data[tf]) return;
-      if (!OPEN_OPPS[tf]) OPEN_OPPS[tf] = {};
-      Object.keys(data[tf]).forEach(function(ouKey) {
-        var d = data[tf][ouKey];
-        if (!d) return;
-        OPEN_OPPS[tf][ouKey] = d.bands || {};
-        OPEN_OPPS[tf][ouKey]['Total'] = d.total || 0;
-      });
-    });
-    console.log('[RD] Live deals loaded:', JSON.stringify(OPEN_OPPS.CQ.SOUTH));
-    render();
-  };
-  script.onerror = function() { clearTimeout(timeout); delete window[cbName]; script.remove(); };
-  document.head.appendChild(script);
 }
 
 let _isRefreshing = false;
@@ -2686,7 +2632,6 @@ async function refreshData() {
     document.getElementById('ts-hc').textContent      = TIMESTAMPS.hc       || '—';
     _setLiveBadge(ok ? 'live' : 'offline', ok ? 'Live · Updated ' + ts : null);
     render();
-    loadLiveDeals();
   } catch(e) {
     console.error('refreshData error:', e);
     _setLiveBadge('offline');
