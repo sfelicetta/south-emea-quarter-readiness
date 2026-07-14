@@ -1911,7 +1911,7 @@ function _renderRDTable(liveAll, q) {
         <td id="${bcoCellId}" data-default="${bcoStr}">${bcoCellHtml}</td>
         <td>${cqtdStr}</td>
         <td class="${yoyClosedCls}">${b ? b.yoyClosed : '—'}</td>
-        <td>${(OPEN_OPPS[S.tf] && OPEN_OPPS[S.tf][ouKey] && OPEN_OPPS[S.tf][ouKey][bk] > 0) ? OPEN_OPPS[S.tf][ouKey][bk].toLocaleString() : (b && b.deals > 0 ? b.deals.toLocaleString() : '—')}</td>
+        <td>${(b && b.deals > 0) ? b.deals.toLocaleString() : ((OPEN_OPPS[S.tf] && OPEN_OPPS[S.tf][ouKey] && OPEN_OPPS[S.tf][ouKey][bk] > 0) ? OPEN_OPPS[S.tf][ouKey][bk].toLocaleString() : '—')}</td>
       </tr>`;
     }).join('');
 
@@ -1953,7 +1953,7 @@ function _renderRDTable(liveAll, q) {
       <td>—</td>
       <td>${k.closed_qtd ? fmtMStr(k.closed_qtd.val) : '—'}</td>
       <td>${k.yoy_closed ? k.yoy_closed.val : (k.closed_qtd ? k.closed_qtd.delta || '—' : '—')}</td>
-      <td>${(OPEN_OPPS[S.tf] && OPEN_OPPS[S.tf][ouKey] && OPEN_OPPS[S.tf][ouKey]['Total'] > 0) ? OPEN_OPPS[S.tf][ouKey]['Total'].toLocaleString() : (k.deals_cmt && k.deals_cmt.val > 0 ? k.deals_cmt.val.toLocaleString() : '—')}</td>
+      <td>${(k.deals_cmt && k.deals_cmt.val > 0) ? k.deals_cmt.val.toLocaleString() : ((OPEN_OPPS[S.tf] && OPEN_OPPS[S.tf][ouKey] && OPEN_OPPS[S.tf][ouKey]['Total'] > 0) ? OPEN_OPPS[S.tf][ouKey]['Total'].toLocaleString() : '—')}</td>
     </tr>`;
 
     // QBR Frcst row
