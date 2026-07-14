@@ -644,7 +644,7 @@ function buildTDB(qtr, logic) {
 
   function top10(map) {
     return Object.keys(map).map(function(n){ return { name:n, val: Math.round(map[n])/1000000 }; })
-      .sort(function(a,b){ return b.val - a.val; }).slice(0,10);
+      .sort(function(a,b){ return b.val - a.val; });
   }
 
   function topAll(map) {
