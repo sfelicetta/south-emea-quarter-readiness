@@ -306,7 +306,10 @@
     @media(max-width:1200px) { .rd-bands-grid { grid-template-columns:repeat(2,1fr); } }
     @media(max-width:700px)  { .rd-bands-grid { grid-template-columns:1fr; } }
     .rd-band-section { margin-bottom:0; display:flex; flex-direction:column; }
+    .rd-opp-filter-btn { padding:4px 12px; font-size:11px; font-weight:600; border:1px solid var(--sf-border); background:var(--sf-card); color:var(--sf-meta); border-radius:4px; cursor:pointer; margin-left:4px; }
+    .rd-opp-filter-btn.active { background:var(--sf-blue); color:#fff; border-color:var(--sf-blue); }
     .rd-opp-table-scroll { overflow-y:auto; max-height:500px; border:1px solid var(--sf-border); border-top:none; border-radius:0 0 var(--r) var(--r); }
+    .rd-opp-table-scroll.limited { max-height:none; overflow-y:visible; }
     .rd-opp-table-scroll::-webkit-scrollbar { width:5px; }
     .rd-opp-table-scroll::-webkit-scrollbar-thumb { background:#c8d0da; border-radius:3px; }
     .rd-band-title { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.7px; color:#fff; background:var(--sf-blue); padding:4px 12px; border-radius:var(--r) var(--r) 0 0; display:flex; align-items:center; gap:8px; }
@@ -475,6 +478,11 @@
   </div>
 
   <!-- Opportunity detail lists — only visible on OPP view -->
+  <div id="rd-opp-filter" style="display:none;margin:12px 0 8px;text-align:right">
+    <label style="font-size:11px;font-weight:600;color:var(--sf-meta);margin-right:6px">Show:</label>
+    <button class="rd-opp-filter-btn active" data-limit="10" onclick="_setOppLimit(10)">Top 10</button>
+    <button class="rd-opp-filter-btn" data-limit="0" onclick="_setOppLimit(0)">All</button>
+  </div>
   <div id="rd-opplists-wrap">
     <!-- populated by render() -->
   </div>
@@ -1810,16 +1818,16 @@ function _renderRDTable(liveAll, q) {
 
   const colHeaders = `<tr>
     <th style="text-align:left">Deal Band</th>
-    <th>${q} FY26 ACV</th>
-    <th class="rd-editable-hdr">${q} FY27 Forecast</th>
-    <th class="rd-editable-hdr">BP Commit</th>
-    <th>Y/Y</th>
-    <th>${q} FY27 Pipe</th>
-    <th>Pipe Growth Y/Y</th>
-    <th>Pipe Coverage (Hist)</th>
-    <th>BCO per AE</th>
-    <th>FY27 Closed QTD</th>
-    <th>Closed Y/Y</th>
+    <th>${q} FY26 ACV<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">$M</span></th>
+    <th class="rd-editable-hdr">${q} FY27 Forecast<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">$M</span></th>
+    <th class="rd-editable-hdr">BP Commit<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">$M</span></th>
+    <th>Y/Y<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">%</span></th>
+    <th>${q} FY27 Pipe<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">$M</span></th>
+    <th>Pipe Growth Y/Y<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">%</span></th>
+    <th>Pipe Coverage (Hist)<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">x</span></th>
+    <th>BCO per AE<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">$K</span></th>
+    <th>FY27 Closed QTD<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">$M</span></th>
+    <th>Closed Y/Y<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">%</span></th>
   </tr>`;
 
   const sectionsHtml = _rdOuList().map(ouKey => {
@@ -1974,16 +1982,16 @@ function _renderRDFallback(q) {
 
   const colHeaders = `<tr>
     <th style="text-align:left">Deal Band</th>
-    <th>${q} FY26 ACV</th>
-    <th class="rd-editable-hdr">${q} FY27 Forecast</th>
-    <th class="rd-editable-hdr">BP Commit</th>
-    <th>Y/Y</th>
-    <th>${q} FY27 Pipe</th>
-    <th>Pipe Growth Y/Y</th>
-    <th>Pipe Coverage (Hist)</th>
-    <th>BCO per AE</th>
-    <th>FY27 Closed QTD</th>
-    <th>Closed Y/Y</th>
+    <th>${q} FY26 ACV<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">$M</span></th>
+    <th class="rd-editable-hdr">${q} FY27 Forecast<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">$M</span></th>
+    <th class="rd-editable-hdr">BP Commit<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">$M</span></th>
+    <th>Y/Y<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">%</span></th>
+    <th>${q} FY27 Pipe<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">$M</span></th>
+    <th>Pipe Growth Y/Y<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">%</span></th>
+    <th>Pipe Coverage (Hist)<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">x</span></th>
+    <th>BCO per AE<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">$K</span></th>
+    <th>FY27 Closed QTD<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">$M</span></th>
+    <th>Closed Y/Y<br><span style="font-weight:400;font-size:8px;color:var(--sf-meta)">%</span></th>
   </tr>`;
 
   const bandRows = BAND_KEYS.map(bk => {
@@ -2030,6 +2038,15 @@ function _renderRDFallback(q) {
     </div>`;
 }
 
+let _OPP_LIMIT = 10;
+function _setOppLimit(n) {
+  _OPP_LIMIT = n;
+  document.querySelectorAll('.rd-opp-filter-btn').forEach(function(btn) {
+    btn.classList.toggle('active', parseInt(btn.dataset.limit) === n);
+  });
+  renderOppLists();
+}
+
 function renderOppLists() {
   const BAND_KEYS = ['$0–$100K', '$100–$500K', '$500K–$1M', '$1M+'];
   const BAND_LABELS = {
@@ -2066,6 +2083,8 @@ function renderOppLists() {
     return;
   }
 
+  document.getElementById('rd-opp-filter').style.display = 'block';
+
   const ouData = tdbData.ous.find(o => o.key === S.ou);
   if (!ouData) { oppWrap.innerHTML = ''; return; }
 
@@ -2074,8 +2093,9 @@ function renderOppLists() {
     const band = ouData.bands[tdbKey];
     if (!band || !band.open27 || !band.open27.length) return '';
     const isLt100 = (bk === '$0–$100K');
+    const displayList = _OPP_LIMIT > 0 ? band.open27.slice(0, _OPP_LIMIT) : band.open27;
 
-    const rows = band.open27.map(d => {
+    const rows = displayList.map(d => {
       const exclKey = S.tf + '_' + S.ou + '_' + bk;
       const isExcl  = (BCO_EXCLUDED[exclKey] || []).some(x => x.name === d.name);
       const chkCell = isLt100
@@ -2098,9 +2118,10 @@ function renderOppLists() {
 
     const chkHeader = isLt100 ? '' : '<th style="text-align:center">Include in Forecast?</th><th style="text-align:center">BP Confirmed Commit</th>';
 
+    const scrollCls = _OPP_LIMIT > 0 ? 'rd-opp-table-scroll limited' : 'rd-opp-table-scroll';
     return `<div class="rd-band-section">
       <div class="rd-band-title">${BAND_LABELS[bk]}</div>
-      <div class="rd-opp-table-scroll">
+      <div class="${scrollCls}">
         <table class="rd-opp-table" style="border:none;border-radius:0">
           <thead><tr><th>Account</th><th>Open Pipe</th>${chkHeader}</tr></thead>
           <tbody>${rows}</tbody>
