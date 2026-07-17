@@ -2139,7 +2139,7 @@ function renderOppLists() {
     const totalPipe = band.totalOpen27 || band.open27.reduce((s,d) => s + d.pipe, 0);
     const scrollCls = _OPP_LIMIT > 0 ? 'rd-opp-table-scroll limited' : 'rd-opp-table-scroll';
     return `<div class="rd-band-section">
-      <div class="rd-band-title">${BAND_LABELS[bk]} <span style="font-weight:400;color:var(--sf-meta);font-size:11px">— Total: $${(Math.round(totalPipe*10)/10).toFixed(1)}M</span></div>
+      <div class="rd-band-title">${BAND_LABELS[bk]} <span style="font-weight:400;color:var(--sf-meta);font-size:11px">— $${(Math.round(totalPipe*10)/10).toFixed(1)}M</span></div>
       <div class="${scrollCls}">
         <table class="rd-opp-table" style="border:none;border-radius:0">
           <thead><tr><th>Account</th><th>Open Pipe</th>${chkHeader}</tr></thead>
@@ -2182,13 +2182,14 @@ function drilldownAccount(acctName, bandKey) {
       body.innerHTML = '<div style="padding:20px;color:var(--sf-meta)">No opportunities found.</div>';
       return;
     }
+    function fmtDollars(m) { return '$' + Math.round(m * 1000000).toLocaleString('en-US'); }
     var rows = data.opps.map(function(o) {
       var mfjCls = o.mfj === 'IN' ? 'rd-drill-mfj-in' : (o.mfj.indexOf('UP') === 0 ? 'rd-drill-mfj-up' : '');
       var idCell = o.oppId ? '<td style="font-family:monospace;font-size:10px">' + o.oppId + '</td>' : '<td>—</td>';
-      return '<tr>' + idCell + '<td>' + o.opp + '</td><td>$' + o.pipe.toFixed(2) + 'M</td><td class="' + mfjCls + '">' + o.mfj + '</td><td>' + o.band + '</td></tr>';
+      return '<tr>' + idCell + '<td style="text-align:right">' + fmtDollars(o.pipe) + '</td><td class="' + mfjCls + '">' + o.mfj + '</td><td>' + o.band + '</td></tr>';
     }).join('');
-    body.innerHTML = '<table class="rd-drill-table"><thead><tr><th>Opp ID</th><th>Opportunity</th><th>Pipe $M</th><th>MFJ</th><th>Deal Band</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-      '<div style="margin-top:12px;font-size:11px;color:var(--sf-meta);text-align:right">Total: <strong>$' + data.total.toFixed(1) + 'M</strong> &middot; ' + data.opps.length + ' opportunities</div>';
+    body.innerHTML = '<table class="rd-drill-table"><thead><tr><th>Opp ID</th><th>Pipe</th><th>MFJ</th><th>Deal Band</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<div style="margin-top:12px;font-size:11px;color:var(--sf-meta);text-align:right">' + fmtDollars(data.total) + ' &middot; ' + data.opps.length + ' opportunities</div>';
   };
   script.onerror = function() { clearTimeout(timeout); delete window[cbName]; script.remove(); };
   document.head.appendChild(script);
