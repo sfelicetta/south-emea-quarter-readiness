@@ -2057,6 +2057,11 @@ function _setOppLimit(n) {
   document.querySelectorAll('.rd-opp-filter-btn').forEach(function(btn) {
     btn.classList.toggle('active', parseInt(btn.dataset.limit) === n);
   });
+  if (n === 0) {
+    // Force re-fetch to get all accounts from server
+    var tf = S.tf;
+    if (TDB_CACHE[tf]) delete TDB_CACHE[tf]['Opportunity'];
+  }
   renderOppLists();
 }
 
