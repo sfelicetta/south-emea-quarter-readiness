@@ -75,6 +75,11 @@ function doGet(e) {
       payload = buildTopDeals2(qtr, ou);
     } else if (action === 'deals') {
       payload = buildDeals();
+    } else if (action === 'drilldown') {
+      const acct = (e && e.parameter && e.parameter.acct) || '';
+      const qtr  = (e && e.parameter && e.parameter.qtr)  || 'CQ';
+      const ou   = (e && e.parameter && e.parameter.ou)   || 'SOUTH';
+      payload = buildDrilldown(acct, qtr, ou);
     } else {
       payload = { error: 'unknown action' };
     }
@@ -1004,6 +1009,65 @@ function _readDealsFromTab(ss, tabName) {
     }
   }
   return result;
+}
+
+// ── Drilldown — single account opportunity detail ────────────────────────────
+// Returns all Openpipe rows for a given account (COMBO_GLOBAL_COMPANY_NAME)
+// filtered by quarter and OU. Shows each opportunity line item.
+function buildDrilldown(acct, qtr, ou) {
+  if (!acct) return { error: 'missing acct param' };
+  var fiscalYear = 'FY 2027';
+  var fiscalQtr  = qtr === 'NQ' ? 'FQ 3' : 'FQ 2';
+  var acctLo     = acct.toLowerCase();
+
+  var OU_LVL3 = {
+    ITALY:   ['vanessa fortarezza'],
+    EGM:     ['ana alonso muñumer'],
+    MIDEAST: ['mohammed alkhotani'],
+  };
+  var IB_PATTERN = /emea\s*-\s*south\s*-\s*ib/i;
+
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var opRows = ss.getSheetByName('Openpipe').getDataRange().getValues();
+
+  var opps = [];
+  for (var i = 1; i < opRows.length; i++) {
+    var row = opRows[i];
+    if (String(row[4]||'').trim() !== fiscalYear || String(row[5]||'').trim() !== fiscalQtr) continue;
+
+    // Filter by OU
+    if (ou && ou !== 'SOUTH') {
+      var lvl3 = String(row[1]||'').trim().toLowerCase();
+      if (ou === 'IBERIA') { if (!IB_PATTERN.test(lvl3)) continue; }
+      else { var allowed = OU_LVL3[ou] || []; if (allowed.indexOf(lvl3) < 0) continue; }
+    }
+
+    var globalName = String(row[7] || '').trim();
+    if (globalName.toLowerCase() !== acctLo) continue;
+
+    var pipe = parseFloat(String(row[13]||'0').replace(/,/g,'')) || 0;
+    var mgr  = String(row[11]||'').trim().toUpperCase();
+    var oppName = String(row[9] || '').trim();
+    var band = String(row[10] || '').trim();
+    var owner = String(row[1] || '').trim();
+
+    opps.push({
+      opp: oppName || globalName,
+      pipe: Math.round(pipe) / 1000000,
+      mfj: mgr || '—',
+      band: band,
+      owner: owner,
+    });
+  }
+
+  opps.sort(function(a, b) { return b.pipe - a.pipe; });
+
+  return {
+    account: acct,
+    quarter: qtr === 'NQ' ? 'Q3 FY27' : 'Q2 FY27',
+    total: Math.round(opps.reduce(function(s, o) { return s + o.pipe; }, 0) * 10) / 10,
+    opps: opps,
+  };
 }
 
 // ── Test ──────────────────────────────────────────────────────────────────────
