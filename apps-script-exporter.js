@@ -54,7 +54,17 @@ function mapOU(raw) {
 function doGet(e) {
   try {
     const cb     = (e && e.parameter && e.parameter.callback) || '';
-    const action = (e && e.parameter && e.parameter.action)   || 'readiness';
+    const action = (e && e.parameter && e.parameter.action)   || '';
+
+    // Serve HTML dashboard when no action specified
+    if (!action) {
+      var template = HtmlService.createTemplateFromFile('Index');
+      template.scriptUrl = ScriptApp.getService().getUrl();
+      return template.evaluate()
+        .setTitle('South EMEA FY27 Quarter Readiness')
+        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    }
+
     var payload;
     if (action === 'readiness') {
       payload = buildPayload();
@@ -79,7 +89,8 @@ function doGet(e) {
       const acct = (e && e.parameter && e.parameter.acct) || '';
       const qtr  = (e && e.parameter && e.parameter.qtr)  || 'CQ';
       const ou   = (e && e.parameter && e.parameter.ou)   || 'SOUTH';
-      payload = buildDrilldown(acct, qtr, ou);
+      const band = (e && e.parameter && e.parameter.band) || '';
+      payload = buildDrilldown(acct, qtr, ou, band);
     } else {
       payload = { error: 'unknown action' };
     }
@@ -631,7 +642,8 @@ function buildTDB(qtr, logic) {
     } else if (logic === 'GlobalCompany') {
       return { name: String(row[7]||'').trim(), bandRaw: String(row[15]||'').trim().toLowerCase() };
     } else {
-      return { name: String(row[7]||'').trim(), bandRaw: String(row[10]||'').trim().toLowerCase() };
+      // Opportunity: col J (index 9) = COMBO_COMPANY_NAME, col K (index 10) = OPPORTUNITY_DEALBAND
+      return { name: String(row[9]||'').trim(), bandRaw: String(row[10]||'').trim().toLowerCase() };
     }
   }
 
@@ -645,11 +657,6 @@ function buildTDB(qtr, logic) {
       BANDS.forEach(function(b) { a[k][b] = {}; });
     });
     return a;
-  }
-
-  function top10(map) {
-    return Object.keys(map).map(function(n){ return { name:n, val: Math.round(map[n])/1000000 }; })
-      .sort(function(a,b){ return b.val - a.val; });
   }
 
   function topAll(map) {
@@ -666,7 +673,8 @@ function buildTDB(qtr, logic) {
     var ou = mapOU(row[1]); if (!ou) continue;
     var nb = getNameBand(row, isCombo);
     if (!nb.name) continue;
-    var band = BAND_MAP[nb.bandRaw]; if (!band || band === 'lt0') continue;
+    var band = BAND_MAP[nb.bandRaw]; if (!band) continue;
+    if (band === 'lt0') band = 'lt100';
     var pipe = parseFloat(String(row[13]||'0').replace(/,/g,'')) || 0;
     accOpen27[ou][band][nb.name] = (accOpen27[ou][band][nb.name] || 0) + pipe;
     accOpen27['SOUTH'][band][nb.name] = (accOpen27['SOUTH'][band][nb.name] || 0) + pipe;
@@ -682,7 +690,8 @@ function buildTDB(qtr, logic) {
     var ou = mapOU(row[1]); if (!ou) continue;
     var nb = getNameBand(row, isCombo);
     if (!nb.name) continue;
-    var band = BAND_MAP[nb.bandRaw]; if (!band || band === 'lt0') continue;
+    var band = BAND_MAP[nb.bandRaw]; if (!band) continue;
+    if (band === 'lt0') band = 'lt100';
     var pipe = parseFloat(String(row[13]||'0').replace(/,/g,'')) || 0;
     var mgr  = String(row[11]||'').trim().toUpperCase();
     accOpen26[ou][band][nb.name] = (accOpen26[ou][band][nb.name] || 0) + pipe;
@@ -716,7 +725,8 @@ function buildTDB(qtr, logic) {
       bandRaw = String(row[10]||'').trim().toLowerCase();
     }
     if (!name) continue;
-    var band = BAND_MAP[bandRaw]; if (!band || band === 'lt0') continue;
+    var band = BAND_MAP[bandRaw]; if (!band) continue;
+    if (band === 'lt0') band = 'lt100';
     var acv = parseFloat(String(row[13]||'0').replace(/,/g,'')) || 0;
     if (yr === 'FY 2026') {
       accACV26[ou][band][name] = (accACV26[ou][band][name] || 0) + acv;
@@ -731,7 +741,7 @@ function buildTDB(qtr, logic) {
   var ous = OU_KEYS_LIST.map(function(ouKey) {
     var bands = {};
     BANDS.forEach(function(b) {
-      var fn      = (b === 'lt100') ? top10 : topAll;
+      var fn      = topAll;
       var open27  = fn(accOpen27[ouKey][b]);
       var open26  = fn(accOpen26[ouKey][b]);
       var close26 = accClose26[ouKey][b];
@@ -1014,11 +1024,19 @@ function _readDealsFromTab(ss, tabName) {
 // ── Drilldown — single account opportunity detail ────────────────────────────
 // Returns all Openpipe rows for a given account (COMBO_GLOBAL_COMPANY_NAME)
 // filtered by quarter and OU. Shows each opportunity line item.
-function buildDrilldown(acct, qtr, ou) {
+function buildDrilldown(acct, qtr, ou, bandFilter) {
   if (!acct) return { error: 'missing acct param' };
   var fiscalYear = 'FY 2027';
   var fiscalQtr  = qtr === 'NQ' ? 'FQ 3' : 'FQ 2';
   var acctLo     = acct.toLowerCase();
+
+  var BAND_FILTER_MAP = {
+    'lt100':    ['up to 100', '<0'],
+    '100to500': ['100-500'],
+    '500to1m':  ['500-1m'],
+    'gt1m':     ['1m+'],
+  };
+  var allowedBands = bandFilter ? BAND_FILTER_MAP[bandFilter] || [] : [];
 
   var OU_LVL3 = {
     ITALY:   ['vanessa fortarezza'],
@@ -1043,7 +1061,12 @@ function buildDrilldown(acct, qtr, ou) {
     }
 
     var globalName = String(row[7] || '').trim();
-    if (globalName.toLowerCase() !== acctLo) continue;
+    var comboName  = String(row[9] || '').trim();
+    if (globalName.toLowerCase() !== acctLo && comboName.toLowerCase() !== acctLo) continue;
+
+    // Filter by dealband if specified
+    var oppBand = String(row[10] || '').trim().toLowerCase();
+    if (allowedBands.length > 0 && allowedBands.indexOf(oppBand) < 0) continue;
 
     var pipe = parseFloat(String(row[13]||'0').replace(/,/g,'')) || 0;
     var mgr  = String(row[11]||'').trim().toUpperCase();
