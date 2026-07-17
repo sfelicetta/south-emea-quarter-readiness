@@ -1046,7 +1046,9 @@ function buildDrilldown(acct, qtr, ou, bandFilter) {
   var IB_PATTERN = /emea\s*-\s*south\s*-\s*ib/i;
 
   var ss = SpreadsheetApp.openById(SHEET_ID);
-  var opRows = ss.getSheetByName('Openpipe').getDataRange().getValues();
+  // Use "OP W OPID" tab — same as Openpipe but with Opportunity ID in col K (index 10)
+  // Columns shifted: K=10 OppID, L=11 DealBand (was K), M=12 MGR (was L), O=14 Pipe (was N=13)
+  var opRows = ss.getSheetByName('OP W OPID').getDataRange().getValues();
 
   var opps = [];
   for (var i = 1; i < opRows.length; i++) {
@@ -1064,18 +1066,20 @@ function buildDrilldown(acct, qtr, ou, bandFilter) {
     var comboName  = String(row[9] || '').trim();
     if (globalName.toLowerCase() !== acctLo && comboName.toLowerCase() !== acctLo) continue;
 
-    // Filter by dealband if specified
-    var oppBand = String(row[10] || '').trim().toLowerCase();
+    // Filter by dealband if specified (col L = index 11 in this tab)
+    var oppBand = String(row[11] || '').trim().toLowerCase();
     if (allowedBands.length > 0 && allowedBands.indexOf(oppBand) < 0) continue;
 
-    var pipe = parseFloat(String(row[13]||'0').replace(/,/g,'')) || 0;
-    var mgr  = String(row[11]||'').trim().toUpperCase();
+    var pipe = parseFloat(String(row[14]||'0').replace(/,/g,'')) || 0;
+    var mgr  = String(row[12]||'').trim().toUpperCase();
     var oppName = String(row[9] || '').trim();
-    var band = String(row[10] || '').trim();
+    var oppId = String(row[10] || '').trim();
+    var band = String(row[11] || '').trim();
     var owner = String(row[1] || '').trim();
 
     opps.push({
       opp: oppName || globalName,
+      oppId: oppId,
       pipe: Math.round(pipe) / 1000000,
       mfj: mgr || '—',
       band: band,

@@ -2184,9 +2184,10 @@ function drilldownAccount(acctName, bandKey) {
     }
     var rows = data.opps.map(function(o) {
       var mfjCls = o.mfj === 'IN' ? 'rd-drill-mfj-in' : (o.mfj.indexOf('UP') === 0 ? 'rd-drill-mfj-up' : '');
-      return '<tr><td>' + o.opp + '</td><td>$' + o.pipe.toFixed(2) + 'M</td><td class="' + mfjCls + '">' + o.mfj + '</td><td>' + o.band + '</td></tr>';
+      var idCell = o.oppId ? '<td style="font-family:monospace;font-size:10px">' + o.oppId + '</td>' : '<td>—</td>';
+      return '<tr>' + idCell + '<td>' + o.opp + '</td><td>$' + o.pipe.toFixed(2) + 'M</td><td class="' + mfjCls + '">' + o.mfj + '</td><td>' + o.band + '</td></tr>';
     }).join('');
-    body.innerHTML = '<table class="rd-drill-table"><thead><tr><th>Opportunity</th><th>Pipe $M</th><th>MFJ</th><th>Deal Band</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+    body.innerHTML = '<table class="rd-drill-table"><thead><tr><th>Opp ID</th><th>Opportunity</th><th>Pipe $M</th><th>MFJ</th><th>Deal Band</th></tr></thead><tbody>' + rows + '</tbody></table>' +
       '<div style="margin-top:12px;font-size:11px;color:var(--sf-meta);text-align:right">Total: <strong>$' + data.total.toFixed(1) + 'M</strong> &middot; ' + data.opps.length + ' opportunities</div>';
   };
   script.onerror = function() { clearTimeout(timeout); delete window[cbName]; script.remove(); };
