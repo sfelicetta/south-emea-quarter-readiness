@@ -2182,7 +2182,7 @@ function drilldownAccount(acctName, bandKey) {
       body.innerHTML = '<div style="padding:20px;color:var(--sf-meta)">No opportunities found.</div>';
       return;
     }
-    function fmtDollars(m) { return '$' + Math.round(m * 1000000).toLocaleString('en-US'); }
+    function fmtDollars(v) { return '$' + Math.round(v).toLocaleString('en-US'); }
     var rows = data.opps.map(function(o) {
       var mfjCls = o.mfj === 'IN' ? 'rd-drill-mfj-in' : (o.mfj.indexOf('UP') === 0 ? 'rd-drill-mfj-up' : '');
       var idCell = o.oppId ? '<td style="font-family:monospace;font-size:10px">' + o.oppId + '</td>' : '<td>—</td>';

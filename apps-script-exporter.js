@@ -1080,7 +1080,7 @@ function buildDrilldown(acct, qtr, ou, bandFilter) {
     opps.push({
       opp: oppName || globalName,
       oppId: oppId,
-      pipe: Math.round(pipe) / 1000000,
+      pipe: Math.round(pipe),
       mfj: mgr || '—',
       band: band,
       owner: owner,
@@ -1092,7 +1092,7 @@ function buildDrilldown(acct, qtr, ou, bandFilter) {
   return {
     account: acct,
     quarter: qtr === 'NQ' ? 'Q3 FY27' : 'Q2 FY27',
-    total: Math.round(opps.reduce(function(s, o) { return s + o.pipe; }, 0) * 10) / 10,
+    total: opps.reduce(function(s, o) { return s + o.pipe; }, 0),
     opps: opps,
   };
 }
