@@ -2112,7 +2112,7 @@ function renderOppLists() {
       const exclKey = S.tf + '_' + S.ou + '_' + bk;
       const isExcl  = (BCO_EXCLUDED[exclKey] || []).some(x => x.name === d.name);
       const chkCell = isLt100
-        ? '<td></td><td></td>'
+        ? ''
         : `<td style="text-align:center"><input type="checkbox" class="rd-chk" ${isExcl ? 'checked' : ''}
             data-ou="${S.ou}" data-band="${bk}" data-name="${d.name.replace(/"/g,'&quot;')}" data-pipe="${d.pipe}"
             onchange="toggleExcluded(this)" /></td>
