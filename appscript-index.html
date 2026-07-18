@@ -2127,9 +2127,10 @@ function renderOppLists() {
             placeholder="—"
             style="width:80px;padding:3px 6px;border:1px solid var(--sf-border);border-radius:4px;font-size:11px;text-align:right;font-family:inherit"
             onblur="updateBpCommit(this)" /></td>`;
+      var pipeStr = isLt100 ? ((d.pipe < 0 ? '-$' : '$') + Math.abs(d.pipe).toFixed(2) + 'M') : fmtM(d.pipe);
       return `<tr>
         <td><a href="#" style="color:var(--sf-blue);text-decoration:none;cursor:pointer" onclick="event.preventDefault();drilldownAccount('${d.name.replace(/'/g,"\\'")}','${tdbKey}')">${d.name}</a></td>
-        <td>${fmtM(d.pipe)}</td>
+        <td>${pipeStr}</td>
         ${chkCell}
       </tr>`;
     }).join('');
