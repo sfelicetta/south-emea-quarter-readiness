@@ -30,6 +30,9 @@
     .hdr { background: var(--sf-blue-dark); color: #fff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
     .hdr h1 { font-size: 17px; font-weight: 700; }
     .hdr .meta { font-size: 10px; opacity: .72; margin-top: 2px; }
+    .hdr-right { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+    .hdr-freshness { font-size:10px; color:rgba(255,255,255,.82); line-height:1.4; text-align:right; }
+    .hdr-freshness span { font-weight:600; color:#fff; }
     .refresh-btn { background: rgba(255,255,255,.15); border: none; color: #fff; border-radius: 20px; padding: 5px 14px; font-size: 11px; cursor: pointer; transition: background .15s, opacity .15s; }
     .refresh-btn:hover:not(:disabled) { background: rgba(255,255,255,.25); }
     .refresh-btn:disabled { opacity: .55; cursor: default; }
@@ -470,7 +473,13 @@
     <h1>South EMEA &mdash; Quarter Readiness</h1>
     <div class="meta">FY27 &middot; Sales Strategy &middot; South EMEA &middot; Live</div>
   </div>
-  <button class="refresh-btn" id="refresh-btn" onclick="refreshData()"><span class="refresh-icon">&#8635;</span> <span id="refresh-ts">Loading…</span></button>
+  <div class="hdr-right">
+    <button class="refresh-btn" id="refresh-btn" onclick="refreshData()"><span class="refresh-icon">&#8635;</span> <span id="refresh-ts">Loading…</span></button>
+    <div class="hdr-freshness">
+      <div>FrontEnd Re-Fetch: <span id="fe-fetch-ts">—</span></div>
+      <div>UIP Updates: Every hour, on the hour</div>
+    </div>
+  </div>
 </header>
 
 <!-- PAGE TABS -->
@@ -2851,6 +2860,7 @@ async function refreshData() {
     const ts = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
     const tsLong = now.toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
     document.getElementById('refresh-ts').textContent = tsLong + (ok ? ' ✓ Live' : ' · Cached');
+    document.getElementById('fe-fetch-ts').textContent = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' }) + ' (' + now.toLocaleDateString('en-GB', { day:'2-digit', month:'short' }) + ')';
     document.getElementById('ts-snow').textContent    = TIMESTAMPS.snowflake || '—';
     document.getElementById('ts-org62').textContent   = TIMESTAMPS.org62    || '—';
     document.getElementById('ts-finplan').textContent = TIMESTAMPS.finplan  || '—';
