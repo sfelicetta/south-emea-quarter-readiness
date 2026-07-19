@@ -474,10 +474,10 @@
     <div class="meta">FY27 &middot; Sales Strategy &middot; South EMEA &middot; Live</div>
   </div>
   <div class="hdr-right">
-    <button class="refresh-btn" id="refresh-btn" onclick="refreshData()"><span class="refresh-icon">&#8635;</span> <span id="refresh-ts">Loading…</span></button>
+    <button class="refresh-btn" id="refresh-btn" onclick="refreshData()"><span class="refresh-icon">&#8635;</span></button>
     <div class="hdr-freshness">
       <div>FrontEnd Re-Fetch: <span id="fe-fetch-ts">—</span></div>
-      <div>UIP Updates: Every hour, on the hour</div>
+      <div>UIP Updates: Every hour on the dot</div>
     </div>
   </div>
 </header>
@@ -2858,8 +2858,6 @@ async function refreshData() {
     const ok = await loadLiveData();
     const now = new Date();
     const ts = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
-    const tsLong = now.toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-    document.getElementById('refresh-ts').textContent = tsLong + (ok ? ' ✓ Live' : ' · Cached');
     document.getElementById('fe-fetch-ts').textContent = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' }) + ' (' + now.toLocaleDateString('en-GB', { day:'2-digit', month:'short' }) + ')';
     document.getElementById('ts-snow').textContent    = TIMESTAMPS.snowflake || '—';
     document.getElementById('ts-org62').textContent   = TIMESTAMPS.org62    || '—';
