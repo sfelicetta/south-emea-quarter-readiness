@@ -484,7 +484,7 @@
 
 <!-- PAGE TABS -->
 <div class="page-tabs">
-  <div class="page-tab active" onclick="switchPage('readiness',this)">Readiness View<span class="tab-tip">Live quarter health check. Deal band breakdown by OU with Forecast, Pipeline Coverage, BCO per AE, and Closed QTD — sourced from Snowflake and Org62. Toggle CQ/NQ, Opportunity/Combo, and OU.</span></div>
+  <div class="page-tab active" onclick="switchPage('readiness',this)">Readiness View<span class="tab-tip">Live quarter health check. Deal band breakdown by OU with Forecast, Pipeline Coverage, BCO per Core AE, and Closed QTD — sourced from Snowflake and Org62. Toggle CQ/NQ, Opportunity/Combo, and OU.</span></div>
   <div class="page-tab" onclick="switchPage('topdeals',this)">Top Deals<span class="tab-tip">Largest open opportunities ranked by Commit, by OU and quarter. Search any account to retrieve its Open Pipeline and Commit position in real time.</span></div>
   <div class="page-tab" onclick="switchPage('topdeals-db',this)">Top Deals by Deal Band<span class="tab-tip">Open pipeline and closed deals segmented by deal size (&lt;$100K · $100K–$500K · $500K–$1M · $1M+) and DealBand logic (Opportunity · Global Company · Combo Company). All combinations available across CQ and NQ, except NQ + Global Company.</span></div>
 </div>
@@ -645,7 +645,7 @@ function mkOU(acv,fcst,yoy,pipe,pg,cv,hcv,dl,bc,cq,yc,bands,q,qbrFcst,delta) {
       pipe_cov:      { val:cv,   lbl:'Current Pipe Coverage' },
       hist_pipe_cov: { val:hcv,  lbl:'Historical Pipe Coverage' },
       deals_cmt:     { val:dl,   lbl:'# Open Opps' },
-      bco_ae:        { val:bc,   lbl:'BCO per AE' },
+      bco_ae:        { val:bc,   lbl:'BCO per Core AE' },
       closed_qtd:    { val:cq,   delta:yc+' Y/Y', lbl:'Closed QTD', dir:ycDir },
     },
     bands:   bands,
@@ -1991,7 +1991,7 @@ function _renderRDTable(liveAll, q) {
     <th>${q} FY27 Pipe <span style="font-weight:400;font-size:8px;color:var(--sf-meta)">$M</span></th>
     <th>Pipe Growth Y/Y <span style="font-weight:400;font-size:8px;color:var(--sf-meta)">%</span></th>
     <th>Pipe Coverage (Hist)</th>
-    <th>BCO per AE</th>
+    <th>BCO per Core AE</th>
     <th>FY27 Closed QTD <span style="font-weight:400;font-size:8px;color:var(--sf-meta)">$M</span></th>
     <th>Closed Y/Y <span style="font-weight:400;font-size:8px;color:var(--sf-meta)">%</span></th>
   </tr>`;
@@ -2155,7 +2155,7 @@ function _renderRDFallback(q) {
     <th>${q} FY27 Pipe <span style="font-weight:400;font-size:8px;color:var(--sf-meta)">$M</span></th>
     <th>Pipe Growth Y/Y <span style="font-weight:400;font-size:8px;color:var(--sf-meta)">%</span></th>
     <th>Pipe Coverage (Hist)</th>
-    <th>BCO per AE</th>
+    <th>BCO per Core AE</th>
     <th>FY27 Closed QTD <span style="font-weight:400;font-size:8px;color:var(--sf-meta)">$M</span></th>
     <th>Closed Y/Y <span style="font-weight:400;font-size:8px;color:var(--sf-meta)">%</span></th>
   </tr>`;
