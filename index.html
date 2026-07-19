@@ -1152,9 +1152,75 @@ function _td2ClosedTable(list, quarter26) {
 
 function renderTopDeals2v() {
   renderTopDeals2();
-  const src = document.getElementById('td2-content');
-  const dst = document.getElementById('td2v-content');
-  if (src && dst) dst.innerHTML = src.innerHTML;
+  const cached = TD2_CACHE[S.tf];
+  if (cached) _td2vRender(cached);
+}
+
+function _td2vRender(payload) {
+  const el = document.getElementById('td2v-content');
+  if (!el) return;
+  const quarter   = payload.quarter   || '';
+  const quarter26 = payload.quarter26 || quarter.replace('FY27','FY26');
+
+  const ouKeys = S.ou === 'SOUTH'
+    ? ['SOUTH', 'IBERIA', 'ITALY', 'EGM', 'MIDEAST']
+    : [S.ou];
+
+  function _tdbAgg(ouKey, fieldKey, valueKey) {
+    const tdb = TDB_CACHE[S.tf] && TDB_CACHE[S.tf]['Opportunity'];
+    if (!tdb) return [];
+    const allBands = ['lt100', '100to500', '500to1m', 'gt1m'];
+    const map = {};
+    const ouData = (tdb.ous || []).find(o => o.key === ouKey);
+    if (!ouData) return [];
+    allBands.forEach(bk => {
+      const b = ouData.bands && ouData.bands[bk];
+      if (!b || !b[fieldKey]) return;
+      b[fieldKey].forEach(d => {
+        map[d.name] = (map[d.name] || 0) + (d[valueKey] || 0);
+      });
+    });
+    return Object.keys(map)
+      .map(n => ({ name: n, val: map[n] }))
+      .filter(d => d.val > 0)
+      .sort((a, b) => b.val - a.val)
+      .slice(0, 20);
+  }
+
+  function _buildFy26Col(ouKey) {
+    const pipe26 = _tdbAgg(ouKey, 'open26', 'pipe');
+    if (!pipe26.length) return '<div class="td2-empty">No data</div>';
+    const acv26map = {};
+    _tdbAgg(ouKey, 'acv26', 'acv').forEach(d => { acv26map[d.name] = d.val; });
+    const rows = pipe26.map(d => {
+      const closed = acv26map[d.name] > 0 ? fmtM(acv26map[d.name]) : '<span style="color:var(--sf-meta)">—</span>';
+      return '<tr><td>' + d.name + '</td><td>' + fmtM(d.val) + '</td><td>' + closed + '</td></tr>';
+    }).join('');
+    const totPipe = pipe26.reduce((s,d) => s+d.val, 0);
+    const totAcv  = pipe26.reduce((s,d) => s+(acv26map[d.name]||0), 0);
+    const totalRow = '<tr class="td2-total"><td>Total (' + pipe26.length + ')</td><td>' + fmtM(totPipe) + '</td><td>' + (totAcv>0?fmtM(totAcv):'—') + '</td></tr>';
+    return '<div class="td2-col-head">' + quarter26 + ' — Open Pipe &amp; Closed</div><div class="td2-table-wrap"><table class="td2-table"><thead><tr><th style="text-align:left">Account</th><th>Open Pipe</th><th>ACV Closed</th></tr></thead><tbody>' + rows + totalRow + '</tbody></table></div>';
+  }
+
+  el.innerHTML = ouKeys.map(ouKey => {
+    const ouRaw = (payload.ous && payload.ous[ouKey]) || {};
+    const isLegacy = Array.isArray(ouRaw);
+    const ou = isLegacy ? {} : ouRaw;
+    const fy27closed = ou.fy27closed && ou.fy27closed.length ? ou.fy27closed : _tdbAgg(ouKey, 'acv27', 'acv').map(d => ({ name: d.name, acv: d.val }));
+    const fy27commit = ou.fy27commit || (isLegacy ? ouRaw : []);
+    const fy27pipe = (ou.fy27pipe && ou.fy27pipe.length)
+      ? ou.fy27pipe
+      : [...fy27commit].sort((a, b) => b.pipe - a.pipe);
+    if (!fy27commit.length && !fy27pipe.length && !fy27closed.length) return '';
+    const ouLabel = OU_LABELS[ouKey] || ouKey;
+
+    return '<div class="td-ou-section"><div class="td-ou-title">' + ouLabel + '</div><div class="td2-4col">'
+      + '<div class="td2-col">' + _buildFy26Col(ouKey) + '</div>'
+      + '<div class="td2-col">' + _td2ClosedTable(fy27closed, quarter + ' — Top 20 ACV Closed') + '</div>'
+      + '<div class="td2-col">' + _td2PipeTable(fy27commit, ouKey, quarter + ' — IN/Commit') + '</div>'
+      + '<div class="td2-col">' + _td2SimplePipeTable(fy27pipe, quarter + ' — by Pipeline') + '</div>'
+      + '</div></div>';
+  }).join('');
 }
 
 function _td2Render(payload) {
@@ -1244,8 +1310,7 @@ function _td2Render(payload) {
       </div>
     </div>`;
   }).join('');
-  const dst = document.getElementById('td2v-content');
-  if (dst && document.getElementById('page-topdeals-2v').classList.contains('active')) dst.innerHTML = el.innerHTML;
+  if (document.getElementById('page-topdeals-2v').classList.contains('active')) _td2vRender(payload);
 }
 
 // ── TOP DEALS ACCOUNT LOOKUP ─────────────────────────────────────────────────
