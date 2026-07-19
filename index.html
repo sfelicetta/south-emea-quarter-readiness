@@ -232,8 +232,7 @@
     .td-ou-title .td-ou-sub { font-size: 10px; font-weight: 400; color: var(--sf-meta); text-transform: none; letter-spacing: 0; }
     .td-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .td-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    @media(max-width:1200px) { .td-grid-4 { grid-template-columns: 1fr 1fr; } }
-    @media(max-width:900px) { .td-grid { grid-template-columns: 1fr; } .td-grid-4 { grid-template-columns: 1fr; } }
+    @media(max-width:900px) { .td-grid { grid-template-columns: 1fr; } }
     .td-card { background: var(--sf-card); border: 1px solid var(--sf-border); border-radius: var(--r); box-shadow: var(--sh); display:flex; flex-direction:column; }
     .td-card-body { flex:1; overflow:auto; }
     .td-card-total { font-size:11px; font-weight:700; color:var(--sf-blue); background:#f8f9fb; border-top:1.5px solid var(--sf-border); display:flex; justify-content:space-between; padding:5px 10px; border-radius:0 0 var(--r) var(--r); }
@@ -341,6 +340,9 @@
     .td2-table th { padding:5px 10px; background:var(--sf-bg); border-bottom:1.5px solid var(--sf-border); font-size:9px; font-weight:700; color:var(--sf-meta); text-transform:uppercase; letter-spacing:.04em; text-align:right; }
     .td2-table th:first-child { text-align:left; min-width:180px; }
     .td2-table th.td2-in-hdr { color:#2e844a; }
+    .td2-sort-th { cursor:pointer; user-select:none; transition:background .15s; }
+    .td2-sort-th:hover { background:#e8f0fe; }
+    .td2-sort-active { background:#e3f2fd; font-weight:700; }
     .td2-table td { padding:5px 10px; border-bottom:1px solid #f0f2f5; text-align:right; font-variant-numeric:tabular-nums; }
     .td2-table td:first-child { text-align:left; }
     .td2-table tr:last-child td { border-bottom:none; }
@@ -397,6 +399,56 @@
     .cov-neg { color: var(--sf-danger); }
     .cov-warn { color: var(--sf-warning); }
 
+
+    /* ── UX: STICKY CONTEXT BAR ── */
+    .context-sticky { position:sticky; top:0; z-index:50; background:rgba(255,255,255,.95); backdrop-filter:blur(6px); border-bottom:1px solid var(--sf-border); padding:6px 24px; font-size:11px; font-weight:600; color:var(--sf-meta); display:none; align-items:center; gap:8px; }
+    .context-sticky .ctx-chip { background:var(--sf-blue); color:#fff; padding:2px 10px; border-radius:12px; font-size:10px; font-weight:700; }
+    .page.active ~ .context-sticky, .context-sticky.visible { display:flex; }
+
+    /* ── UX: COLOR-CODED VALUES ── */
+    .val-in { color:#2e844a; font-weight:700; }
+    .val-upp { color:var(--sf-blue); font-weight:600; }
+    .val-upm { color:#e67700; font-weight:600; }
+    .val-pipe { color:var(--sf-title); font-weight:600; }
+    .td-bar.bar-committed { background:linear-gradient(90deg,#2e844a,#4bc076); }
+    .td-bar.bar-upside { background:linear-gradient(90deg,#0176D3,#42a5f5); }
+    .td-bar.bar-pipe { background:#b0bec5; }
+
+    /* ── UX: ROW HOVER ── */
+    .td2-table tbody tr:hover td { background:#e8f4fd; transition:background .12s; }
+    .td-table tbody tr:hover td { background:#e8f4fd; transition:background .12s; }
+    .rd-opp-table tbody tr:hover td { background:#e8f4fd; }
+
+    /* ── UX: MODAL TRANSITIONS ── */
+    .rd-drill-overlay { animation:fadeIn .2s ease-out; }
+    .rd-drill-modal { animation:slideUp .25s ease-out; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── UX: RESPONSIVE TDB ── */
+    @media(max-width:700px) { .td-grid-4 { grid-template-columns:1fr; } }
+
+    /* ── UX: FONT SIZE BUMP FOR DATA ── */
+    .td2-table td, .td-table td, .rd-opp-table td { font-size:12px; }
+    .td2-table th, .td-table th { font-size:10px; }
+
+    /* ── UX: KPI HERO CARDS ── */
+    .kpi-hero { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+    @media(max-width:1100px) { .kpi-hero { grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:600px) { .kpi-hero { grid-template-columns:1fr; } }
+    .kpi-hero-card { background:var(--sf-card); border:1px solid var(--sf-border); border-radius:8px; padding:16px 20px; box-shadow:var(--sh); position:relative; overflow:hidden; }
+    .kpi-hero-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+    .kpi-hero-card.kpi-good::before { background:linear-gradient(90deg,#2e844a,#4bc076); }
+    .kpi-hero-card.kpi-warn::before { background:linear-gradient(90deg,#e67700,#ffa726); }
+    .kpi-hero-card.kpi-bad::before { background:linear-gradient(90deg,#c53929,#ef5350); }
+    .kpi-hero-card.kpi-neutral::before { background:linear-gradient(90deg,#0176D3,#42a5f5); }
+    .kpi-hero-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--sf-meta); margin-bottom:6px; }
+    .kpi-hero-val { font-size:26px; font-weight:800; line-height:1.1; }
+    .kpi-hero-sub { font-size:10px; margin-top:5px; color:var(--sf-meta); }
+    .kpi-hero-val.good { color:#2e844a; }
+    .kpi-hero-val.warn { color:#e67700; }
+    .kpi-hero-val.bad { color:#c53929; }
+    .kpi-hero-val.neutral { color:var(--sf-blue); }
 
     /* ── LOADING ── */
     .loading { position: fixed; inset: 0; background: rgba(1,68,134,.88); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; gap: 14px; z-index: 999; transition: opacity .3s; }
@@ -479,10 +531,21 @@
   <div class="view-lbl" id="view-lbl">Current Quarter &mdash; Opportunity &mdash; EMEA South</div>
 </div>
 
+<!-- STICKY CONTEXT BAR -->
+<div class="context-sticky visible" id="context-sticky">
+  <span style="opacity:.6">Viewing:</span>
+  <span class="ctx-chip" id="ctx-tf">CQ</span>
+  <span class="ctx-chip" id="ctx-ou" style="background:#00695C">EMEA South</span>
+  <span class="ctx-chip" id="ctx-lv" style="background:#7B1FA2">Opportunity</span>
+</div>
+
 <!-- ════════════════════════════════════════════════════════════ -->
 <!--  PAGE 1: READINESS VIEW                                     -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div class="page active" id="page-readiness">
+
+  <!-- KPI HERO CARDS -->
+  <div class="kpi-hero" id="kpi-hero"></div>
 
   <!-- Main dealband table -->
   <div class="section-lbl" id="rd-table-lbl">Quarter Readiness — Deal Band Breakdown<span class="rd-live-badge" id="rd-live-badge"><span class="rd-live-dot loading" id="rd-live-dot"></span><span id="rd-live-txt">Loading…</span></span></div>
@@ -520,15 +583,9 @@
 <!--  PAGE 3: TOP DEALS BY DEALBAND                              -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div class="page" id="page-topdeals-db">
-  <div class="td-header">
-    <div>
-      <h2 style="font-size:14px;font-weight:700;margin-bottom:2px">Top Deals by Deal Band</h2>
-      <p style="font-size:11px;color:var(--sf-meta)">Open pipeline and closed deals segmented by deal size and DealBand logic &mdash; live data</p>
-      <p class="tab-desc">Deal-level pipeline segmented by <strong>deal size tier</strong> (&lt;$100K · $100K–$500K · $500K–$1M · $1M+) and <strong>DealBand logic</strong> (Opportunity · Global Company · Combo Company). All combinations available across CQ and NQ — the only exception is <strong>NQ + Global Company</strong>, which is not available in the source data.</p>
-    </div>
-  </div>
   <div id="tdb-content"></div>
 </div>
+
 
 <!-- ════════════════════════════════════════════════════════════ -->
 <!--  PAGE 4: QBR FORECAST                                        -->
@@ -1006,24 +1063,42 @@ function renderTopDeals2() {
   document.head.appendChild(script);
 }
 
-function _td2PipeRows(list, ouKey) {
-  return list.map(d => {
-    const inVal  = d.in_ > 0  ? `<span class="td-commit-dot"></span>${fmtM(d.in_)}`  : '<span style="color:var(--sf-meta)">—</span>';
-    const uppVal = d.upp > 0 ? fmtM(d.upp) : '<span style="color:var(--sf-meta)">—</span>';
-    const upmVal = d.upm > 0 ? fmtM(d.upm) : '<span style="color:var(--sf-meta)">—</span>';
-    return `<tr><td>${d.name}</td><td>${fmtM(d.pipe)}</td><td>${inVal}</td><td>${uppVal}</td><td>${upmVal}</td></tr>`;
+const _td2SortState = {};
+
+function _td2PipeRows(list, ouKey, sortKey) {
+  const sorted = sortKey ? [...list].sort((a,b) => (b[sortKey]||0) - (a[sortKey]||0)) : list;
+  return sorted.map(d => {
+    const inVal  = d.in_ > 0  ? `<span class="td-commit-dot"></span><span class="val-in">${fmtM(d.in_)}</span>`  : '<span style="color:var(--sf-meta)">—</span>';
+    const uppVal = d.upp > 0 ? `<span class="val-upp">${fmtM(d.upp)}</span>` : '<span style="color:var(--sf-meta)">—</span>';
+    const upmVal = d.upm > 0 ? `<span class="val-upm">${fmtM(d.upm)}</span>` : '<span style="color:var(--sf-meta)">—</span>';
+    return `<tr><td>${d.name}</td><td class="val-pipe">${fmtM(d.pipe)}</td><td>${inVal}</td><td>${uppVal}</td><td>${upmVal}</td></tr>`;
   }).join('') + (() => {
     const t = list.reduce((a,d) => { a.pipe+=d.pipe; a.in_+=d.in_; a.upp+=d.upp; a.upm+=d.upm; return a; }, {pipe:0,in_:0,upp:0,upm:0});
-    return `<tr class="td2-total"><td>Total (${list.length})</td><td>${fmtM(t.pipe)}</td><td>${fmtM(t.in_)}</td><td>${t.upp>0?fmtM(t.upp):'—'}</td><td>${t.upm>0?fmtM(t.upm):'—'}</td></tr>`;
+    return `<tr class="td2-total"><td>Total (${list.length})</td><td>${fmtM(t.pipe)}</td><td class="val-in">${fmtM(t.in_)}</td><td>${t.upp>0?'<span class="val-upp">'+fmtM(t.upp)+'</span>':'—'}</td><td>${t.upm>0?'<span class="val-upm">'+fmtM(t.upm)+'</span>':'—'}</td></tr>`;
   })();
+}
+
+function _td2SortCol(ouKey, colKey) {
+  _td2SortState[ouKey] = colKey;
+  const cached = TD2_CACHE[S.tf];
+  if (cached) _td2Render(cached);
 }
 
 function _td2PipeTable(list, ouKey, subtitle) {
   if (!list || !list.length) return `<div class="td2-empty">No data</div>`;
-  const hdr = `<tr><th style="text-align:left">Account</th><th>Pipe</th><th class="td2-in-hdr">IN</th><th>UP+</th><th>UP−</th></tr>`;
+  const sk = _td2SortState[ouKey] || 'pipe';
+  const cols = [
+    {key:'pipe', label:'Pipe'},
+    {key:'in_', label:'IN'},
+    {key:'upp', label:'UP+'},
+    {key:'upm', label:'UP−'}
+  ];
+  const hdr = `<tr><th style="text-align:left">Account</th>${cols.map(c =>
+    `<th class="${c.key==='in_'?'td2-in-hdr':''} td2-sort-th${sk===c.key?' td2-sort-active':''}" onclick="_td2SortCol('${ouKey}','${c.key}')">${c.label}${sk===c.key?' ▼':''}</th>`
+  ).join('')}</tr>`;
   return `<div class="td2-col-head">${subtitle}</div>
     <div class="td2-table-wrap">
-      <table class="td2-table"><thead>${hdr}</thead><tbody>${_td2PipeRows(list, ouKey)}</tbody></table>
+      <table class="td2-table"><thead>${hdr}</thead><tbody>${_td2PipeRows(list, ouKey, sk)}</tbody></table>
     </div>`;
 }
 
@@ -1354,13 +1429,18 @@ function tdLookupKey(e, id, ouKey, tf) {
 // Cache: TDB_CACHE[qtr][logic] = payload da Apps Script
 const TDB_CACHE = {};
 
-const TDB_STATE = { tf: 'CQ', logic: 'Opportunity', band: 'lt100' };
+const TDB_STATE = { tf: 'CQ', logic: 'Opportunity', band: 'lt100', limit: 20 };
 
 function setTDBFilter(dim, val, btn) {
   TDB_STATE[dim] = val;
   const cls = dim === 'tf' ? '.tdb-tf' : dim === 'logic' ? '.tdb-logic' : '.tdb-band';
   document.querySelectorAll(cls).forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  renderTopDealsDB();
+}
+
+function _setTDBLimit(n) {
+  TDB_STATE.limit = n;
   renderTopDealsDB();
 }
 
@@ -1414,24 +1494,33 @@ function _tdbRender(payload, band) {
     ? payload.ous
     : payload.ous.filter(ou => ou.key === S.ou);
 
-  function pipeRows(arr, key, maxVal) {
+  function pipeRows(arr, key, maxVal, clickable) {
     if (!arr || !arr.length) return '<tr><td colspan="2" style="color:var(--sf-meta);font-style:italic;text-align:center;padding:8px">No data</td></tr>';
-    return arr.map(d => {
+    const sliced = lim > 0 ? arr.slice(0, lim) : arr;
+    return sliced.map(d => {
       const val = d[key] || 0;
       const barW = maxVal > 0 ? Math.round((val / maxVal) * 80) : 0;
-      return `<tr><td>${d.name}</td><td><div class="td-bar-wrap"><div class="td-bar" style="width:${barW}px"></div><span>${fmtM(val)}</span></div></td></tr>`;
+      const nameCell = clickable
+        ? `<td><a href="#" onclick="drilldownAccount('${d.name.replace(/'/g,"\\'")}','${band}');return false" style="color:var(--sf-blue);text-decoration:none;cursor:pointer">${d.name}</a></td>`
+        : `<td>${d.name}</td>`;
+      return `<tr>${nameCell}<td><div class="td-bar-wrap"><div class="td-bar" style="width:${barW}px"></div><span>${fmtM2(val)}</span></div></td></tr>`;
     }).join('');
   }
 
   function simpleRows(arr, key) {
     if (!arr || !arr.length) return '<tr><td colspan="2" style="color:var(--sf-meta);font-style:italic;text-align:center;padding:8px">No data</td></tr>';
-    return arr.map(d => `<tr><td>${d.name}</td><td style="text-align:right">${fmtM(d[key]||0)}</td></tr>`).join('');
+    const sliced = lim > 0 ? arr.slice(0, lim) : arr;
+    return sliced.map(d => `<tr><td>${d.name}</td><td style="text-align:right">${fmtM2(d[key]||0)}</td></tr>`).join('');
   }
 
+  const lim = TDB_STATE.limit;
   el.innerHTML = `
-    <div style="font-size:11px;color:var(--sf-meta);margin-bottom:14px;padding:6px 12px;background:#f0f6ff;border-left:3px solid var(--sf-blue);border-radius:0 4px 4px 0">
-      Showing: <strong>${bandLabel}</strong> &middot; Logic <strong>${payload.logic}</strong> &middot; <strong>${payload.quarter}</strong>
-      <span style="float:right;opacity:.6;font-style:italic">Live from Salesforce</span>
+    <div style="font-size:11px;color:var(--sf-meta);margin-bottom:14px;padding:6px 12px;background:#f0f6ff;border-left:3px solid var(--sf-blue);border-radius:0 4px 4px 0;display:flex;align-items:center;justify-content:space-between">
+      <span>Showing: <strong>${bandLabel}</strong> &middot; Logic <strong>${payload.logic}</strong> &middot; <strong>${payload.quarter}</strong></span>
+      <span>
+        <button class="rd-opp-filter-btn${lim===20?' active':''}" onclick="_setTDBLimit(20)" style="font-size:10px;padding:3px 10px">Top 20</button>
+        <button class="rd-opp-filter-btn${lim===0?' active':''}" onclick="_setTDBLimit(0)" style="font-size:10px;padding:3px 10px">All</button>
+      </span>
     </div>
     ${visibleOus.map(ou => {
       const b = ou.bands[band] || { open27:[], totalOpen27:0, open26:[], totalOpen26:0, acv26:[], totalACV26:0, acv27:[], totalACV27:0 };
@@ -1441,14 +1530,15 @@ function _tdbRender(payload, band) {
       const maxACV27  = b.acv27.length  ? Math.max(...b.acv27.map(d=>d.acv))  : 1;
 
       // Table 2: Open FY26 with closed column
-      const open26Rows = (!b.open26 || !b.open26.length)
+      const open26Src = lim > 0 && b.open26 ? b.open26.slice(0, lim) : (b.open26 || []);
+      const open26Rows = (!open26Src.length)
         ? '<tr><td colspan="3" style="color:var(--sf-meta);font-style:italic;text-align:center;padding:8px">No data</td></tr>'
-        : b.open26.map(d => {
+        : open26Src.map(d => {
             const barW = maxOpen26 > 0 ? Math.round(((d.pipe||0) / maxOpen26) * 60) : 0;
             return `<tr>
               <td>${d.name}</td>
-              <td><div class="td-bar-wrap"><div class="td-bar" style="width:${barW}px"></div><span>${fmtM(d.pipe||0)}</span></div></td>
-              <td style="text-align:right;color:var(--sf-green)">${d.closed > 0 ? fmtM(d.closed) : '—'}</td>
+              <td><div class="td-bar-wrap"><div class="td-bar" style="width:${barW}px"></div><span>${fmtM2(d.pipe||0)}</span></div></td>
+              <td style="text-align:right;color:var(--sf-green)">${d.closed > 0 ? fmtM2(d.closed) : '—'}</td>
             </tr>`;
           }).join('');
 
@@ -1462,9 +1552,9 @@ function _tdbRender(payload, band) {
             <div class="td-card-hdr">Top Open <span class="td-card-sub">${payload.quarter} · ${bandLabel}</span></div>
             <div class="td-card-body"><table class="td-table">
               <thead><tr><th>Account</th><th>Open Pipe</th></tr></thead>
-              <tbody>${pipeRows(b.open27, 'pipe', maxOpen27)}</tbody>
+              <tbody>${pipeRows(b.open27, 'pipe', maxOpen27, true)}</tbody>
             </table></div>
-            <div class="td-card-total"><span>Total</span><span>${fmtM(b.totalOpen27||0)}</span></div>
+            <div class="td-card-total"><span>Total</span><span>${fmtM2(b.totalOpen27||0)}</span></div>
           </div>
           <div class="td-card">
             <div class="td-card-hdr">Top Open <span class="td-card-sub">${priorYrLabel} · ${bandLabel}</span></div>
@@ -1472,7 +1562,7 @@ function _tdbRender(payload, band) {
               <thead><tr><th>Account</th><th>Open Pipe</th><th style="color:var(--sf-green)">Closed</th></tr></thead>
               <tbody>${open26Rows}</tbody>
             </table></div>
-            <div class="td-card-total"><span>Total</span><span>${fmtM(b.totalOpen26||0)}</span></div>
+            <div class="td-card-total"><span>Total</span><span>${fmtM2(b.totalOpen26||0)}</span></div>
           </div>
           <div class="td-card">
             <div class="td-card-hdr">Top ACV <span class="td-card-sub">${priorYrLabel} · ${bandLabel}</span></div>
@@ -1480,7 +1570,7 @@ function _tdbRender(payload, band) {
               <thead><tr><th>Account</th><th>ACV</th></tr></thead>
               <tbody>${simpleRows(b.acv26, 'acv')}</tbody>
             </table></div>
-            <div class="td-card-total"><span>Total</span><span>${fmtM(b.totalACV26||0)}</span></div>
+            <div class="td-card-total"><span>Total</span><span>${fmtM2(b.totalACV26||0)}</span></div>
           </div>
           <div class="td-card">
             <div class="td-card-hdr">Top ACV <span class="td-card-sub">${payload.quarter} · ${bandLabel}</span></div>
@@ -1488,7 +1578,7 @@ function _tdbRender(payload, band) {
               <thead><tr><th>Account</th><th>ACV</th></tr></thead>
               <tbody>${simpleRows(b.acv27, 'acv')}</tbody>
             </table></div>
-            <div class="td-card-total"><span>Total</span><span>${fmtM(b.totalACV27||0)}</span></div>
+            <div class="td-card-total"><span>Total</span><span>${fmtM2(b.totalACV27||0)}</span></div>
           </div>
         </div>
       </div>`;
@@ -1496,9 +1586,11 @@ function _tdbRender(payload, band) {
   `;
 }
 
+
 // ── UTILS ────────────────────────────────────────────────────────────────────
 function r1(n)     { return Math.round(Math.abs(n) * 10) / 10 * Math.sign(n); }
 function fmtM(n)   { var v = Math.round(n * 10) / 10; return (v < 0 ? '-$' : '$') + Math.abs(v).toFixed(1) + 'M'; }
+function fmtM2(n)  { var v = Math.round(n * 100) / 100; return (v < 0 ? '-$' : '$') + Math.abs(v).toFixed(2) + 'M'; }
 function fmtMStr(s) { // "$61264414.1M" → "$61.3M" | "$61.3M" → "$61.3M"
   if (!s || s === '—') return '—';
   var str = String(s);
@@ -1521,13 +1613,22 @@ function setFilter(dim, val, btn) {
   btn.closest('div').querySelectorAll('button')
     .forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  // Re-render la pagina attiva
+  _updateContextBar();
   const activePage = document.querySelector('.page.active');
   const pageId = activePage ? activePage.id.replace('page-','') : 'readiness';
   if (pageId === 'readiness') render();
   else if (pageId === 'topdeals') renderTopDeals();
   else if (pageId === 'topdeals-db') renderTopDealsDB();
   else if (pageId === 'qbr') renderQBR();
+}
+
+function _updateContextBar() {
+  const ouColors = {SOUTH:'#00695C',IBERIA:'#E65100',ITALY:'#B71C1C',EGM:'#01579B',MIDEAST:'#4527A0'};
+  document.getElementById('ctx-tf').textContent = S.tf === 'CQ' ? 'CQ' : 'NQ';
+  const ouEl = document.getElementById('ctx-ou');
+  ouEl.textContent = OU_LABELS[S.ou] || S.ou;
+  ouEl.style.background = ouColors[S.ou] || '#00695C';
+  document.getElementById('ctx-lv').textContent = S.lv === 'COMBO' ? 'Combo' : 'Opportunity';
 }
 
 // ── RENDER ───────────────────────────────────────────────────────────────────
@@ -1754,6 +1855,44 @@ function _dataToRdCache(tf, lv) {
   return result;
 }
 
+function _renderKPIHero(payload) {
+  const el = document.getElementById('kpi-hero');
+  if (!el) return;
+  if (!payload || !payload.bands) {
+    el.innerHTML = '';
+    return;
+  }
+  const bands = payload.bands;
+  const totalPipe = bands.reduce((s,b) => s + (b.open||0), 0);
+  const totalFcst = bands.reduce((s,b) => s + (b.forecast||0), 0);
+  const totalClosed = bands.reduce((s,b) => s + (b.closedQTD||0), 0);
+  const coverage = totalFcst > 0 ? (totalPipe / totalFcst) : 0;
+  const covClass = coverage >= 2 ? 'good' : coverage >= 1.5 ? 'warn' : 'bad';
+  const covCard = coverage >= 2 ? 'kpi-good' : coverage >= 1.5 ? 'kpi-warn' : 'kpi-bad';
+
+  el.innerHTML = `
+    <div class="kpi-hero-card kpi-neutral">
+      <div class="kpi-hero-lbl">Total Open Pipe</div>
+      <div class="kpi-hero-val neutral">${fmtM(totalPipe)}</div>
+      <div class="kpi-hero-sub">${bands.length} deal bands</div>
+    </div>
+    <div class="kpi-hero-card kpi-neutral">
+      <div class="kpi-hero-lbl">Forecast</div>
+      <div class="kpi-hero-val neutral">${fmtM(totalFcst)}</div>
+      <div class="kpi-hero-sub">${S.tf === 'CQ' ? 'Current' : 'Next'} Quarter</div>
+    </div>
+    <div class="kpi-hero-card ${covCard}">
+      <div class="kpi-hero-lbl">Pipe Coverage</div>
+      <div class="kpi-hero-val ${covClass}">${coverage.toFixed(1)}x</div>
+      <div class="kpi-hero-sub">${coverage >= 2 ? 'Healthy' : coverage >= 1.5 ? 'Watch' : 'At Risk'}</div>
+    </div>
+    <div class="kpi-hero-card kpi-good">
+      <div class="kpi-hero-lbl">Closed QTD</div>
+      <div class="kpi-hero-val good">${fmtM(totalClosed)}</div>
+      <div class="kpi-hero-sub">Booked this quarter</div>
+    </div>
+  `;
+}
 
 function render() {
   const ouLabel = OU_LABELS[S.ou];
@@ -1761,8 +1900,13 @@ function render() {
   const q = S.tf === 'NQ' ? 'Q3' : 'Q2';
 
   document.getElementById('view-lbl').textContent = `${S.tf === 'CQ' ? 'Current Quarter' : 'Next Quarter'} — ${lvLabel} — ${ouLabel}`;
+  _updateContextBar();
 
   const livePayload = RD_CACHE[S.tf] && RD_CACHE[S.tf][S.lv];
+
+  // KPI Hero Cards
+  _renderKPIHero(livePayload);
+
   if (livePayload) {
     _renderRDTable(livePayload, q);
   } else {
