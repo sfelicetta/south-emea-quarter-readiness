@@ -486,6 +486,7 @@
 <div class="page-tabs">
   <div class="page-tab active" onclick="switchPage('readiness',this)">Readiness View<span class="tab-tip">Live quarter health check. Deal band breakdown by OU with Forecast, Pipeline Coverage, BCO per Core AE, and Closed QTD — sourced from Snowflake and Org62. Toggle CQ/NQ, Opportunity/Combo, and OU.</span></div>
   <div class="page-tab" onclick="switchPage('topdeals',this)">Top Deals<span class="tab-tip">Largest open opportunities ranked by Commit, by OU and quarter. Search any account to retrieve its Open Pipeline and Commit position in real time.</span></div>
+  <div class="page-tab" onclick="switchPage('topdeals-2v',this)">2nd View<span class="tab-tip">Duplicate of Top Deals — use for side-by-side comparison or a second perspective on the same data.</span></div>
   <div class="page-tab" onclick="switchPage('topdeals-db',this)">Top Deals by Deal Band<span class="tab-tip">Open pipeline and closed deals segmented by deal size (&lt;$100K · $100K–$500K · $500K–$1M · $1M+) and DealBand logic (Opportunity · Global Company · Combo Company). All combinations available across CQ and NQ, except NQ + Global Company.</span></div>
 </div>
 
@@ -586,6 +587,16 @@
     </div>
   </div>
   <div id="td2-content"></div>
+</div>
+
+<div class="page" id="page-topdeals-2v">
+  <div class="td-header">
+    <div>
+      <h2 style="font-size:14px;font-weight:700;margin-bottom:2px">Top Deals — 2nd View</h2>
+      <p style="font-size:11px;color:var(--sf-meta)">Largest open opportunities ranked by Commit &mdash; live data</p>
+    </div>
+  </div>
+  <div id="td2v-content"></div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════ -->
@@ -1139,6 +1150,13 @@ function _td2ClosedTable(list, quarter26) {
     </div>`;
 }
 
+function renderTopDeals2v() {
+  renderTopDeals2();
+  const src = document.getElementById('td2-content');
+  const dst = document.getElementById('td2v-content');
+  if (src && dst) dst.innerHTML = src.innerHTML;
+}
+
 function _td2Render(payload) {
   const el = document.getElementById('td2-content');
   if (!el) return;
@@ -1226,6 +1244,8 @@ function _td2Render(payload) {
       </div>
     </div>`;
   }).join('');
+  const dst = document.getElementById('td2v-content');
+  if (dst && document.getElementById('page-topdeals-2v').classList.contains('active')) dst.innerHTML = el.innerHTML;
 }
 
 // ── TOP DEALS ACCOUNT LOOKUP ─────────────────────────────────────────────────
@@ -2556,7 +2576,7 @@ function switchPage(page, tab) {
   document.getElementById('page-' + page).classList.add('active');
   // Slicer bar: always visible; TF su tutti i tab; LV solo su readiness e topdeals
   document.getElementById('slicer-bar').style.display = 'flex';
-  const hasTf = ['readiness','topdeals','qbr'].includes(page);
+  const hasTf = ['readiness','topdeals','topdeals-2v','qbr'].includes(page);
   const hasLv = ['readiness'].includes(page);
   ['sg-tf','sd-tf'].forEach(id => {
     const el = document.getElementById(id);
@@ -2572,6 +2592,7 @@ function switchPage(page, tab) {
     if (el) el.style.display = hasTdb ? '' : 'none';
   });
   if (page === 'topdeals') renderTopDeals2();
+  if (page === 'topdeals-2v') renderTopDeals2v();
   if (page === 'topdeals-db') renderTopDealsDB();
   if (page === 'qbr') renderQBR();
 }
