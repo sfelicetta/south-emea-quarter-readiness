@@ -338,6 +338,8 @@
     .rd-chk { cursor:pointer; width:13px; height:13px; accent-color:var(--sf-blue); }
     .rd-in-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:#4bc076; margin-right:3px; vertical-align:middle; }
     /* Top Deals v2 */
+    .ml-select { width:100%; font-size:10px; padding:3px 4px; border:1px solid var(--sf-border); border-radius:4px; background:#fff; cursor:pointer; }
+    .ml-select:focus { outline:none; border-color:var(--sf-blue); box-shadow:0 0 0 2px rgba(1,118,211,.15); }
     .td2-table-wrap { overflow-x:auto; margin-bottom:18px; }
     .td2-table { width:100%; border-collapse:collapse; font-size:11px; white-space:nowrap; background:var(--sf-card); border:1px solid var(--sf-border); border-radius:var(--r); box-shadow:var(--sh); }
     .td2-table th { padding:5px 10px; background:var(--sf-bg); border-bottom:1.5px solid var(--sf-border); font-size:9px; font-weight:700; color:var(--sf-meta); text-transform:uppercase; letter-spacing:.04em; text-align:right; }
@@ -1218,9 +1220,83 @@ function _td2vRender(payload) {
       + '<div class="td2-col">' + _buildFy26Col(ouKey) + '</div>'
       + '<div class="td2-col">' + _td2ClosedTable(fy27closed, quarter + ' — Top 20 ACV Closed') + '</div>'
       + '<div class="td2-col">' + _td2PipeTable(fy27commit, ouKey, quarter + ' — IN/Commit') + '</div>'
-      + '<div class="td2-col">' + _td2SimplePipeTable(fy27pipe, quarter + ' — by Pipeline') + '</div>'
+      + '<div class="td2-col">' + _td2vMostLikely(ouKey, quarter, fy27closed, fy27commit) + '</div>'
       + '</div></div>';
   }).join('');
+}
+
+function _td2vMostLikely(ouKey, quarter, closedList, commitList) {
+  const closedMap = {};
+  (closedList || []).forEach(d => { closedMap[d.name] = d.acv || 0; });
+  const inMap = {};
+  (commitList || []).forEach(d => { inMap[d.name] = d.in_ || 0; });
+  const allNames = new Set();
+  Object.keys(closedMap).forEach(n => allNames.add(n));
+  Object.keys(inMap).forEach(n => allNames.add(n));
+  const sortedNames = [...allNames].sort((a,b) => a.localeCompare(b));
+  const opts = sortedNames.map(n => '<option value="' + n.replace(/"/g,'&quot;') + '">' + n + '</option>').join('');
+  const uid = ouKey + '_' + Date.now();
+  var rows = '';
+  for (var i = 0; i < 20; i++) {
+    rows += '<tr id="ml_row_' + uid + '_' + i + '">'
+      + '<td><select class="ml-select" data-uid="' + uid + '" data-idx="' + i + '" onchange="_td2vMlChange(this,\'' + ouKey + '\')"><option value="">— Select —</option>' + opts + '</select></td>'
+      + '<td class="ml-closed" style="text-align:right">—</td>'
+      + '<td class="ml-in" style="text-align:right">—</td>'
+      + '<td class="ml-total" style="text-align:right;font-weight:600">—</td>'
+      + '</tr>';
+  }
+  return '<div class="td2-col-head">' + quarter + ' — Most Likely ACV</div>'
+    + '<div class="td2-table-wrap"><table class="td2-table"><thead><tr><th style="text-align:left">Account</th><th>Closed</th><th>IN</th><th>Most Likely</th></tr></thead>'
+    + '<tbody>' + rows + '<tr class="td2-total" id="ml_tot_' + uid + '"><td>Total</td><td class="ml-closed">—</td><td class="ml-in">—</td><td class="ml-total" style="font-weight:700">—</td></tr></tbody></table></div>';
+}
+
+const _td2vMlData = {};
+
+function _td2vMlChange(sel, ouKey) {
+  var cached = TD2_CACHE[S.tf];
+  if (!cached) return;
+  var ouRaw = (cached.ous && cached.ous[ouKey]) || {};
+  var ou = Array.isArray(ouRaw) ? {} : ouRaw;
+  var closedList = ou.fy27closed && ou.fy27closed.length ? ou.fy27closed : [];
+  if (!closedList.length) {
+    var tdb = TDB_CACHE[S.tf] && TDB_CACHE[S.tf]['Opportunity'];
+    if (tdb) {
+      var allBands = ['lt100','100to500','500to1m','gt1m'];
+      var cmap = {};
+      var ouData = (tdb.ous || []).find(function(o){return o.key===ouKey;});
+      if (ouData) allBands.forEach(function(bk){var b=ouData.bands&&ouData.bands[bk];if(b&&b.acv27)b.acv27.forEach(function(d){cmap[d.name]=(cmap[d.name]||0)+(d.acv||0);});});
+      closedList = Object.keys(cmap).map(function(n){return {name:n,acv:cmap[n]};});
+    }
+  }
+  var commitList = ou.fy27commit || (Array.isArray(ouRaw) ? ouRaw : []);
+  var closedMap = {};
+  closedList.forEach(function(d){closedMap[d.name]=d.acv||0;});
+  var inMap = {};
+  commitList.forEach(function(d){inMap[d.name]=d.in_||0;});
+
+  var name = sel.value;
+  var row = sel.closest('tr');
+  var closedVal = closedMap[name] || 0;
+  var inVal = inMap[name] || 0;
+  var total = closedVal + inVal;
+  row.querySelector('.ml-closed').textContent = name ? fmtM(closedVal) : '—';
+  row.querySelector('.ml-in').textContent = name ? fmtM(inVal) : '—';
+  row.querySelector('.ml-total').textContent = name ? fmtM(total) : '—';
+
+  var table = sel.closest('table');
+  var selects = table.querySelectorAll('.ml-select');
+  var totC = 0, totI = 0;
+  selects.forEach(function(s){
+    if (!s.value) return;
+    totC += closedMap[s.value] || 0;
+    totI += inMap[s.value] || 0;
+  });
+  var totRow = table.querySelector('.td2-total');
+  if (totRow) {
+    totRow.querySelector('.ml-closed').textContent = totC > 0 ? fmtM(totC) : '—';
+    totRow.querySelector('.ml-in').textContent = totI > 0 ? fmtM(totI) : '—';
+    totRow.querySelector('.ml-total').textContent = (totC+totI) > 0 ? fmtM(totC+totI) : '—';
+  }
 }
 
 function _td2Render(payload) {
