@@ -48,10 +48,6 @@
     .page-tab { position: relative; padding: 10px 20px; font-size: 12px; font-weight: 600; color: var(--sf-meta); border-bottom: 3px solid transparent; cursor: pointer; margin-bottom: -2px; transition: all .15s; }
     .page-tab.active { color: var(--sf-blue); border-bottom-color: var(--sf-blue); }
     .page-tab:hover:not(.active) { color: var(--sf-title); background: var(--sf-bg); }
-    /* Tab tooltip on hover */
-    .page-tab .tab-tip { display:none; position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%); width:260px; background:#1a1a2e; color:#e8eaf0; font-size:11px; font-weight:400; line-height:1.55; padding:9px 13px; border-radius:6px; box-shadow:0 4px 16px rgba(0,0,0,.22); z-index:200; pointer-events:none; white-space:normal; }
-    .page-tab .tab-tip::before { content:''; position:absolute; bottom:100%; left:50%; transform:translateX(-50%); border:6px solid transparent; border-bottom-color:#1a1a2e; }
-    .page-tab:hover .tab-tip { display:block; }
 
     /* ── SLICER BAR ── */
     .slicer-bar {
@@ -486,10 +482,10 @@
 
 <!-- PAGE TABS -->
 <div class="page-tabs">
-  <div class="page-tab active" onclick="switchPage('readiness',this)">Readiness View<span class="tab-tip">Live quarter health check. Deal band breakdown by OU with Forecast, Pipeline Coverage, BCO per Core AE, and Closed QTD — sourced from Snowflake and Org62. Toggle CQ/NQ, Opportunity/Combo, and OU.</span></div>
-  <div class="page-tab" onclick="switchPage('topdeals',this)">Top Deals<span class="tab-tip">Largest open opportunities ranked by Commit, by OU and quarter. Search any account to retrieve its Open Pipeline and Commit position in real time.</span></div>
-  <div class="page-tab" onclick="switchPage('topdeals-2v',this)">2nd View<span class="tab-tip">Duplicate of Top Deals — use for side-by-side comparison or a second perspective on the same data.</span></div>
-  <div class="page-tab" onclick="switchPage('topdeals-db',this)">Top Deals by Deal Band<span class="tab-tip">Open pipeline and closed deals segmented by deal size (&lt;$100K · $100K–$500K · $500K–$1M · $1M+) and DealBand logic (Opportunity · Global Company · Combo Company). All combinations available across CQ and NQ, except NQ + Global Company.</span></div>
+  <div class="page-tab active" onclick="switchPage('readiness',this)">Readiness View</div>
+  <div class="page-tab" onclick="switchPage('topdeals',this)">Top Deals</div>
+  <div class="page-tab" onclick="switchPage('topdeals-2v',this)">2nd View</div>
+  <div class="page-tab" onclick="switchPage('topdeals-db',this)">Top Deals by Deal Band</div>
 </div>
 
 <!-- SLICER BAR -->
@@ -1226,13 +1222,20 @@ function _td2vRender(payload) {
 }
 
 function _td2vMostLikely(ouKey, quarter, closedList, commitList) {
-  const closedMap = {};
-  (closedList || []).forEach(d => { closedMap[d.name] = d.acv || 0; });
-  const inMap = {};
-  (commitList || []).forEach(d => { inMap[d.name] = d.in_ || 0; });
   const allNames = new Set();
-  Object.keys(closedMap).forEach(n => allNames.add(n));
-  Object.keys(inMap).forEach(n => allNames.add(n));
+  var tdb = TDB_CACHE[S.tf] && TDB_CACHE[S.tf]['Opportunity'];
+  if (tdb) {
+    var ouData = (tdb.ous || []).find(function(o){return o.key===ouKey;});
+    if (ouData) ['lt100','100to500','500to1m','gt1m'].forEach(function(bk){
+      var b = ouData.bands && ouData.bands[bk];
+      if (!b) return;
+      ['open27','open26','acv26','acv27'].forEach(function(fk){
+        if (b[fk]) b[fk].forEach(function(d){ allNames.add(d.name); });
+      });
+    });
+  }
+  (closedList || []).forEach(function(d){ allNames.add(d.name); });
+  (commitList || []).forEach(function(d){ allNames.add(d.name); });
   const sortedNames = [...allNames].sort((a,b) => a.localeCompare(b));
   const opts = sortedNames.map(n => '<option value="' + n.replace(/"/g,'&quot;') + '">' + n + '</option>').join('');
   const uid = ouKey + '_' + Date.now();
